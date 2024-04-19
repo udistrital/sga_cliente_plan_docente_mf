@@ -1,0 +1,19 @@
+form {
+    width: 100%;
+}
+
+.campos {
+    width: 100%;
+    padding: 0rem 1rem;
+}
+
+.espacio {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    button {
+        height: 3rem;
+        width: 5rem;
+        top: -10px;
+    }
+}

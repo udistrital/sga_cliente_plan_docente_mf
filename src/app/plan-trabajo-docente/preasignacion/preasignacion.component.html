@@ -1,0 +1,172 @@
+<mat-card>
+    <mat-card-header>
+        <div class="ancho-100 texto-centro">
+            <mat-card-title>
+                {{ 'ptd.preasignar_ptd' | translate }}
+            </mat-card-title>   
+        </div>
+    </mat-card-header>
+    <!-- Vista de tabla lista docentes -->
+    <mat-card-content *ngIsGranted="rolesDocente">
+        <mat-card class="card-fieldset">
+            <div class="fieldset-legend">{{ 'ptd.preasignacion' | translate }}</div>
+            
+            <div class="ancho-50">
+                <mat-form-field style="width: 40%;">
+                    <mat-label>{{ 'GLOBAL.periodo' | translate }}:</mat-label>
+                    <mat-select (selectionChange)="selectPeriodo($event)">
+                        <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
+                        <mat-option *ngFor="let item of periodos" [value]="item">
+                            {{item.Nombre}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                &nbsp;<button mat-stroked-button *ngIf="periodo.Id" (click)="loadPreasignaciones()"> {{ 'GLOBAL.actualizar' | translate }} </button>
+            </div>
+
+            <div>
+                <mat-form-field>
+                    <mat-label>{{ 'GLOBAL.filtrar' | translate }}</mat-label>
+                    <input matInput (keyup)="applyFilter($event)" #input>
+                </mat-form-field>
+                <mat-table mat-table [dataSource]="dataSource" matSort>
+                    <ng-container matColumnDef="espacio_academico">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'practicas_academicas.espacio_academico' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.espacio_academico}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="periodo">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.periodo' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.periodo}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="grupo">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'asignaturas.grupo' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.grupo}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="proyecto">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.proyecto_academico' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.proyecto}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="nivel">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.nivel' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.nivel}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="aprobacion_docente">
+                        <mat-header-cell *matHeaderCellDef> <b>{{ 'ptd.aprobacion_docente' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row">
+                            <action-check [rowData]="row" [value]="row.aprobacion_docente"></action-check>
+                        </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="aprobacion_proyecto">
+                        <mat-header-cell *matHeaderCellDef> <b>{{ 'ptd.aprobacion_proyecto' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row">
+                            <action-check [rowData]="row" [value]="row.aprobacion_proyecto"></action-check>
+                        </mat-cell>
+                    </ng-container>
+                    <mat-header-row *matHeaderRowDef="displayedColumns_docente"></mat-header-row>
+                    <mat-row *matRowDef="let row; columns: displayedColumns_docente;"></mat-row>
+                </mat-table>
+                <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of users"></mat-paginator>
+            </div>
+                
+        </mat-card>
+    </mat-card-content>
+    <!-- Vista de tabla lista Coordinador -->
+    <mat-card-content *ngIsGranted="rolesCoord">
+        <mat-card class="card-fieldset">
+            <div class="fieldset-legend">{{ 'ptd.preasignacion' | translate }}</div>
+            
+            <div class="ancho-50">
+                <mat-form-field style="width: 40%;">
+                    <mat-label>{{ 'GLOBAL.periodo' | translate }}:</mat-label>
+                    <mat-select (selectionChange)="selectPeriodo($event)">
+                        <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
+                        <mat-option *ngFor="let item of periodos" [value]="item">
+                            {{item.Nombre}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                &nbsp;<button mat-stroked-button *ngIf="periodo.Id" (click)="loadPreasignaciones()"> {{ 'GLOBAL.actualizar' | translate }} </button>
+            </div>
+
+            <div>
+                <mat-form-field>
+                    <mat-label>{{ 'GLOBAL.filtrar' | translate }}</mat-label>
+                    <input matInput (keyup)="applyFilter($event)" #input>
+                </mat-form-field>
+                <mat-table mat-table [dataSource]="dataSource" matSort>
+                    <ng-container matColumnDef="docente">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'notas.docente' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.docente}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="espacio_academico">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'practicas_academicas.espacio_academico' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.espacio_academico}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="periodo">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.periodo' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.periodo}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="grupo">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'asignaturas.grupo' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.grupo}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="proyecto">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.proyecto_academico' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.proyecto}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="nivel">
+                        <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.nivel' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> {{row.nivel}} </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="aprobacion_docente">
+                        <mat-header-cell *matHeaderCellDef> <b>{{ 'ptd.aprobacion_docente' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row"> 
+                            <action-check [rowData]="row" [value]="row.aprobacion_docente"></action-check>
+                        </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="aprobacion_proyecto">
+                        <mat-header-cell *matHeaderCellDef> <b>{{ 'ptd.aprobacion_proyecto' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row">
+                            <action-check [rowData]="row" [value]="row.aprobacion_proyecto"></action-check>
+                        </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="enviar">
+                        <mat-header-cell *matHeaderCellDef> <b>{{ 'ptd.enviar_a_docente' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row">
+                            <action-button [rowData]="row" [value]="row.enviar" (valueChanged)="accionEnviar($event)"></action-button>
+                        </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="editar">
+                        <mat-header-cell *matHeaderCellDef> <b>{{ 'GLOBAL.editar' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row">
+                            <action-button [rowData]="row" [value]="row.editar" (valueChanged)="accionEditar($event)"></action-button>
+                        </mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="borrar">
+                        <mat-header-cell *matHeaderCellDef> <b>{{ 'GLOBAL.eliminar' | translate }}</b> </mat-header-cell>
+                        <mat-cell *matCellDef="let row">
+                            <action-button [rowData]="row" [value]="row.borrar" (valueChanged)="accionBorrar($event)"></action-button>
+                        </mat-cell>
+                    </ng-container>
+                    <mat-header-row *matHeaderRowDef="displayedColumns_coord"></mat-header-row>
+                    <mat-row *matRowDef="let row; columns: displayedColumns_coord;"></mat-row>
+                </mat-table>
+                <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of users"></mat-paginator>
+            </div>
+
+        </mat-card>
+ 
+    </mat-card-content>
+    <mat-card-actions>
+        <div class="ancho-100 posicion-centro">
+            <button *ngIsGranted="rolesDocente" mat-raised-button color="primary" (click)="enviarAprobacion()">
+                {{ 'GLOBAL.enviar_aprobacion' | translate }}
+            </button>
+            <button *ngIsGranted="rolesCoord" mat-raised-button color="primary" (click)="agregacionPreasignacion()">
+                {{ 'GLOBAL.nuevo' | translate }}
+            </button>
+        </div>
+    </mat-card-actions>
+    <mat-card-footer>
+    </mat-card-footer>
+</mat-card>
