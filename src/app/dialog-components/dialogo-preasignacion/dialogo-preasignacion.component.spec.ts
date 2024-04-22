@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DialogoPreAsignacionPtdComponent } from './dialogo-preasignacion.component';
+import { dialogoPreAsignacionPtdComponent } from './dialogo-preasignacion.component';
 
 describe('dialogoPreAsignacionPtdComponent', () => {
-  let component: DialogoPreAsignacionPtdComponent;
-  let fixture: ComponentFixture<DialogoPreAsignacionPtdComponent>;
+  let component: dialogoPreAsignacionPtdComponent;
+  let fixture: ComponentFixture<dialogoPreAsignacionPtdComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [DialogoPreAsignacionPtdComponent]
+      declarations: [dialogoPreAsignacionPtdComponent]
     })
       .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DialogoPreAsignacionPtdComponent);
+    fixture = TestBed.createComponent(dialogoPreAsignacionPtdComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

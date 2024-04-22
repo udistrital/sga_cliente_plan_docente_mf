@@ -11,7 +11,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatAutocompleteModule } from '@angular/material/autocomplete'; 
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 export const MATERIAL_MODULES = [
     MatCardModule,
@@ -28,4 +32,8 @@ export const MATERIAL_MODULES = [
     MatCheckboxModule,
     MatDialogModule,
     MatAutocompleteModule,
+    DragDropModule,
+    MatDatepickerModule,
+    MatTabsModule,
+    MatSlideToggleModule
 ];

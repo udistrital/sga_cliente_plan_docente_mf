@@ -7,7 +7,7 @@ import { BehaviorSubject, combineLatest, Subject, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, switchMap, startWith } from 'rxjs/operators';
 import { ParametrosService } from '../../services/parametros.service';
 import { SgaPlanTrabajoDocenteMidService } from '../../services/sga-plan-trabajo-docente-mid.service';
-import { EspaciosAcademicosService } from '../../services/espacios-academicos-service';
+import { EspaciosAcademicosService } from '../../services/espacios-academicos.service';
 import { PlanTrabajoDocenteService } from 'src/app/services/plan-trabajo-docente.service';
 import { TercerosService } from 'src/app/services/terceros.service';
 import { Periodo } from 'src/app/models/parametros/periodo';
@@ -37,7 +37,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   opcionesGrupos: any[] = [];
   opcionesGruposTodas: any[] = [];
   periodos: Periodo[] = [];
-  periodo: Periodo = {};
+  periodo: Periodo = new Periodo({});
   documento_docente: any;
   espacio_academico: any;
   grupo: any;
@@ -133,7 +133,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
 
     this.cargarPeriodo().then((periodos) => {
       this.periodos = periodos;
-      this.periodo = periodos.find(p => p.Activo)||{};
+      this.periodo = periodos.find(p => p.Activo) ?? new Periodo({});
       this.cargarEspaciosAcademicos().then((espaciosAcademicos) => {
         this.opcionesEspaciosAcademicos = espaciosAcademicos;
         if (this.modificando) {
@@ -275,7 +275,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
 
   cargarPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,activo:true&sortby=Id&order=desc&limit=0').subscribe({
+      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,Activo:true&sortby=Id&order=desc&limit=0').subscribe({
         next: (resp: RespFormat) => {
           if (checkResponse(resp) && checkContent(resp.Data)) {
             resolve(resp.Data as Periodo[]);

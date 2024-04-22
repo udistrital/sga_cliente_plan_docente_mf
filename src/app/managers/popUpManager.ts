@@ -89,7 +89,7 @@ export class PopUpManager {
         return Swal.fire(opt);
     }
 
-    public showPopUpForm(title: string, form: { html: string; ids: any[]; }, cancelar: boolean): Promise<any> {
+    public showPopUpForm(title: string, form: { html: string[]; ids: any[]; }, cancelar: boolean): Promise<any> {
         const opt: any = {
             title: title,
             html: form.html,

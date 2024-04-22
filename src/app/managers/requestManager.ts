@@ -60,6 +60,12 @@ export class RequestManager {
     );
   }
 
+  getp(endpoint: string) {
+    return this.http.get<any>(`${this.path}${endpoint}`, {...this.httpOptions, reportProgress: true, observe: 'events' }).pipe(
+      catchError(this.errManager.handleError.bind(this)),
+    );
+  }
+
   /**
    * Perform a POST http request
    * @param endpoint service's end-point
