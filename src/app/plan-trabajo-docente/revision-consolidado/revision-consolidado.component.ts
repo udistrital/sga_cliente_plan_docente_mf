@@ -60,6 +60,7 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    console.log("Hola test pr")
     this.userService.getUserRoles().then(roles => {
       this.isSecDecanatura = roles.find(role => (role == ROLES.SEC_DECANATURA));
         this.isDecano = roles.find(role => (role == ROLES.DECANO));
