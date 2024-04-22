@@ -28,7 +28,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   coodrinador: boolean = false;
 
   periodos: Periodo[] = [];
-  periodo: Periodo = {};
+  periodo: Periodo = new Periodo({});
 
   dataSource: MatTableDataSource<any>;
   displayedColumns_docente: string[] = ["espacio_academico", "periodo", "grupo", "proyecto", "nivel", "aprobacion_docente", "aprobacion_proyecto"];
@@ -210,6 +210,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
         },
         error: err => {
           console.log(err);
+          this.dataSource = new MatTableDataSource();
           this.popUpManager.showErrorToast(this.translate.instant('ptd.error_no_found_preasignaciones'));
         }
       });
@@ -226,11 +227,13 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
           },
           error: err => {
             console.log(err);
+            this.dataSource = new MatTableDataSource();
             this.popUpManager.showErrorToast(this.translate.instant('ptd.error_no_found_preasignaciones'));
           }
         });
       }).catch(err => {
         console.log(err);
+        this.dataSource = new MatTableDataSource();
         this.popUpManager.showErrorToast(this.translate.instant('GLOBAL.error_no_found_tercero_id'));
       });
     }
@@ -238,7 +241,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
 
   cargarPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,activo:true&sortby=Id&order=desc&limit=0').subscribe({
+      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,Activo:true&sortby=Id&order=desc&limit=0').subscribe({
         next: (resp: RespFormat) => {
           if (checkResponse(resp) && checkContent(resp.Data)) {
             resolve(resp.Data as Periodo[]);

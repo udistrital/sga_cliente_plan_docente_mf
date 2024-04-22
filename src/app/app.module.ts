@@ -19,11 +19,14 @@ import { SERVICES_HTTP } from './imports/services';
 import { DIRECTIVES } from './imports/directives';
 import { UserService } from './services/user.service';
 import { CommonModule } from '@angular/common';
-import { ActionButtonComponent } from './general-components/action-button.component';
-import { ActionCheckComponent } from './general-components/action-check.component';
+import { ActionButtonComponent } from './micro-components/action-button.component';
+import { ActionCheckComponent } from './micro-components/action-check.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DialogoPreAsignacionPtdComponent } from './dialog-components/dialogo-preasignacion/dialogo-preasignacion.component';
 import { DialogoAsignarPeriodoComponent } from './dialog-components/dialogo-asignar-periodo/dialogo-asignar-periodo.component';
+import { HorarioCargaLectivaComponent } from './componentes/horario-carga-lectiva/horario-carga-lectiva.component'
+import { AsignarPtdMultipleComponent } from './componentes/asignar-ptd-multiple/asignar-ptd-multiple.component';
+import { DialogoFirmaPtdComponent } from './dialog-components/dialogo-firma-ptd/dialogo-firma-ptd.component';
 
 export function createTranslateLoader(http: HttpClient) {
   return new TranslateHttpLoader(http, environment.apiUrl + 'assets/i18n/', '.json');
@@ -40,12 +43,16 @@ export function createTranslateLoader(http: HttpClient) {
     ConsolidadoComponent,
     // ? directivas
     DIRECTIVES,
-    // ? componentes generales
+    // ? componentes micro
     ActionButtonComponent,
     ActionCheckComponent,
     // ? componentes de dialogo
     DialogoPreAsignacionPtdComponent,
     DialogoAsignarPeriodoComponent,
+    DialogoFirmaPtdComponent,
+    // ? componentes transversales
+    HorarioCargaLectivaComponent,
+    AsignarPtdMultipleComponent,
   ],
   imports: [
     BrowserModule,

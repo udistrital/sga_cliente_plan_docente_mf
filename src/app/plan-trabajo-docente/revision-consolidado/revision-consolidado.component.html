@@ -1,11 +1,134 @@
-<mat-card>
-    <mat-card-header>
-        <p>revision-consolidado works!</p>
-    </mat-card-header>
-    <mat-card-content>
-        content
-    </mat-card-content>
-    <mat-card-footer>
-        footer
-    </mat-card-footer>
+<mat-card [ngSwitch]="vista">
+    <!-- Vista de tabla lista consolidados -->
+    <ng-container *ngSwitchCase="VIEWS.LIST">
+        <mat-card-header>
+            <div class="ancho-100 texto-izquierda">
+                <mat-card-title>
+                    {{ 'ptd.gest_consolidados' | translate }}
+                </mat-card-title>
+            </div>
+        </mat-card-header>
+        <mat-card-content>
+            <mat-card class="card-fieldset">
+                <div class="fieldset-legend">{{ 'ptd.list_consolidados' | translate }}</div>
+                
+                <div class="ancho-50">
+                    <mat-form-field style="width: 20%;">
+                        <mat-label>{{ 'GLOBAL.periodo' | translate }}:</mat-label>
+                        <mat-select [(ngModel)]="periodos.select" (selectionChange)="listarConsolidados()">
+                            <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
+                            <mat-option *ngFor="let item of periodos.opciones" [value]="item">
+                                {{item.Nombre}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    &nbsp;
+                    <mat-form-field style="width: 50%;">
+                        <mat-label>{{ 'GLOBAL.proyecto_academico' | translate }}:</mat-label>
+                        <mat-select [(ngModel)]="proyectos.select" (selectionChange)="listarConsolidados()">
+                            <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
+                            <mat-option *ngFor="let item of proyectos?.opciones" [value]="item">
+                                {{item.Nombre}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    &nbsp;<button mat-stroked-button *ngIf="this.periodos.select && this.proyectos.select" (click)="listarConsolidados()"> {{ 'GLOBAL.actualizar' | translate }} </button>
+                </div>
+
+                <div>
+                    <mat-form-field>
+                        <mat-label>{{ 'GLOBAL.filtrar' | translate }}</mat-label>
+                        <input matInput (keyup)="applyFilter($event)" #input>
+                    </mat-form-field>
+                    <mat-table mat-table [dataSource]="dataSource" matSort>
+                        <ng-container matColumnDef="proyecto_curricular">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.proyecto_academico' | translate }}</b> </mat-header-cell>
+                            <mat-cell *matCellDef="let row"> {{row.proyecto_curricular}} </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="codigo">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.codigo' | translate }}</b> </mat-header-cell>
+                            <mat-cell *matCellDef="let row"> {{row.codigo}} </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="fecha_radicado">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'fecha_radicado' | translate }}</b> </mat-header-cell>
+                            <mat-cell *matCellDef="let row"> {{row.fecha_radicado}} </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="periodo_academico">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'calendario.periodo' | translate }}</b> </mat-header-cell>
+                            <mat-cell *matCellDef="let row"> {{row.periodo_academico}} </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="gestion">
+                            <mat-header-cell *matHeaderCellDef> <b>{{ 'ptd.gest' | translate }}</b> </mat-header-cell>
+                            <mat-cell *matCellDef="let row">
+                                <action-button [rowData]="row" [value]="row.gestion" (valueChanged)="accionGestion($event)"></action-button>
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="estado">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.estado' | translate }}</b> </mat-header-cell>
+                            <mat-cell *matCellDef="let row"> {{row.estado}} </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="enviar">
+                            <mat-header-cell *matHeaderCellDef> <b>{{ 'GLOBAL.enviar' | translate }}</b> </mat-header-cell>
+                            <mat-cell *matCellDef="let row">
+                                <action-button [rowData]="row" [value]="row.enviar" (valueChanged)="accionEnviar($event)"></action-button>
+                            </mat-cell>
+                        </ng-container>
+                        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+                    </mat-table>
+                    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of users"></mat-paginator>
+                </div>
+
+            </mat-card>
+        </mat-card-content>
+        <mat-card-footer>
+            <br>
+        </mat-card-footer>
+    </ng-container>
+    <!-- Vista de formulario consolidados -->
+    <ng-container *ngSwitchCase="VIEWS.FORM">
+        <mat-card-header>
+            <div class="ancho-100 texto-izquierda">
+                <mat-card-title>
+                    {{ 'ptd.revision_consolidado' | translate }}
+                </mat-card-title>
+            </div>
+        </mat-card-header>
+        <mat-card-content>
+            <!-- formulario nuevo/editar consolidado -->
+            <mat-card class="card-fieldset">
+                <div class="fieldset-legend">{{ 'ptd.formato_control_cumplimiento_norma' | translate }}</div>
+                <!-- <form [formGroup]="formRevConsolidado" (ngSubmit)="validarFormRevConsolidado()">
+                    <div class="grid">
+                        <mat-form-field style="width: 100%;">
+                            <mat-label>{{ 'GLOBAL.adjuntar_documento' | translate }}</mat-label>
+                            <input matInput type="text" formControlName="ArchivoSoporte" placeholder="GLOBAL.adjuntar_documento">
+                        </mat-form-field>
+                        &nbsp;
+                        <mat-form-field style="width: 40%;">
+                            <mat-label>{{ 'ptd.quien_envia' | translate }}</mat-label>
+                            <input matInput type="text" formControlName="QuienEnvia" placeholder="ptd.placeholder_quien_envia">
+                        </mat-form-field>
+                        &nbsp;
+                        <mat-form-field>
+                            <mat-label>{{ 'GLOBAL.rol' | translate }}</mat-label>
+                            <input matInput type="text" formControlName="Rol" placeholder="GLOBAL.rol" readonly>
+                        </mat-form-field>
+                    </div>
+                    <div class="ancho-100 posicion-centro">
+                        <button mat-raised-button color="primary" type="submit" [disabled]="formRevConsolidado.invalid">
+                            {{ 'GLOBAL.guardar' | translate }}
+                        </button>
+                    </div>
+                </form> -->
+            </mat-card>
+        </mat-card-content>
+        <mat-card-actions>
+            <div class="ancho-100 posicion-centro">
+                <button mat-stroked-button color="primary" (click)="regresar()">{{ 'GLOBAL.regresar' | translate }}</button>
+            </div>
+        </mat-card-actions>
+        <mat-card-footer>
+        </mat-card-footer>
+    </ng-container>
 </mat-card>

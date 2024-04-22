@@ -13,17 +13,17 @@ export class SgaEspaciosAcademicosMidService {
     }
 
     post(endpoint: string, element: any) {
-    this.requestManager.setPath('SGA_ESPACIOS_ACADEMICOS_MID_SERVICE');
-    return this.requestManager.post(endpoint, element);
+        this.requestManager.setPath('SGA_ESPACIOS_ACADEMICOS_MID_SERVICE');
+        return this.requestManager.post(endpoint, element);
     }
 
     put(endpoint: string, element: any) {
-    this.requestManager.setPath('SGA_ESPACIOS_ACADEMICOS_MID_SERVICE');
-    return this.requestManager.put(endpoint, element);
+        this.requestManager.setPath('SGA_ESPACIOS_ACADEMICOS_MID_SERVICE');
+        return this.requestManager.put(endpoint, element);
     }
 
     delete(endpoint: string, element: any) {
-    this.requestManager.setPath('SGA_ESPACIOS_ACADEMICOS_MID_SERVICE');
-    return this.requestManager.delete(endpoint, element.Id);
+        this.requestManager.setPath('SGA_ESPACIOS_ACADEMICOS_MID_SERVICE');
+        return this.requestManager.delete(endpoint, element.Id);
     }
 }
