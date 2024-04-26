@@ -15,6 +15,8 @@ import { RespFormat } from 'src/app/models/response-format';
 import { checkContent, checkResponse } from 'src/app/utils/verify-response';
 import { EstadoConsolidado } from 'src/app/models/plan-trabajo-docente/estado-consolidado';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';
 
 @Component({
   selector: 'app-consolidado',
@@ -60,6 +62,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     private proyectoAcademicoService: ProyectoAcademicoService,
     private builder: FormBuilder,
     private sgaPlanTrabajoDocenteMidService: PlanTrabajoDocenteService,
+    private matDialog: MatDialog,
   ) {
     this.vista = VIEWS.LIST;
     this.dataSource = new MatTableDataSource();
@@ -367,19 +370,11 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     }
   }
   previewFile(url: string) {
-    const h = screen.height * 0.65;
-    const w = h * 3/4;
-    const left = (screen.width * 3/4) - (w / 2);
-    const top = (screen.height / 2) - (h / 2);
-    window.open(url, '', 'toolbar=no,' +
-      'location=no, directories=no, status=no, menubar=no,' +
-      'scrollbars=no, resizable=no, copyhistory=no, ' +
-      'width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
-      /* const dialogDoc = new MatDialogConfig();
-      dialogDoc.width = '80vw';
-      dialogDoc.height = '90vh';
-      dialogDoc.data = {url};
-      this.matDialog.open(DialogPreviewFileComponent, dialogDoc); */
+    const dialogDoc = new MatDialogConfig();
+    dialogDoc.width = '65vw';
+    dialogDoc.height = '80vh';
+    dialogDoc.data = { url: url, title: this.translate.instant('GLOBAL.soporte_documental') };
+    this.matDialog.open(DialogPreviewFileComponent, dialogDoc);
   }
 
   verRevDecano(consolidado: any) {

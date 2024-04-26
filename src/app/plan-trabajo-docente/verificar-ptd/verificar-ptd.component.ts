@@ -20,6 +20,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TercerosService } from 'src/app/services/terceros.service';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { DialogoFirmaPtdComponent } from 'src/app/dialog-components/dialogo-firma-ptd/dialogo-firma-ptd.component';
+import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';
 
 @Component({
   selector: 'app-verificar-ptd',
@@ -64,7 +65,7 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
     private gestorDocumental: GestorDocumentalService,
     private builder: FormBuilder,
     private tercerosService: TercerosService,
-    private dialog: MatDialog,
+    private matDialog: MatDialog,
   ) {
     this.vista = VIEWS.LIST;
     this.periodos = {select: undefined, opciones: []};
@@ -296,7 +297,7 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
                 vinculacionId: this.dataDocente.tipo_vinculacion_id,
                 periodoId: this.periodos.select.Id,
               };
-              const dialogFirma = this.dialog.open(DialogoFirmaPtdComponent, dialogParams);
+              const dialogFirma = this.matDialog.open(DialogoFirmaPtdComponent, dialogParams);
               const outDialog = await dialogFirma.afterClosed().toPromise();
               if (outDialog.document) {
                 putPlan.soporte_documental = outDialog.document;
@@ -388,14 +389,11 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
   }
 
   previewFile(url: string) {
-    const h = screen.height * 0.65;
-    const w = h * 3/4;
-    const left = (screen.width * 3/4) - (w / 2);
-    const top = (screen.height / 2) - (h / 2);
-    window.open(url, '', 'toolbar=no,' +
-      'location=no, directories=no, status=no, menubar=no,' +
-      'scrollbars=no, resizable=no, copyhistory=no, ' +
-      'width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+    const dialogDoc = new MatDialogConfig();
+    dialogDoc.width = '65vw';
+    dialogDoc.height = '80vh';
+    dialogDoc.data = { url: url, title: this.translate.instant('GLOBAL.soporte_documental') };
+    this.matDialog.open(DialogPreviewFileComponent, dialogDoc);
   }
 
   regresar() {

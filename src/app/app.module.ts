@@ -10,7 +10,7 @@ import { RevisionConsolidadoComponent } from './plan-trabajo-docente/revision-co
 import { ConsolidadoComponent } from './plan-trabajo-docente/consolidado/consolidado.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MATERIAL_MODULES } from './imports/material';
-import { HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
 import { SpinnerUtilInterceptor, SpinnerUtilModule } from 'spinner-util';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { environment } from 'src/environments/environment';
@@ -27,7 +27,7 @@ import { DialogoAsignarPeriodoComponent } from './dialog-components/dialogo-asig
 import { HorarioCargaLectivaComponent } from './componentes/horario-carga-lectiva/horario-carga-lectiva.component'
 import { AsignarPtdMultipleComponent } from './componentes/asignar-ptd-multiple/asignar-ptd-multiple.component';
 import { DialogoFirmaPtdComponent } from './dialog-components/dialogo-firma-ptd/dialogo-firma-ptd.component';
-
+import { DialogPreviewFileComponent } from './dialog-components/dialog-preview-file/dialog-preview-file.component'
 export function createTranslateLoader(http: HttpClient) {
   return new TranslateHttpLoader(http, environment.apiUrl + 'assets/i18n/', '.json');
 }
@@ -50,6 +50,7 @@ export function createTranslateLoader(http: HttpClient) {
     DialogoPreAsignacionPtdComponent,
     DialogoAsignarPeriodoComponent,
     DialogoFirmaPtdComponent,
+    DialogPreviewFileComponent,
     // ? componentes transversales
     HorarioCargaLectivaComponent,
     AsignarPtdMultipleComponent,
@@ -60,6 +61,7 @@ export function createTranslateLoader(http: HttpClient) {
     CommonModule,
     BrowserAnimationsModule,
     MATERIAL_MODULES,
+    HttpClientModule,
     SpinnerUtilModule,
     TranslateModule.forRoot({
       loader: {

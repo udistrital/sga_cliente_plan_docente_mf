@@ -1,0 +1,24 @@
+<mat-card class="fullsize">
+    <mat-card-header>
+        <div class="ancho-100 texto-centro">
+            <mat-card-title>
+                {{title}}
+            </mat-card-title>
+        </div>
+    </mat-card-header>
+    <mat-card-content class="fullsize">
+        <object class="fullsize" [data]="ulrfileSafe" type="application/pdf" *ngIf="validsafe">{{ 'ERROR.error_previsualizar_doc' | translate }}</object>
+        <div class="nofile fullsize" *ngIf="!validsafe">
+            {{ 'ERROR.error_previsualizar_doc' | translate }}
+        </div>
+    </mat-card-content>
+    <mat-card-actions>
+        <div class="ancho-100 posicion-centro-separado">
+            <button mat-stroked-button color="primary" mat-dialog-close >{{ 'GLOBAL.cerrar_visualizador' | translate }}</button>
+            <button mat-raised-button color="primary" (click)="descargar()" ><mat-icon>download</mat-icon>&nbsp;{{ 'GLOBAL.descargar_archivo' | translate }}</button>
+        </div>
+    </mat-card-actions>
+    <mat-card-footer>
+        <br>
+    </mat-card-footer>
+</mat-card>

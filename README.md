@@ -6,25 +6,20 @@ Cliente para la gestión de plan trabajo docente, parte del Sistema de Gestión 
 
 ### Tecnologías Implementadas y Versiones
 
-- [Angular](https://angular.io/docs) 16.2.0
-  - Incluye Animations, Common, Compiler, Core, Forms, Platform-Browser, Platform-Browser-Dynamic, Router
-### Revisarr
-<!-- - [Angular Material](https://material.angular.io/) 16.2.14
+- [Angular](https://angular.io/docs) 17.3.6
+  - Incluye Animations, Common, Compiler, Core, Forms, Platform-Browser, Platform-Browser-Dynamic, Router, cdk (^16.2.14)
+- [Angular Material](https://material.angular.io/) 16.2.14
 - [ngx-translate](https://github.com/ngx-translate/core) 15.0.0
   - Incluye ngx-translate Http Loader
-- [Moment.js](https://momentjs.com/docs/) 2.30.1
-- [ngx-fx-layout](https://www.npmjs.com/package/ngx-fx-layout) 2.0.4
 - [RxJS](https://rxjs.dev/guide/overview) ~7.8.0
 - [Single-spa](https://single-spa.js.org/) >=4.0.0
   - Incluye single-spa-angular
-- [SweetAlert2](https://sweetalert2.github.io/) 11.10.6
+- [SweetAlert2](https://sweetalert2.github.io/) 11.10.7
+  - Incluye SeetAlert/themes
 - [tslib](https://github.com/Microsoft/tslib) 2.3.0
-- [Zone.js](https://github.com/angular/angular/tree/master/packages/zone.js) ~0.13.0
- -->
-
-
-
-
+- [Zone.js](https://github.com/angular/angular/tree/master/packages/zone.js) ~0.14.4
+- [lodash](https://lodash.com/) ^4.17.21
+- [spinner-util](https://github.com/udistrital/utils_frontend) ^0.0.2
 
 ### Variables de Entorno
 
