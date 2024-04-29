@@ -128,7 +128,7 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
 
   loadPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,Activo:true&sortby=Id&order=desc&limit=0').subscribe({
+      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA&sortby=Id&order=desc&limit=0').subscribe({
         next: (resp: RespFormat) => {
           if (checkResponse(resp) && checkContent(resp.Data)) {
             resolve(resp.Data as Periodo[]);
@@ -235,31 +235,34 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
           Rol: this.isCoordinator,
         })
 
-        this.planTrabajoDocenteService.get('plan_docente/'+plan.id).subscribe(async resPlan => {
+        this.planTrabajoDocenteService.get('plan_docente/'+plan.id).subscribe(resPlan => {
           this.planDocenteEstadoGet = resPlan.Data;
-          let terceroId = 0;
           if (resPlan.Data.respuesta && resPlan.Data.respuesta != "") {
             const jsonResp = JSON.parse(resPlan.Data.respuesta);
-            terceroId = jsonResp.responsable_id;
-            const estadoPlan = this.estadosPlan.opciones.find(estado => estado._id === resPlan.Data.estado_plan_id);
-            this.editVerif = (estadoPlan?.codigo_abreviacion == "APR") || false;
-            this.formVerificar.patchValue({
-              DeAcuerdo: jsonResp.concertado,
-              Observaciones: jsonResp.observacion,
-              EstadoAprobado: estadoPlan,
-            })
-            
+            const terceroId = jsonResp.responsable_id;
+            if (terceroId) {
+              const estadoPlan = this.estadosPlan.opciones.find(estado => estado._id === resPlan.Data.estado_plan_id);
+              this.editVerif = (estadoPlan?.codigo_abreviacion == "APR") || false;
+              this.formVerificar.patchValue({
+                DeAcuerdo: jsonResp.concertado,
+                Observaciones: jsonResp.observacion,
+                EstadoAprobado: estadoPlan,
+              })
+              this.getInfoResponsable(terceroId);
+            } else {
+              this.userService.getPersonaId().then((terceroId) => {
+                this.getInfoResponsable(terceroId);
+              }).catch(() => {
+                this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+              });
+            }
           } else {
-            terceroId = await this.userService.getPersonaId().catch(() => terceroId = 0);
+            this.userService.getPersonaId().then((terceroId) => {
+              this.getInfoResponsable(terceroId);
+            }).catch(() => {
+              this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+            });
           }
-          this.tercerosService.get('tercero/'+terceroId).subscribe(resTerc => {
-            this.formVerificar.patchValue({
-              QuienResponde: resTerc.NombreCompleto,
-            })
-          }, err => {
-            console.warn(err);
-            this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
-          });
         }, err => {
           console.warn(err);
           this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
@@ -271,6 +274,20 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
         this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
       }
     );
+  }
+
+  getInfoResponsable(terceroId: number) {
+    this.tercerosService.get('tercero/' + terceroId).subscribe({
+      next: (resTerc) => {
+        this.formVerificar.patchValue({
+          QuienResponde: resTerc.NombreCompleto,
+        })
+      },
+      error: (err) => {
+        console.warn(err);
+        this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+      }
+    });
   }
 
   validarFormVerificar() {
@@ -289,8 +306,10 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
             
             if (estAprov.codigo_abreviacion === "APR") {
               const dialogParams = new MatDialogConfig();
-              dialogParams.width = '640px';
-              dialogParams.height = '440px';
+              dialogParams.width = '40vw';
+              dialogParams.minWidth = '540px';
+              dialogParams.height = '40vh';
+              dialogParams.maxHeight = '390px';
               dialogParams.data = {
                 docenteId: putPlan.docente_id,
                 responsableId: respuestaJson.responsable_id,

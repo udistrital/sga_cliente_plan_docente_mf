@@ -1143,7 +1143,8 @@
         "tooltip_crear": "Create period",
         "tooltip_cancelar": "Cancel",
         "tooltip_guargar": "Save",
-        "select_periodo": "Select period"
+        "select_periodo": "Select period",
+        "asignar_periodo": "Assign period"
     },
     "oferta": {
         "seguro_actualizar_periodo": "Are you sure you update this Academic Offer?",

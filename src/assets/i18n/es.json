@@ -1144,7 +1144,8 @@
         "tooltip_crear": "Crear periodo",
         "tooltip_cancelar": "Cancelar",
         "tooltip_guargar": "Guardar",
-        "select_periodo": "Seleccionar periodo"
+        "select_periodo": "Seleccionar periodo",
+        "asignar_periodo": "Asignar periodo"
     },
     "oferta": {
         "seguro_actualizar_periodo": "¿Está seguro de actualizar este oferta académica?",

@@ -253,7 +253,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   
   cargarPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,Activo:true&sortby=Id&order=desc&limit=0').subscribe({
+      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA&sortby=Id&order=desc&limit=0').subscribe({
         next: (resp: RespFormat) => {
           if (checkResponse(resp) && checkContent(resp.Data)) {
             resolve(resp.Data as Periodo[]);
