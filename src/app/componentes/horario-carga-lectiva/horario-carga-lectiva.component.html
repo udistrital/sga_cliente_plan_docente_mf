@@ -12,6 +12,7 @@
         </mat-select>
     </mat-form-field>
     <br>
+    <div class="unaLinea">
     <mat-form-field style="width: 40%;" *ngIf="isCoordinador">
         <mat-label>{{ 'ptd.select_asignatura' | translate }}:</mat-label>
         <mat-select [(ngModel)]="asignaturaSelected">
@@ -35,6 +36,7 @@
         (click)="formularioEspacioFisico()"> {{
         'GLOBAL.agregar' | translate }}
     </button>
+    </div>
 </mat-card>
 
 <!-- Diligencia la información para la carga: espacio físico, horas... -->
@@ -138,6 +140,7 @@
     <div *ngIf="!edit" class="fieldset-legend">{{ 'ptd.plan_trabajo' | translate }}</div>
     <div *ngIf="isCoordinador && edit" class="fieldset-legend">{{ 'ptd.insert_carga_lectiva' | translate }}</div>
     <div *ngIf="isDocente && edit" class="fieldset-legend">{{ 'ptd.insert_actividad' | translate }}</div>
+    <div style="overflow-x: auto;">
     <div class="row" style="display: flex; align-items: center; margin: auto;"
         [style.padding-left.px]="snapGridSize.x*1.5" [style.padding-right.px]="snapGridSize.x*1.5">
         <table style="margin: auto;">
@@ -241,6 +244,7 @@
             </tbody>
         </table>
     </div>
+    </div>
 </mat-card>
 
 <!-- Resumen del horario -->
@@ -274,18 +278,18 @@
         </table>
     </div>
     <br>
-    <div class="row" style="display: flex; align-items: center;">
-        <fieldset [ngClass]="{'fieldseter':true}" style="width: 80%; margin: auto;">
-            <legend><small>&nbsp; {{ 'GLOBAL.observaciones' | translate }}</small></legend>
+    <div class="ancho-100 posicion-centro">
+        <mat-card class="card-fieldset ancho-80">
+            <div class="fieldset-legend">{{ 'GLOBAL.observaciones' | translate }}</div>
             <mat-form-field style="width: 100%;">
                 <mat-label>{{ 'GLOBAL.observaciones' | translate }}:</mat-label>
                 <textarea [(ngModel)]="observacion" matInput [disabled]="!edit"></textarea>
             </mat-form-field>
-        </fieldset>
+        </mat-card>
     </div>
-    <div class="row" style="display: flex; align-items: center; margin-top: 1rem;" *ngIf="Data.aprobacion">
-        <fieldset [ngClass]="{'fieldseter':true}" style="width: 80%; margin: auto;">
-            <legend><small>&nbsp; {{ 'ptd.aprobacion_plan_coordinacion' | translate }}</small></legend>
+    <div class="ancho-100 posicion-centro" *ngIf="Data.aprobacion">
+        <mat-card class="card-fieldset ancho-80">
+            <div class="fieldset-legend">{{ 'ptd.aprobacion_plan_coordinacion' | translate }}</div>
             <mat-form-field style="width: 100%;">
                 <mat-label>* {{ 'ptd.aprobacion_plan_coordinacion' | translate }}:</mat-label>
                 <mat-select [(ngModel)]="aprobacion">
@@ -295,13 +299,11 @@
                     </mat-option>
                 </mat-select>
             </mat-form-field>
-        </fieldset>
+        </mat-card>
     </div>
     <br>
-    <div class="row" style="display: flex; justify-content: center; align-items: center;" *ngIf="edit">
-        <button mat-raised-button color="primary" style="margin-left: 1.5rem;" (click)="guardar_ptd()" [disabled]="(Data.aprobacion && !aprobacion)"> {{
-            'ptd.guardar_ptd' | translate }} </button>
-        <!-- <button mat-raised-button color="primary" style="margin-left: 1.5rem;" (click)="cancelar()"> {{
-            'GLOBAL.cancelar' | translate }} </button> -->
+    <div class="ancho-100 posicion-centro" style="padding-top: 1rem;">
+        <button mat-raised-button color="primary" style="margin-left: 1.5rem;" (click)="guardar_ptd()" [disabled]="(Data.aprobacion && !aprobacion)">
+        {{ 'ptd.guardar_ptd' | translate }} </button>
     </div>
 </mat-card>

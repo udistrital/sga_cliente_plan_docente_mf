@@ -1,8 +1,3 @@
-fieldset {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-
 /* Valor de ancho de la cuadrícula */
 $snap-grid-width: 150px;
 /* Valor de alto de la cuadrícula */
@@ -11,6 +6,10 @@ $snap-grid-height: 75px;
 #ubicacion {
   scroll-margin-block: 130px;
   scroll-behavior: smooth;
+}
+
+table {
+  border-spacing: 0px;
 }
 
 /* estilo cuadricula tabla horario - headers */
@@ -191,6 +190,7 @@ td {
   align-items: center;
   overflow: hidden;
   line-height: 1;
+  padding: 3px;
 }
 
 /* estilo tooltip para opciones */

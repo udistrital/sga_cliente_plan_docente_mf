@@ -179,6 +179,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   enviarPreasignacion() {
+    console.log(this.preasignacionForm);
     if (this.preasignacionForm.valid) {
       let request = {
         "docente_id": String(this.docente.Id),
@@ -275,7 +276,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
 
   cargarPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,Activo:true&sortby=Id&order=desc&limit=0').subscribe({
+      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA&sortby=Id&order=desc&limit=0').subscribe({
         next: (resp: RespFormat) => {
           if (checkResponse(resp) && checkContent(resp.Data)) {
             resolve(resp.Data as Periodo[]);
@@ -397,8 +398,9 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
             },
             error: (err) => {
               console.log(err);
-              this.popUpManager.showErrorToast(this.translate.instant('ptd.error_no_found_proyectos'));
-              reject(this.opcionesGrupos);
+              this.showAcademicSpaceGroup2AssingPeriod(this.espacio_academico._id);
+              //this.popUpManager.showErrorToast(this.translate.instant('ptd.error_no_found_proyectos'));
+              //reject(this.opcionesGrupos);
             }
           });
 
@@ -505,12 +507,10 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
 
   showAcademicSpaceGroup2AssingPeriod(academicSpaceId: string) {
     const dialogAssignPeriodConfig = new MatDialogConfig();
-    dialogAssignPeriodConfig.width = '550px';
-    dialogAssignPeriodConfig.height = '300px';
-    /* dialogAssignPeriodConfig.width = '65vw';
-    dialogAssignPeriodConfig.minWidth = '700px';
-    dialogAssignPeriodConfig.height = '65vh';
-    dialogAssignPeriodConfig.maxHeight = '615px'; */
+    dialogAssignPeriodConfig.width = '55vw';
+    dialogAssignPeriodConfig.minWidth = '550px';
+    dialogAssignPeriodConfig.height = '30vh';
+    dialogAssignPeriodConfig.maxHeight = '300px';
     dialogAssignPeriodConfig.data = {
       espacio_academico_sin_periodo: academicSpaceId,
       periodo_id: this.periodo.Id

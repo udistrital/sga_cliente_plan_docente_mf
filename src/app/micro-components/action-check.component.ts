@@ -37,6 +37,7 @@ export class ActionCheckComponent implements OnInit {
     }
 
     this.miniForm.get("value")?.valueChanges.subscribe(x => {
+      this.value.value = x;
       this.checkboxVal.emit({ value: x, Data: this.rowData })
     });
   }

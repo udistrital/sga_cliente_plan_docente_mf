@@ -119,7 +119,7 @@
 }
 
 mat-card .card-fieldset {
-    font-family: 'Open Sans';
+    font-family: "Raleway", "Open Sans", sans-serif;
     border: 2px solid var(--primary);
     padding: 1rem;
     margin-top: 1rem;
@@ -131,4 +131,9 @@ mat-card .card-fieldset {
         left: 1rem;
         background: inherit;
     }
+}
+
+.unaLinea {
+    display: flex;
+    align-items: flex-start;
 }

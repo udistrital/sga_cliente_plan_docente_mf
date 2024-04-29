@@ -20,6 +20,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TercerosService } from 'src/app/services/terceros.service';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { DialogoFirmaPtdComponent } from 'src/app/dialog-components/dialogo-firma-ptd/dialogo-firma-ptd.component';
+import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';
 
 @Component({
   selector: 'app-verificar-ptd',
@@ -64,7 +65,7 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
     private gestorDocumental: GestorDocumentalService,
     private builder: FormBuilder,
     private tercerosService: TercerosService,
-    private dialog: MatDialog,
+    private matDialog: MatDialog,
   ) {
     this.vista = VIEWS.LIST;
     this.periodos = {select: undefined, opciones: []};
@@ -127,7 +128,7 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
 
   loadPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,Activo:true&sortby=Id&order=desc&limit=0').subscribe({
+      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA&sortby=Id&order=desc&limit=0').subscribe({
         next: (resp: RespFormat) => {
           if (checkResponse(resp) && checkContent(resp.Data)) {
             resolve(resp.Data as Periodo[]);
@@ -234,31 +235,34 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
           Rol: this.isCoordinator,
         })
 
-        this.planTrabajoDocenteService.get('plan_docente/'+plan.id).subscribe(async resPlan => {
+        this.planTrabajoDocenteService.get('plan_docente/'+plan.id).subscribe(resPlan => {
           this.planDocenteEstadoGet = resPlan.Data;
-          let terceroId = 0;
           if (resPlan.Data.respuesta && resPlan.Data.respuesta != "") {
             const jsonResp = JSON.parse(resPlan.Data.respuesta);
-            terceroId = jsonResp.responsable_id;
-            const estadoPlan = this.estadosPlan.opciones.find(estado => estado._id === resPlan.Data.estado_plan_id);
-            this.editVerif = (estadoPlan?.codigo_abreviacion == "APR") || false;
-            this.formVerificar.patchValue({
-              DeAcuerdo: jsonResp.concertado,
-              Observaciones: jsonResp.observacion,
-              EstadoAprobado: estadoPlan,
-            })
-            
+            const terceroId = jsonResp.responsable_id;
+            if (terceroId) {
+              const estadoPlan = this.estadosPlan.opciones.find(estado => estado._id === resPlan.Data.estado_plan_id);
+              this.editVerif = (estadoPlan?.codigo_abreviacion == "APR") || false;
+              this.formVerificar.patchValue({
+                DeAcuerdo: jsonResp.concertado,
+                Observaciones: jsonResp.observacion,
+                EstadoAprobado: estadoPlan,
+              })
+              this.getInfoResponsable(terceroId);
+            } else {
+              this.userService.getPersonaId().then((terceroId) => {
+                this.getInfoResponsable(terceroId);
+              }).catch(() => {
+                this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+              });
+            }
           } else {
-            terceroId = await this.userService.getPersonaId().catch(() => terceroId = 0);
+            this.userService.getPersonaId().then((terceroId) => {
+              this.getInfoResponsable(terceroId);
+            }).catch(() => {
+              this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+            });
           }
-          this.tercerosService.get('tercero/'+terceroId).subscribe(resTerc => {
-            this.formVerificar.patchValue({
-              QuienResponde: resTerc.NombreCompleto,
-            })
-          }, err => {
-            console.warn(err);
-            this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
-          });
         }, err => {
           console.warn(err);
           this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
@@ -270,6 +274,20 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
         this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
       }
     );
+  }
+
+  getInfoResponsable(terceroId: number) {
+    this.tercerosService.get('tercero/' + terceroId).subscribe({
+      next: (resTerc) => {
+        this.formVerificar.patchValue({
+          QuienResponde: resTerc.NombreCompleto,
+        })
+      },
+      error: (err) => {
+        console.warn(err);
+        this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+      }
+    });
   }
 
   validarFormVerificar() {
@@ -288,15 +306,17 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
             
             if (estAprov.codigo_abreviacion === "APR") {
               const dialogParams = new MatDialogConfig();
-              dialogParams.width = '640px';
-              dialogParams.height = '440px';
+              dialogParams.width = '40vw';
+              dialogParams.minWidth = '540px';
+              dialogParams.height = '40vh';
+              dialogParams.maxHeight = '390px';
               dialogParams.data = {
                 docenteId: putPlan.docente_id,
                 responsableId: respuestaJson.responsable_id,
                 vinculacionId: this.dataDocente.tipo_vinculacion_id,
                 periodoId: this.periodos.select.Id,
               };
-              const dialogFirma = this.dialog.open(DialogoFirmaPtdComponent, dialogParams);
+              const dialogFirma = this.matDialog.open(DialogoFirmaPtdComponent, dialogParams);
               const outDialog = await dialogFirma.afterClosed().toPromise();
               if (outDialog.document) {
                 putPlan.soporte_documental = outDialog.document;
@@ -388,14 +408,11 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
   }
 
   previewFile(url: string) {
-    const h = screen.height * 0.65;
-    const w = h * 3/4;
-    const left = (screen.width * 3/4) - (w / 2);
-    const top = (screen.height / 2) - (h / 2);
-    window.open(url, '', 'toolbar=no,' +
-      'location=no, directories=no, status=no, menubar=no,' +
-      'scrollbars=no, resizable=no, copyhistory=no, ' +
-      'width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+    const dialogDoc = new MatDialogConfig();
+    dialogDoc.width = '65vw';
+    dialogDoc.height = '80vh';
+    dialogDoc.data = { url: url, title: this.translate.instant('GLOBAL.soporte_documental') };
+    this.matDialog.open(DialogPreviewFileComponent, dialogDoc);
   }
 
   regresar() {

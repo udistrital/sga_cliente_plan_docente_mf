@@ -15,6 +15,11 @@ import { RespFormat } from 'src/app/models/response-format';
 import { checkContent, checkResponse } from 'src/app/utils/verify-response';
 import { EstadoConsolidado } from 'src/app/models/plan-trabajo-docente/estado-consolidado';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';
+import { TercerosService } from 'src/app/services/terceros.service';
+import { SgaPlanTrabajoDocenteMidService } from 'src/app/services/sga-plan-trabajo-docente-mid.service';
+import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 
 @Component({
   selector: 'app-consolidado',
@@ -41,13 +46,13 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   estadosConsolidado: {select: any, opciones: any[]};
 
   formNewEditConsolidado: FormGroup;
-  //dataNewEditConsolidado: any;
   newEditConsolidado: boolean;
   consolidadoSololectura: boolean;
 
   formRespuestaConsolidado: FormGroup;
-  //dataRespuestaConsolidado: any;
   respuestaConsolidado: boolean;
+
+  consolidadoInfo: any = undefined;
 
   listaPlanesConsolidado: any = undefined;
 
@@ -58,8 +63,11 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     private planTrabajoDocenteService: PlanTrabajoDocenteService,
     private parametrosService: ParametrosService,
     private proyectoAcademicoService: ProyectoAcademicoService,
+    private tercerosService: TercerosService,
+    private sgaPlanTrabajoDocenteMidService: SgaPlanTrabajoDocenteMidService,
+    private gestorDocumentalService: GestorDocumentalService,
     private builder: FormBuilder,
-    private sgaPlanTrabajoDocenteMidService: PlanTrabajoDocenteService,
+    private matDialog: MatDialog,
   ) {
     this.vista = VIEWS.LIST;
     this.dataSource = new MatTableDataSource();
@@ -133,7 +141,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
 
   loadPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,Activo:true&sortby=Id&order=desc&limit=0').subscribe({
+      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA&sortby=Id&order=desc&limit=0').subscribe({
         next: (resp: RespFormat) => {
           if (checkResponse(resp) && checkContent(resp.Data)) {
             resolve(resp.Data as Periodo[]);
@@ -243,43 +251,69 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     return new Date(fechaHora).toLocaleString('es-CO', { timeZone: 'America/Bogota' });
   }
 
+  valuechanged(event: any) {
+    console.log(event);
+  }
+
   nuevoEditarConsolidado(consolidado: any) {
     this.vista = VIEWS.FORM;
-    /* this.newEditConsolidado = true;
-    this.formNewEditConsolidado.campos[this.getIndexFormNewEditConsolidado("Rol")].valor = this.isCoordinator;
+    this.newEditConsolidado = true;
+    this.formNewEditConsolidado.patchValue({
+      Rol: this.isCoordinator
+    })
     this.listaPlanesConsolidado = "";
-    let terceroId = 0;
     if (consolidado) {
       this.consolidadoInfo = consolidado;
       const consolidado_coordinacion = JSON.parse(this.consolidadoInfo.consolidado_coordinacion);
-      terceroId = consolidado_coordinacion.responsable_id;
-      this.GestorDocumental.get([{Id: consolidado_coordinacion.documento_id, ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}]).subscribe(
-        (resp: any[])  => {
-          this.formNewEditConsolidado.campos[this.getIndexFormNewEditConsolidado("ArchivoSoporte")].urlTemp = resp[0].url;
-          this.formNewEditConsolidado.campos[this.getIndexFormNewEditConsolidado("ArchivoSoporte")].valor = resp[0].url;
-        }
-      );
+      const terceroId = consolidado_coordinacion.responsable_id;
+      if (terceroId) {
+        /* this.GestorDocumental.get([{Id: consolidado_coordinacion.documento_id, ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}]).subscribe(
+          (resp: any[])  => {
+            this.formNewEditConsolidado.campos[this.getIndexFormNewEditConsolidado("ArchivoSoporte")].urlTemp = resp[0].url;
+            this.formNewEditConsolidado.campos[this.getIndexFormNewEditConsolidado("ArchivoSoporte")].valor = resp[0].url;
+          }
+        ); */
+        this.getInfoResponsable(terceroId);
+      } else {
+        this.userService.getPersonaId().then((terceroId) => {
+          this.getInfoResponsable(terceroId);
+        }).catch(() => {
+          this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+        });
+      }
     } else {
       this.consolidadoInfo = undefined;
-      terceroId = this.userService.getPersonaId();
+      this.userService.getPersonaId().then((terceroId) => {
+        this.getInfoResponsable(terceroId);
+      }).catch(() => {
+        this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+      });
     }
-    this.tercerosService.get('tercero/'+terceroId).subscribe(resTerc => {
-      this.formNewEditConsolidado.campos[this.getIndexFormNewEditConsolidado("QuienEnvia")].valor = resTerc.NombreCompleto;
-    }, err => {
-      console.warn(err);
-      this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
-    }); */
+  }
+
+  getInfoResponsable(terceroId: number) {
+    this.tercerosService.get('tercero/' + terceroId).subscribe({
+      next: (resTerc) => {
+        this.formNewEditConsolidado.patchValue({
+          QuienEnvia: resTerc.NombreCompleto,
+        })
+      },
+      error: (err) => {
+        console.warn(err);
+        this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+      }
+    });
   }
 
   async validarFormNewEdit() {
-    /* if (this.periodos.select && this.proyectos.select) {
-      if (event.valid) {
+    const archivo = this.formNewEditConsolidado.get('ArchivoSoporte')?.value
+    if (this.periodos.select && this.proyectos.select) {
+      if (this.formNewEditConsolidado.valid) {
         if (this.consolidadoInfo == undefined) {
           if (this.listaPlanesConsolidado == "") {
             this.popUpManager.showPopUpGeneric(this.translate.instant('ptd.diligenciar_consolidado'), this.translate.instant('ptd.please_descargue_consolidado'), MODALS.INFO, false)
           } else {
-            this.loading = true;
-            this.GestorDocumental.uploadFiles([event.data.Consolidado.ArchivoSoporte]).subscribe(
+            this.gestorDocumentalService.uploadFiles([/* event.data.Consolidado.ArchivoSoporte */]).subscribe(
               (resp: any[]) => {
                 const consolidado = {
                   "documento_id": resp[0].res.Id,
@@ -298,10 +332,8 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
                 }
                 
                 this.planTrabajoDocenteService.post('consolidado_docente', prepareData).subscribe((resp) => {
-                  this.loading = false;
                   this.popUpManager.showSuccessAlert(this.translate.instant('ptd.crear_consolidado_ok'));
                 }, (err) => {
-                  this.loading = false;
                   console.warn(err);
                   this.popUpManager.showErrorAlert(this.translate.instant('ptd.fallo_crear_consolidado'));
                 });
@@ -310,8 +342,8 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
           }
         } else {
           const verifyNewDoc = new Promise(resolve => {
-            if (event.data.Consolidado.ArchivoSoporte.file != undefined) {
-              this.GestorDocumental.uploadFiles([event.data.Consolidado.ArchivoSoporte]).subscribe(
+            if (archivo.file != undefined) {
+              this.gestorDocumentalService.uploadFiles([/* event.data.Consolidado.ArchivoSoporte */]).subscribe(
                 (resp: any[]) => {
                   resolve(resp[0].res.Id)
                 });
@@ -330,12 +362,9 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
           this.consolidadoInfo.proyecto_academico_id = `${this.proyectos.select.Id}`;
           this.consolidadoInfo.estado_consolidado_id = `${this.estadosConsolidado.opciones.find(estado => estado.codigo_abreviacion == "DEF")._id}`;
           this.consolidadoInfo.consolidado_coordinacion = JSON.stringify(consolidado);
-          this.loading = true;
           this.planTrabajoDocenteService.put('consolidado_docente/'+this.consolidadoInfo._id, this.consolidadoInfo).subscribe((resp) => {
-            this.loading = false;
             this.popUpManager.showSuccessAlert(this.translate.instant('ptd.actualizar_consolidado_ok'));
           }, (err) => {
-            this.loading = false;
             console.warn(err);
             this.popUpManager.showErrorAlert(this.translate.instant('ptd.fallo_actualizar_consolidado'));
           });
@@ -343,11 +372,11 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
       }
     } else {
       this.popUpManager.showPopUpGeneric(this.translate.instant('ptd.diligenciar_consolidado'), this.translate.instant('ptd.select_periodo_proyecto'), MODALS.INFO, false)
-    } */
+    }
   }
   obtenerDocConsolidado() {
     if (this.periodos.select) {
-      this.sgaPlanTrabajoDocenteMidService.post(`reporte/verificacion-cumplimiento-ptd?vigencia=${this.periodos.select.Id}&proyecto=${this.proyectos.select ? this.proyectos.select.Id : 0}`,{}).subscribe((resp) =>  {
+      this.sgaPlanTrabajoDocenteMidService.get(`reporte/verificacion-cumplimiento-ptd?vigencia=${this.periodos.select.Id}&proyecto=${this.proyectos.select ? this.proyectos.select.Id : 0}`).subscribe((resp) =>  {
         this.listaPlanesConsolidado = resp.Data.listaIdPlanes;
         const rawFilePDF = new Uint8Array(atob(resp.Data.pdf).split('').map(char => char.charCodeAt(0)));
         const urlFilePDF = window.URL.createObjectURL(new Blob([rawFilePDF], { type: 'application/pdf' }));
@@ -367,19 +396,11 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     }
   }
   previewFile(url: string) {
-    const h = screen.height * 0.65;
-    const w = h * 3/4;
-    const left = (screen.width * 3/4) - (w / 2);
-    const top = (screen.height / 2) - (h / 2);
-    window.open(url, '', 'toolbar=no,' +
-      'location=no, directories=no, status=no, menubar=no,' +
-      'scrollbars=no, resizable=no, copyhistory=no, ' +
-      'width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
-      /* const dialogDoc = new MatDialogConfig();
-      dialogDoc.width = '80vw';
-      dialogDoc.height = '90vh';
-      dialogDoc.data = {url};
-      this.matDialog.open(DialogPreviewFileComponent, dialogDoc); */
+    const dialogDoc = new MatDialogConfig();
+    dialogDoc.width = '65vw';
+    dialogDoc.height = '80vh';
+    dialogDoc.data = { url: url, title: this.translate.instant('GLOBAL.soporte_documental') };
+    this.matDialog.open(DialogPreviewFileComponent, dialogDoc);
   }
 
   verRevDecano(consolidado: any) {

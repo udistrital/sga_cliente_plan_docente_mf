@@ -17,6 +17,8 @@ import { MatSort } from '@angular/material/sort';
 import { MatSelectChange } from '@angular/material/select';
 import { EstadoPlan } from 'src/app/models/plan-trabajo-docente/estado-plan'
 import { cloneDeep as _cloneDeep } from 'lodash';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';
 
 @Component({
   selector: 'app-asignar-ptd',
@@ -64,6 +66,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     private parametrosService: ParametrosService,
     private planTrabajoDocenteService: PlanTrabajoDocenteService,
     private gestorDocumental: GestorDocumentalService,
+    private matDialog: MatDialog,
   ) {
     this.vista = VIEWS.LIST;
     this.dataSource = new MatTableDataSource();
@@ -250,7 +253,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   
   cargarPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,Activo:true&sortby=Id&order=desc&limit=0').subscribe({
+      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA&sortby=Id&order=desc&limit=0').subscribe({
         next: (resp: RespFormat) => {
           if (checkResponse(resp) && checkContent(resp.Data)) {
             resolve(resp.Data as Periodo[]);
@@ -340,14 +343,11 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   }
 
   previewFile(url: string) {
-    const h = screen.height * 0.65;
-    const w = h * 3/4;
-    const left = (screen.width * 3/4) - (w / 2);
-    const top = (screen.height / 2) - (h / 2);
-    window.open(url, '', 'toolbar=no,' +
-      'location=no, directories=no, status=no, menubar=no,' +
-      'scrollbars=no, resizable=no, copyhistory=no, ' +
-      'width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+    const dialogDoc = new MatDialogConfig();
+    dialogDoc.width = '65vw';
+    dialogDoc.height = '80vh';
+    dialogDoc.data = { url: url, title: this.translate.instant('GLOBAL.soporte_documental') };
+    this.matDialog.open(DialogPreviewFileComponent, dialogDoc);
   }
 
   regresar() {

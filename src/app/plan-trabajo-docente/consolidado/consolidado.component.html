@@ -50,7 +50,7 @@
                             <mat-cell *matCellDef="let row"> {{row.codigo}} </mat-cell>
                         </ng-container>
                         <ng-container matColumnDef="fecha_radicado">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'fecha_radicado' | translate }}</b> </mat-header-cell>
+                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'ptd.fecha_radicado' | translate }}</b> </mat-header-cell>
                             <mat-cell *matCellDef="let row"> {{row.fecha_radicado}} </mat-cell>
                         </ng-container>
                         <ng-container matColumnDef="periodo_academico">
@@ -134,26 +134,27 @@
                             </mat-select>
                         </mat-form-field>
                         &nbsp;<button mat-stroked-button *ngIf="this.periodos.select && this.proyectos.select" (click)="obtenerDocConsolidado()"> {{ 'ptd.generar_consolidado' | translate }} </button>
-                        &nbsp;<div class="info-alert" class="texto-centro"> {{ 'ptd.generador_consolidado_info' | translate }} </div>
+                        &nbsp;<div class="info-alert texto-centro" > {{ 'ptd.generador_consolidado_info' | translate }} </div>
                     </div>
                 </mat-card>
                 <mat-card class="card-fieldset">
                     <div class="fieldset-legend">{{ 'ptd.formato_control_cumplimiento_norma' | translate }}</div>
                     <form [formGroup]="formNewEditConsolidado" (ngSubmit)="validarFormNewEdit()">
                         <div class="grid">
-                            <mat-form-field style="width: 100%;">
-                                <mat-label>{{ 'GLOBAL.adjuntar_documento' | translate }}</mat-label>
-                                <input matInput type="text" formControlName="ArchivoSoporte" placeholder="GLOBAL.adjuntar_documento">
+                            <mat-form-field style="width: 100%; cursor: pointer;">
+                                <mat-label floatLabel="always">{{ 'GLOBAL.adjuntar_documento' | translate }}</mat-label>
+                                <input matInput type="file" accept=".xlsx" formControlName="ArchivoSoporte" [hidden]="!formNewEditConsolidado.get('ArchivoSoporte')?.value">
+                                <mat-icon matPrefix>attach_file</mat-icon>
                             </mat-form-field>
                             &nbsp;
                             <mat-form-field style="width: 40%;">
                                 <mat-label>{{ 'ptd.quien_envia' | translate }}</mat-label>
-                                <input matInput type="text" formControlName="QuienEnvia" placeholder="ptd.placeholder_quien_envia">
+                                <input matInput type="text" formControlName="QuienEnvia" placeholder="{{ 'ptd.placeholder_quien_envia' | translate }}">
                             </mat-form-field>
                             &nbsp;
                             <mat-form-field>
                                 <mat-label>{{ 'GLOBAL.rol' | translate }}</mat-label>
-                                <input matInput type="text" formControlName="Rol" placeholder="GLOBAL.rol" readonly>
+                                <input matInput type="text" formControlName="Rol" placeholder="{{ 'GLOBAL.rol' | translate }}" readonly>
                             </mat-form-field>
                         </div>
                         <div class="ancho-100 posicion-centro">

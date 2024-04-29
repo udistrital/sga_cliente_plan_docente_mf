@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { PopUpManager } from 'src/app/managers/popUpManager';
 import { ACTIONS, MODALS, ROLES, VIEWS } from 'src/app/models/diccionario';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
@@ -7,6 +7,8 @@ import { SgaPlanTrabajoDocenteMidService } from 'src/app/services/sga-plan-traba
 import { UserService } from 'src/app/services/user.service';
 import { intersection as _intersection, head as _head, cloneDeep as _cloneDeep } from 'lodash';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';
 
 @Component({
   selector: 'asignar-ptd-multiple',
@@ -53,15 +55,13 @@ export class AsignarPtdMultipleComponent implements OnInit {
     private userService: UserService,
     private gestorDocumentalService: GestorDocumentalService,
     private builder: FormBuilder,
+    private matDialog: MatDialog,
   ) {
     this.vista = VIEWS.LIST;
     this.formDocente = this.builder.group({});
   }
 
   ngOnInit() {
-    /* this.translate.onLangChange.subscribe((event: LangChangeEvent) => {
-      this.buildFormDocente();
-    }) */
     this.userService.getUserRoles().then(roles => {
       let r = _head(_intersection(roles, this.rolesDocente.concat(this.rolesCoord)));
       const intersection = _intersection(roles, this.rolesCoord);
@@ -215,14 +215,11 @@ export class AsignarPtdMultipleComponent implements OnInit {
   }
 
   previewFile(url: string) {
-    const h = screen.height * 0.65;
-    const w = h * 3 / 4;
-    const left = (screen.width * 3 / 4) - (w / 2);
-    const top = (screen.height / 2) - (h / 2);
-    window.open(url, '', 'toolbar=no,' +
-      'location=no, directories=no, status=no, menubar=no,' +
-      'scrollbars=no, resizable=no, copyhistory=no, ' +
-      'width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+    const dialogDoc = new MatDialogConfig();
+    dialogDoc.width = '65vw';
+    dialogDoc.height = '80vh';
+    dialogDoc.data = { url: url, title: this.translate.instant('GLOBAL.soporte_documental') };
+    this.matDialog.open(DialogPreviewFileComponent, dialogDoc);
   }
 
   doReload(event: any) {
