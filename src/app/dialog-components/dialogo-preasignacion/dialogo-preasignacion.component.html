@@ -43,7 +43,7 @@
                     </div>
                     <div class="espacio">
                         <mat-form-field style="width: 90%;">
-                            <input matInput type="text" formControlName="doc_docente" pattern="[0-9]"
+                            <input matInput type="text" formControlName="doc_docente" pattern="[0-9]*"
                                 placeholder="*{{ 'ptd.documento_docente' | translate }}: " />
                             <mat-error
                                 *ngIf="preasignacionForm.get('doc_docente')?.hasError('required') && preasignacionForm.get('doc_docente')?.touched">

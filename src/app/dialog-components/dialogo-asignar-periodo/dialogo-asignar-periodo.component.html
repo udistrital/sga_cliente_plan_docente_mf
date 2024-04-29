@@ -8,6 +8,7 @@
                     <div class="espacio">
                         <p class="texto-justificado-1_0"><b>{{ 'ptd.mensaje_espacio_sin_periodo' | translate }}</b></p>
                     </div>
+                    <br>
                     <div class="espacio">
                         <mat-form-field style="width: 24%;">
                             <input matInput type="text" formControlName="nivel" readonly placeholder="*{{ 'GLOBAL.nivel' | translate }}:" />
@@ -22,7 +23,7 @@
                                 *ngIf="assignPeriodForm.get('subnivel')?.hasError('required') && assignPeriodForm.get('subnivel')?.touched">
                                 {{ 'ptd.error_nivel' | translate }}
                             </mat-error>
-                        </mat-form-field>?
+                        </mat-form-field>
                         <mat-form-field style="width: 48%;">
                             <input matInput type="text" formControlName="proyecto" readonly placeholder="*{{ 'ptd.proyecto_curricular' | translate }}:" />
                             <mat-error
@@ -56,7 +57,7 @@
                 </div>
             </div>
             <div class="ancho-100 posicion-centro-separado">
-                <button mat-raised-button (click)="sendAssingPeriodGroups()" color="primary" >{{ 'perido.asignar_periodo' | translate }}</button>
+                <button mat-raised-button (click)="sendAssingPeriodGroups()" color="primary" >{{ 'periodo.asignar_periodo' | translate }}</button>
             </div>
         </form>
     </mat-card-content>

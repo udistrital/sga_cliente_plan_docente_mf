@@ -166,11 +166,16 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     this.popUpManager.showPopUpGeneric(this.translate.instant('GLOBAL.enviar_aprobacion'), this.translate.instant('ptd.pregunta_enviar_a_coordinacion'), MODALS.QUESTION, false).then(
       action => {
         if (action.value) {
-          let req = {
-            "preasignaciones": [{}],
-            "no-preasignaciones": [{}],
-            "docente": true,
-          }
+          let req: {
+            preasignaciones: { Id: any; }[];
+            "no-preasignaciones": { Id: any; }[];
+            docente: boolean;
+          } = {
+            preasignaciones: [],
+            "no-preasignaciones": [],
+            docente: true,
+          };
+          console.log(this.dataSource.data);
           this.dataSource.data.forEach((preasignacion) => {
             if (preasignacion.aprobacion_docente.value) {
               req.preasignaciones.push({ "Id": preasignacion.id });
@@ -241,7 +246,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
 
   cargarPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA,Activo:true&sortby=Id&order=desc&limit=0').subscribe({
+      this.parametrosService.get('periodo?query=CodigoAbreviacion:PA&sortby=Id&order=desc&limit=0').subscribe({
         next: (resp: RespFormat) => {
           if (checkResponse(resp) && checkContent(resp.Data)) {
             resolve(resp.Data as Periodo[]);

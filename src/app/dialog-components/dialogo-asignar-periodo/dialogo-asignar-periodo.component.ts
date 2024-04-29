@@ -106,7 +106,7 @@ export class DialogoAsignarPeriodoComponent implements OnInit {
       assignPeriodData.periodo_id = this.data.periodo_id;
       assignPeriodData.padre = this.data.espacio_academico_sin_periodo;
 
-      this.sgaEspaciosAcademicosMidService.put('espacios_academicos/espacio_academico_hijos/asignar_periodo', 
+      this.sgaEspaciosAcademicosMidService.put('espacios-academicos/hijos/asignar-periodo', 
       assignPeriodData).subscribe({
         next: (response: any) => {
           this.popUpManager.showSuccessAlert(this.translate.instant('ptd.assign_period_2_group_success'));
