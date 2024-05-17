@@ -20,11 +20,11 @@ const routes: Routes = [
     component: PreasignacionComponent,
   },
   {
-    path: 'asignar-ptd',
+    path: 'asignar',
     component: AsignarPtdComponent,
   },
   {
-    path: 'verificar-ptd',
+    path: 'verificar',
     component: VerificarPtdComponent,
   },
   {
@@ -32,7 +32,7 @@ const routes: Routes = [
     component: ConsolidadoComponent,
   },
   {
-    path: 'revision-consolidado',
+    path: 'consolidado/revision',
     component: RevisionConsolidadoComponent,
   },
   {
@@ -46,7 +46,7 @@ const routes: Routes = [
   exports: [RouterModule],
   providers: [
     provideRouter(routes),
-    { provide: APP_BASE_HREF, useValue: '/ptd/' },
+    { provide: APP_BASE_HREF, useValue: '/plan-trabajo-docente/' },
     getSingleSpaExtraProviders(),
     provideHttpClient(withFetch())
   ]
