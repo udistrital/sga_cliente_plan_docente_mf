@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
 import { uniq as _uniq } from "lodash";
+import { decrypt } from "../utils/util-encrypt";
 
 @Injectable()
 export class UserService {
@@ -7,7 +8,8 @@ export class UserService {
 
     public getPersonaId(): Promise<number> {
         return new Promise((resolve, reject) => {
-            const strId = localStorage.getItem('persona_id');
+            const strcryptedId = localStorage.getItem('persona_id');
+            const strId = decrypt(strcryptedId);
             if (strId) {
                 resolve(parseInt(strId, 10));
             } else {
