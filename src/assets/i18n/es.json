@@ -1284,7 +1284,8 @@
         "ptd_docente_relacionado": "PTD Docente relacionado",
         "ptd_timed": "PTD por Tiempos",
         "tiempo_inferior_periodo": "Carga con tiempo inferior al periodo",
-        "seccion_tiempo": "Sección de tiempo"
+        "seccion_tiempo": "Sección de tiempo",
+        "perido_inactivo": "Periodo inactivo"
     },
     "espacios_academicos": {
         "espacios_academicos":"Espacios Académicos",

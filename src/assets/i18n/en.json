@@ -1283,7 +1283,8 @@
         "ptd_general": "General PTD",
         "ptd_timed": "PTD by Times",
         "tiempo_inferior_periodo": "Loading with time less than the period",
-        "seccion_tiempo": "Time section"
+        "seccion_tiempo": "Time section",
+        "perido_inactivo": "Inactive period"
     },
     "espacios_academicos": {
         "espacios_academicos":"Academic Spaces",
