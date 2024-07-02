@@ -125,6 +125,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     });
 
     this.preasignacionForm.get("periodo")?.valueChanges.subscribe(value => {
+      console.log("value", value)
       if (this.preasignacionForm.get("tipo_vinculacion")?.value != null) {
         this.preasignacionForm.get("docente")?.enable();
         this.preasignacionForm.get("doc_docente")?.enable();
@@ -132,8 +133,8 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     });
 
     this.cargarPeriodo().then((periodos) => {
-      this.periodos = periodos;
-      this.periodo = periodos.find(p => p.Activo) ?? new Periodo({});
+      this.periodos = periodos.filter( periodo => periodo.Activo === true);
+      // this.periodo = periodos.find(p => p.Activo) ?? new Periodo({});
       this.cargarEspaciosAcademicos().then((espaciosAcademicos) => {
         this.opcionesEspaciosAcademicos = espaciosAcademicos;
         if (this.modificando) {
@@ -185,7 +186,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         "docente_id": String(this.docente.Id),
         "tipo_vinculacion_id": String(this.preasignacionForm.get("tipo_vinculacion")?.value),
         "espacio_academico_id": this.grupo.Id,
-        "periodo_id": String(this.periodo.Id),
+        "periodo_id": String(this.preasignacionForm.get("periodo")?.value.Id),
         "aprobacion_docente": false,
         "aprobacion_proyecto": false,
         "activo": true
