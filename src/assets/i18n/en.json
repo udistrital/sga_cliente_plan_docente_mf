@@ -638,7 +638,8 @@
         "formacion_actual": "Current formation",
         "experiencia_actual": "Current work",
         "paso": "Step",
-        "ayuda": "Help"
+        "ayuda": "Help",
+        "sin_datos": "No data"
     },
     "ERROR": {
         "general": "The request could not be satisfied",
@@ -1284,7 +1285,9 @@
         "ptd_timed": "PTD by Times",
         "tiempo_inferior_periodo": "Loading with time less than the period",
         "seccion_tiempo": "Time section",
-        "perido_inactivo": "Inactive period"
+        "perido_inactivo": "Inactive period",
+        "sin_planes_docente": "No work plans found.",
+        "sin_preasignaciones_de_carga_academica_por_periodo": "No academic load pre-assignments found for the selected period."
     },
     "espacios_academicos": {
         "espacios_academicos":"Academic Spaces",

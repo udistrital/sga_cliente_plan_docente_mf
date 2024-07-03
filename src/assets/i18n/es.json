@@ -639,7 +639,9 @@
         "experiencia_actual": "Trabajo actual",
         "paso": "Paso",
         "ayuda": "Ayuda",
-        "descargar_archivo": "Descargar archivo"
+        "descargar_archivo": "Descargar archivo",
+        "sin_datos": "Sin datos",
+        "sin_planes_docente": "No se encontraron planes de trabajo"
     },
     "ERROR": {
         "general": "La solicitud no pudo ser cumplida",
@@ -1285,7 +1287,8 @@
         "ptd_timed": "PTD por Tiempos",
         "tiempo_inferior_periodo": "Carga con tiempo inferior al periodo",
         "seccion_tiempo": "Sección de tiempo",
-        "perido_inactivo": "Periodo inactivo"
+        "perido_inactivo": "Periodo inactivo",
+        "sin_preasignaciones_de_carga_academica_por_periodo": "No se encontraron preasignaciones de carga académica para el periodo seleccionado"
     },
     "espacios_academicos": {
         "espacios_academicos":"Espacios Académicos",
