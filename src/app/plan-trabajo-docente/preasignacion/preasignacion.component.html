@@ -6,27 +6,56 @@
   </mat-card-header>
   <!-- Vista de tabla lista docentes -->
   <mat-card-content *ngIsGranted="rolesDocente">
-    <h2>{{ "ptd.preasignacion" | translate }}</h2>
+    <h3 class="margin-y">{{ "ptd.preasignacion" | translate }}</h3>
 
-    <mat-form-field style="width: 40%">
+    <mat-form-field class="form-field">
       <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
       <mat-select (selectionChange)="selectPeriodo($event)">
         <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
         <mat-option *ngFor="let item of periodos" [value]="item">
-          {{ item.Nombre }}
+          <div style="display: flex; flex-wrap: wrap; align-items: center">
+            <div
+              class="badge"
+              [ngStyle]="{
+                backgroundColor: item.Activo
+                  ? 'var(--success-accent)'
+                  : 'var(--danger-base)'
+              }"
+            ></div>
+            <b>{{ item.Nombre }}</b>
+            <small style="margin-left: 5px; font-size: 0.8em; color: gray">
+              (Inicio vigencia: {{ item.InicioVigencia | date : "yyyy-MM-dd" }})
+            </small>
+          </div>
         </mat-option>
       </mat-select>
     </mat-form-field>
-    &nbsp;<button
-      mat-stroked-button
-      *ngIf="periodo.Id"
-      (click)="loadPreasignaciones()"
-    >
-      {{ "GLOBAL.actualizar" | translate }}
-    </button>
 
-    <div>
-      <mat-form-field>
+    <mat-toolbar style="display: flex; gap: 0.5em; flex-wrap: wrap">
+      <button
+        mat-flat-button
+        extended
+        color="warn"
+        *ngIf="periodo.Id"
+        (click)="loadPreasignaciones()"
+        [matTooltip]="'GLOBAL.actualizar' | translate"
+      >
+        <mat-icon>autorenew</mat-icon>
+        {{ "GLOBAL.actualizar" | translate }}
+      </button>
+      <button
+        *ngIsGranted="rolesDocente"
+        mat-flat-button
+        color="accent"
+        (click)="enviarAprobacion()"
+      >
+        <mat-icon>send</mat-icon>
+        {{ "GLOBAL.enviar_aprobacion" | translate }}
+      </button>
+    </mat-toolbar>
+
+    <div class="margin-y" *ngIf="dataSource.data.length > 0">
+      <mat-form-field class="form-field">
         <mat-label>{{ "GLOBAL.filtrar" | translate }}</mat-label>
         <input matInput (keyup)="applyFilter($event)" #input />
       </mat-form-field>
@@ -269,17 +298,5 @@
       {{ "ptd.sin_preasignaciones_de_carga_academica_por_periodo" | translate }}
     </div>
   </mat-card-content>
-  <mat-card-actions>
-    <div class="ancho-100 posicion-centro">
-      <button
-        *ngIsGranted="rolesDocente"
-        mat-raised-button
-        color="primary"
-        (click)="enviarAprobacion()"
-      >
-        {{ "GLOBAL.enviar_aprobacion" | translate }}
-      </button>
-    </div>
-  </mat-card-actions>
   <mat-card-footer> </mat-card-footer>
 </mat-card>
