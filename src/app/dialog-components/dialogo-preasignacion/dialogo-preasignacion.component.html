@@ -142,9 +142,9 @@
                     </div>
                 </div>
 
-                <div class="ancho-100 posicion-centro-separado">
-                    <button mat-flat-button (click)="enviarPreasignacion()" color="accent" >{{ 'GLOBAL.aceptar' | translate }}</button>
-                    <button mat-flat-button (click)="cancelar()" color="warn">{{ 'GLOBAL.cancelar' | translate }}</button>
+                <div style="display: flex; gap: 0.5em; flex-wrap: wrap;">
+                    <button mat-flat-button (click)="enviarPreasignacion()" color="accent" >{{ 'GLOBAL.crear' | translate }}</button>
+                    <button mat-flat-button (click)="cancelar()">{{ 'GLOBAL.cancelar' | translate }}</button>
                 </div>
 
         </form>
