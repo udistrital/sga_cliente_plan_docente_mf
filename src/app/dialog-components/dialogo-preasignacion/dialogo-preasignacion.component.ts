@@ -454,6 +454,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
               this.preasignacionForm.get("grupo")?.enable();
               this.preasignacionForm.get("proyecto")?.enable();
               this.preasignacionForm.get("nivel")?.enable();
+              this.loadProyectos();
             } else {
               this.preasignacionForm.get("espacio_academico")?.setValue(null);
               this.preasignacionForm.get("grupo")?.disable();
