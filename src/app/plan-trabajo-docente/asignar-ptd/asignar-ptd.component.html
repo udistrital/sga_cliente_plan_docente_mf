@@ -1,133 +1,237 @@
 <mat-card [ngSwitch]="vista">
-    <!-- Vista de tabla lista docentes -->
-    <ng-container *ngSwitchCase="VIEWS.LIST">
-        <mat-card-header>
-            <div class="ancho-100 texto-centro">
-                <mat-card-title>
-                    {{ 'ptd.asignacion_ptd' | translate }}
-                </mat-card-title>
+  <!-- Vista de tabla lista docentes -->
+  <ng-container *ngSwitchCase="VIEWS.LIST">
+    <mat-card-header>
+      <mat-card-title>
+        <h2>{{ "ptd.asignacion_ptd" | translate }}</h2>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <h3>{{ "ptd.list_docente" | translate }}</h3>
+      <mat-form-field class="form-field">
+        <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
+        <mat-select (selectionChange)="selectPeriodo($event)">
+          <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
+          <mat-option *ngFor="let item of periodos" [value]="item">
+            <div style="display: flex; flex-wrap: wrap; align-items: center">
+              <div
+                class="badge"
+                [ngStyle]="{
+                  backgroundColor: item.Activo
+                    ? 'var(--success-accent)'
+                    : 'var(--danger-base)'
+                }"
+              ></div>
+              <b>{{ item.Nombre }}</b>
+              <small style="margin-left: 5px; font-size: 0.8em; color: gray">
+                (Inicio vigencia: {{ item.InicioVigencia | date : "yyyy-MM-dd" }})
+              </small>
             </div>
-        </mat-card-header>
-        <mat-card-content>
-            <mat-card class="card-fieldset">
-                <div class="fieldset-legend">{{ 'ptd.list_docente' | translate }}</div>
-                
-                <div class="ancho-50">
-                    <mat-form-field style="width: 40%;">
-                        <mat-label>{{ 'GLOBAL.periodo' | translate }}:</mat-label>
-                        <mat-select (selectionChange)="selectPeriodo($event)">
-                            <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
-                            <mat-option *ngFor="let item of periodos" [value]="item">
-                                {{item.Nombre}}
-                            </mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                    &nbsp;<button mat-stroked-button *ngIf="periodo.Id" (click)="loadAsignaciones()"> {{ 'GLOBAL.actualizar' | translate }} </button>
-                </div>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
 
-                <div>
-                    <mat-form-field>
-                        <mat-label>{{ 'GLOBAL.filtrar' | translate }}</mat-label>
-                        <input matInput (keyup)="applyFilter($event)" #input>
-                    </mat-form-field>
-                    <mat-table mat-table [dataSource]="dataSource" matSort>
-                        <ng-container matColumnDef="docente">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.nombre' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.docente}} </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="identificacion">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.Documento' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.identificacion}} </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="tipo_vinculacion">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.tipo_vinculacion' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.tipo_vinculacion}} </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="periodo_academico">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'calendario.periodo' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.periodo_academico}} </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="soporte_documental">
-                            <mat-header-cell *matHeaderCellDef > <b>{{ 'GLOBAL.soporte_documental' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row">
-                                <action-button [rowData]="row" [value]="row.soporte_documental" (valueChanged)="accionSoporte($event)"></action-button>
-                            </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="gestion">
-                            <mat-header-cell *matHeaderCellDef> <b>{{ 'ptd.gest' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row">
-                                <action-button [rowData]="row" [value]="row.gestion" (valueChanged)="accionGestion($event)"></action-button>
-                            </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="estado">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.estado' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.estado}} </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="enviar">
-                            <mat-header-cell *matHeaderCellDef> <b>{{ coordinador ? ('ptd.enviar_a_docente' | translate) : ('ptd.enviar_a_coordinacion' | translate) }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row">
-                                <action-button [rowData]="row" [value]="row.enviar" (valueChanged)="accionEnviar($event)"></action-button>
-                            </mat-cell>
-                        </ng-container>
-                        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-                        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-                    </mat-table>
-                    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of users"></mat-paginator>
-                </div>
+      <!-- BARRA DE HERRAMIENTAS -->
+      <mat-toolbar style="display: flex; gap: 0.5em; flex-wrap: wrap">
+        <button
+          mat-flat-button
+          color="warn"
+          *ngIf="periodo.Id"
+          (click)="loadAsignaciones()"
+          [matTooltip]="'GLOBAL.actualizar' | translate"
+        >
+          <mat-icon>autorenew</mat-icon>
+          {{ "GLOBAL.actualizar" | translate }}
+        </button>
+      </mat-toolbar>
 
-            </mat-card>
-        </mat-card-content>
-        <mat-card-footer>
-            <br>
-        </mat-card-footer>
-    </ng-container>
-    <!-- Vista de gestión ptd -->
-    <ng-container *ngSwitchCase="VIEWS.FORM">
-        <mat-card-header>
-            <div class="ancho-100 texto-centro">
-                <mat-card-title>
-                    {{ 'ptd.gest_ptd' | translate }}
-                </mat-card-title>
-            </div>
-        </mat-card-header>
-        <mat-card-content>
-            <!-- PDT Simple no modular -->
-            <ng-container *ngIf="detallesAsignaciones.length <= 0">
-                <asignar-ptd-multiple [dataDocente]="dataDocente" [detalleAsignacion]="detalleAsignacion" [periodosAnteriores]="periodosAnteriores"></asignar-ptd-multiple>
-            </ng-container>
-            <!-- PDT con asignación modular -->
-            <ng-container *ngIf="detallesAsignaciones.length > 0">
-                <mat-tab-group mat-align-tabs="center" [selectedIndex]="1">
-                    <mat-tab label="{{ 'ptd.ptd_general' | translate }}">
-                        <asignar-ptd-multiple [dataDocente]="dataDocente" [detalleAsignacion]="detallesGeneral" [periodosAnteriores]="periodosAnteriores" [soloLectura]="true"></asignar-ptd-multiple>
-                    </mat-tab>
-                    <mat-tab label="{{ 'ptd.ptd_docente_principal' | translate }}">
-                        <asignar-ptd-multiple [dataDocente]="dataDocente" [detalleAsignacion]="detalleAsignacion" [periodosAnteriores]="periodosAnteriores" (OutDetalleChanged)="manageChangesInGeneralPTD($event)"></asignar-ptd-multiple>
-                    </mat-tab>
-                    <ng-container *ngFor="let detalleAsign of detallesAsignaciones; index as i">
-                        <mat-tab label="{{ ( 'ptd.ptd_docente_relacionado' | translate ) + ' ' + (i+1) }}">
-                            <asignar-ptd-multiple [dataDocente]="dataDocentes_ptd[0]" [detalleAsignacion]="detalleAsign" [periodosAnteriores]="periodosAnteriores" (OutDetalleChanged)="manageChangesInGeneralPTD($event)"></asignar-ptd-multiple>
-                        </mat-tab>
-                    </ng-container>
-                    <mat-tab label="{{ 'ptd.ptd_timed' | translate }}">
-                        <mat-tab-group mat-align-tabs="center">
-                            <mat-tab label="{{ 'ptd.seccion_tiempo' | translate }}">
-                                <asignar-ptd-multiple [dataDocente]="dataDocente" [detalleAsignacion]="detallesGeneral" [periodosAnteriores]="periodosAnteriores" [soloLectura]="true"></asignar-ptd-multiple>
-                            </mat-tab>
-                            <mat-tab label="{{ 'ptd.seccion_tiempo' | translate }}">
-                                <asignar-ptd-multiple [dataDocente]="dataDocente" [detalleAsignacion]="detallesGeneral" [periodosAnteriores]="periodosAnteriores" [soloLectura]="true"></asignar-ptd-multiple>
-                            </mat-tab>
-                        </mat-tab-group>
-                    </mat-tab>
-                </mat-tab-group>
-            </ng-container>
-        </mat-card-content>
-        <mat-card-actions>
-            <div class="ancho-100 posicion-centro">
-                <button mat-stroked-button color="primary" (click)="regresar()">{{ 'GLOBAL.regresar' | translate }}</button>
-            </div>
-        </mat-card-actions>
-        <mat-card-footer>
-        </mat-card-footer>
-    </ng-container>
+      <!-- TABLA Y BUSCADOR -->
+      <div class="margin-y" *ngIf="dataSource.data.length > 0">
+        <mat-form-field class="form-field">
+          <mat-label>{{ "GLOBAL.filtrar" | translate }}</mat-label>
+          <input matInput (keyup)="applyFilter($event)" #input />
+        </mat-form-field>
+        <mat-table mat-table [dataSource]="dataSource" matSort>
+          <ng-container matColumnDef="docente">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>
+              <b>{{ "GLOBAL.nombre" | translate }}</b>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{ row.docente }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="identificacion">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>
+              <b>{{ "GLOBAL.Documento" | translate }}</b>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              {{ row.identificacion }}
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="tipo_vinculacion">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>
+              <b>{{ "GLOBAL.tipo_vinculacion" | translate }}</b>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              {{ row.tipo_vinculacion }}
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="periodo_academico">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>
+              <b>{{ "calendario.periodo" | translate }}</b>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              {{ row.periodo_academico }}
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="soporte_documental">
+            <mat-header-cell *matHeaderCellDef>
+              <b>{{ "GLOBAL.soporte_documental" | translate }}</b>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <action-button
+                [rowData]="row"
+                [value]="row.soporte_documental"
+                (valueChanged)="accionSoporte($event)"
+              ></action-button>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="gestion">
+            <mat-header-cell *matHeaderCellDef>
+              <b>{{ "ptd.gest" | translate }}</b>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <action-button
+                [rowData]="row"
+                [value]="row.gestion"
+                (valueChanged)="accionGestion($event)"
+              ></action-button>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>
+              <b>{{ "GLOBAL.estado" | translate }}</b>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{ row.estado }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="enviar">
+            <mat-header-cell *matHeaderCellDef>
+              <b>{{
+                coordinador
+                  ? ("ptd.enviar_a_docente" | translate)
+                  : ("ptd.enviar_a_coordinacion" | translate)
+              }}</b>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <action-button
+                [rowData]="row"
+                [value]="row.enviar"
+                (valueChanged)="accionEnviar($event)"
+              ></action-button>
+            </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+        </mat-table>
+        <mat-paginator
+          [pageSizeOptions]="[5, 10, 25, 100]"
+          aria-label="Select page of users"
+        ></mat-paginator>
+      </div>
+
+      <!-- MENSAJE DE VACIO -->
+      <div *ngIf="dataSource.data.length === 0" class="margin-y alert info">
+        <mat-icon class="icon">sentiment_very_dissatisfied</mat-icon>
+        {{
+          "ptd.sin_preasignaciones_de_carga_academica_por_periodo" | translate
+        }}
+      </div>
+    </mat-card-content>
+    <mat-card-footer>
+      <br />
+    </mat-card-footer>
+  </ng-container>
+  <!-- Vista de gestión ptd -->
+  <ng-container *ngSwitchCase="VIEWS.FORM">
+    <mat-card-header>
+      <div class="anchoads-100 texto-centro">
+        <mat-card-title>
+          {{ "ptd.gest_ptd" | translate }}
+        </mat-card-title>
+      </div>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- PDT Simple no modular -->
+      <ng-container *ngIf="detallesAsignaciones.length <= 0">
+        <asignar-ptd-multiple
+          [dataDocente]="dataDocente"
+          [detalleAsignacion]="detalleAsignacion"
+          [periodosAnteriores]="periodosAnteriores"
+        ></asignar-ptd-multiple>
+      </ng-container>
+      <!-- PDT con asignación modular -->
+      <ng-container *ngIf="detallesAsignaciones.length > 0">
+        <mat-tab-group mat-align-tabs="center" [selectedIndex]="1">
+          <mat-tab label="{{ 'ptd.ptd_general' | translate }}">
+            <asignar-ptd-multiple
+              [dataDocente]="dataDocente"
+              [detalleAsignacion]="detallesGeneral"
+              [periodosAnteriores]="periodosAnteriores"
+              [soloLectura]="true"
+            ></asignar-ptd-multiple>
+          </mat-tab>
+          <mat-tab label="{{ 'ptd.ptd_docente_principal' | translate }}">
+            <asignar-ptd-multiple
+              [dataDocente]="dataDocente"
+              [detalleAsignacion]="detalleAsignacion"
+              [periodosAnteriores]="periodosAnteriores"
+              (OutDetalleChanged)="manageChangesInGeneralPTD($event)"
+            ></asignar-ptd-multiple>
+          </mat-tab>
+          <ng-container
+            *ngFor="let detalleAsign of detallesAsignaciones; index as i"
+          >
+            <mat-tab
+              label="{{
+                ('ptd.ptd_docente_relacionado' | translate) + ' ' + (i + 1)
+              }}"
+            >
+              <asignar-ptd-multiple
+                [dataDocente]="dataDocentes_ptd[0]"
+                [detalleAsignacion]="detalleAsign"
+                [periodosAnteriores]="periodosAnteriores"
+                (OutDetalleChanged)="manageChangesInGeneralPTD($event)"
+              ></asignar-ptd-multiple>
+            </mat-tab>
+          </ng-container>
+          <mat-tab label="{{ 'ptd.ptd_timed' | translate }}">
+            <mat-tab-group mat-align-tabs="center">
+              <mat-tab label="{{ 'ptd.seccion_tiempo' | translate }}">
+                <asignar-ptd-multiple
+                  [dataDocente]="dataDocente"
+                  [detalleAsignacion]="detallesGeneral"
+                  [periodosAnteriores]="periodosAnteriores"
+                  [soloLectura]="true"
+                ></asignar-ptd-multiple>
+              </mat-tab>
+              <mat-tab label="{{ 'ptd.seccion_tiempo' | translate }}">
+                <asignar-ptd-multiple
+                  [dataDocente]="dataDocente"
+                  [detalleAsignacion]="detallesGeneral"
+                  [periodosAnteriores]="periodosAnteriores"
+                  [soloLectura]="true"
+                ></asignar-ptd-multiple>
+              </mat-tab>
+            </mat-tab-group>
+          </mat-tab>
+        </mat-tab-group>
+      </ng-container>
+    </mat-card-content>
+    <mat-card-actions>
+      <div class="ancho-100 posicion-centro">
+        <button mat-stroked-button color="primary" (click)="regresar()">
+          {{ "GLOBAL.regresar" | translate }}
+        </button>
+      </div>
+    </mat-card-actions>
+    <mat-card-footer> </mat-card-footer>
+  </ng-container>
 </mat-card>
