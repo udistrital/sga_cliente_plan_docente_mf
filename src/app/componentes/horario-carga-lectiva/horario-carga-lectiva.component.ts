@@ -538,8 +538,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           id: element.idCarga,
           plan_docente_id: this.Data.plan_docente[this.seleccion],
           sede_id: element.sede.Id,
-          edificio_id: element.edificio.Id ? element.edificio.Id : "-",
-          salon_id: element.salon.Id ? element.salon.Id : "-",
+          edificio_id: element.edificio.Id ? element.edificio.Id : "",
+          salon_id: element.salon.Id ? element.salon.Id : "",
           horario: JSON.stringify({
             horas: element.horas,
             horaFormato: element.horaFormato,
