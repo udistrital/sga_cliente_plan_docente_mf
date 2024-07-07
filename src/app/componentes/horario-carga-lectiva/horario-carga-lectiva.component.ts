@@ -526,7 +526,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       } else {
         nombre = this.actividades.find(
           (actividad) => actividad._id == carga.actividad_id
-        ).nombre;
+        )?.nombre;
       }
 
       const newElement: CardDetalleCarga = {
