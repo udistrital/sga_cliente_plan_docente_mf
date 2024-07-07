@@ -7,7 +7,7 @@
       </mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <h3>{{ "ptd.list_docente" | translate }}</h3>
+      <h3 class="margin-y">{{ "ptd.list_docente" | translate }}</h3>
       <mat-form-field class="form-field">
         <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
         <mat-select (selectionChange)="selectPeriodo($event)">
@@ -226,12 +226,10 @@
       </ng-container>
     </mat-card-content>
     <mat-card-actions>
-      <div class="ancho-100 posicion-centro">
-        <button mat-stroked-button color="primary" (click)="regresar()">
+      
+        <button mat-flat-button color="primary" (click)="regresar()">
           {{ "GLOBAL.regresar" | translate }}
         </button>
-      </div>
     </mat-card-actions>
-    <mat-card-footer> </mat-card-footer>
   </ng-container>
 </mat-card>

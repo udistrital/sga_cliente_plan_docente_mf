@@ -27,6 +27,7 @@ export class AsignarPtdMultipleComponent implements OnInit {
   coordinador: boolean = false;
   rolIs: string = '';
   canEdit: Symbol = ACTIONS.VIEW;
+  showCopyPTD: boolean = false;
 
   asignaturaAdd: any = undefined;
 
@@ -231,4 +232,7 @@ export class AsignarPtdMultipleComponent implements OnInit {
     this.OutDetalleChanged.emit({"carga": event, "docente": this.dataDocente.docente_id})
   }
 
+  onClickCopyPTD() {
+    this.showCopyPTD = !this.showCopyPTD;
+  }
 }
