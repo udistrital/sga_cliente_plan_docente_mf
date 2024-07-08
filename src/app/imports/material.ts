@@ -17,6 +17,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import {MatToolbarModule} from '@angular/material/toolbar';
+import {MatDividerModule} from '@angular/material/divider';
 
 export const MATERIAL_MODULES = [
     MatCardModule,
@@ -37,5 +38,6 @@ export const MATERIAL_MODULES = [
     MatDatepickerModule,
     MatTabsModule,
     MatSlideToggleModule,
-    MatToolbarModule
+    MatToolbarModule,
+    MatDividerModule
 ];

@@ -217,14 +217,14 @@
 </ng-container>
 
 <!-- El gráfico del horario en cuestión -->
-<div >
-  <h3 *ngIf="!edit" >
+<div class="margin-y">
+  <h3 *ngIf="!edit">
     {{ "ptd.plan_trabajo" | translate }}
   </h3>
-  <h3 *ngIf="isCoordinador && edit" >
+  <h3 *ngIf="isCoordinador && edit">
     {{ "ptd.insert_carga_lectiva" | translate }}
   </h3>
-  <h3 *ngIf="isDocente && edit" >
+  <h3 *ngIf="isDocente && edit">
     {{ "ptd.insert_actividad" | translate }}
   </h3>
   <div style="overflow-x: auto">
@@ -392,10 +392,10 @@
 </div>
 
 <!-- Resumen del horario -->
-<div >
-  <h5 class="fieldset-legend">{{ "GLOBAL.resumen" | translate }}</h5>
+<div class="margin-y">
+  <h4>{{ "GLOBAL.resumen" | translate }}</h4>
   <div class="margin-y" style="display: flex; align-items: center">
-    <table class="resumen" style="width: 80%; margin: auto">
+    <table class="resumen" style="width: 100%; margin: auto">
       <thead>
         <tr>
           <th></th>
@@ -425,44 +425,44 @@
       </tbody>
     </table>
   </div>
-      <h5 class="margin-y">
-        {{ "GLOBAL.observaciones" | translate }}
-      </h5>
-      <mat-form-field class="form-field">
-        <mat-label>{{ "GLOBAL.observaciones" | translate }}:</mat-label>
-        <textarea
-          [(ngModel)]="observacion"
-          matInput
-          [disabled]="!edit"
-        ></textarea>
-      </mat-form-field>
+  <h4 class="margin-y">
+    {{ "GLOBAL.observaciones" | translate }}
+  </h4>
+  <mat-form-field class="form-field">
+    <mat-label>{{ "GLOBAL.observaciones" | translate }}:</mat-label>
+    <textarea [(ngModel)]="observacion" matInput [disabled]="!edit"></textarea>
+  </mat-form-field>
   <ng-container *ngIf="Data.aprobacion" class="margin-y">
-      <h4>
-        {{ "ptd.aprobacion_plan_coordinacion" | translate }}
-      </h4>
-      <mat-form-field class="form-field">
-        <mat-label
-          >* {{ "ptd.aprobacion_plan_coordinacion" | translate }}:</mat-label
-        >
-        <mat-select [(ngModel)]="aprobacion">
-          <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
-          <mat-option *ngFor="let item of Data.aprobacion" [value]="item">
-            {{ item.nombre }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+    <h4>
+      {{ "ptd.aprobacion_plan_coordinacion" | translate }}
+    </h4>
+    <mat-form-field class="form-field">
+      <mat-label
+        >* {{ "ptd.aprobacion_plan_coordinacion" | translate }}:</mat-label
+      >
+      <mat-select [(ngModel)]="aprobacion">
+        <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
+        <mat-option *ngFor="let item of Data.aprobacion" [value]="item">
+          {{ item.nombre }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
   </ng-container>
-  
+  <ng-container style="display: flex; justify-content: center;">
     <button
       mat-flat-button
-      class="form-field"
       color="accent"
-      style="background-color: var(--success-accent);"
+      style="background-color: var(--success-accent)"
       (click)="guardar_ptd()"
-      [disabled]="Data.aprobacion && !aprobacion"
+      [disabled]="Data.aprobacion || !aprobacion"
+      [hidden]="!edit"
     >
       <mat-icon>save</mat-icon>
       {{ "ptd.guardar_ptd" | translate }}
     </button>
-  
-  </div>
+  </ng-container>
+
+  <br />
+  <mat-divider></mat-divider>
+  <br />
+</div>
