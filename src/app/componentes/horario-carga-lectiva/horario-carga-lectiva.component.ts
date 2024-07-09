@@ -306,7 +306,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           }`
         )
         .subscribe((res) => {
-          this.ocupados = res.Response.Body ? res.Response.Body : [];
+          this.ocupados = res.Success == 200 ? res.Data : [];
           this.OutLoading.emit(false);
           this.ocupados.forEach((newElement) => {
             const newElementFormat: CardDetalleCarga = {
@@ -473,8 +473,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         sede: this.ubicacionForm.get("sede")?.value,
         edificio: this.ubicacionForm.get("edificio")?.value
           ? this.ubicacionForm.get("edificio")?.value
-          : "-",
-        salon: salon || "-",
+          : "NA",
+        salon: salon || "NA",
         horas: h,
         horaFormato: "",
         tipo: this.isDocente ? this.tipo.actividades : this.tipo.carga_lectiva,
@@ -500,8 +500,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       this.editandoAsignacion.edificio = this.ubicacionForm.get("edificio")
         ?.value
         ? this.ubicacionForm.get("edificio")?.value
-        : "-";
-      this.editandoAsignacion.salon = salon || "-";
+        : "NA";
+      this.editandoAsignacion.salon = salon || "NA";
       this.editandoAsignacion.dragPosition = { x: x, y: y };
       this.editandoAsignacion.prevPosition =
         this.editandoAsignacion.dragPosition;
@@ -519,7 +519,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     this.Data.carga[this.seleccion].forEach((carga: any) => {
       this.identificador++;
       let nombre;
-      if (carga.espacio_academico_id != null) {
+      if (carga.espacio_academico_id != "NA") {
         nombre = this.Data.espacios_academicos[this.seleccion].find(
           (espacio: any) => espacio.id == carga.espacio_academico_id
         ).nombre;
