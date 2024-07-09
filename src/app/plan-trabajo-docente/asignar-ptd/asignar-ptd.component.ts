@@ -86,7 +86,6 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     });
     this.cargarPeriodo().then(resp => this.periodos = resp)
       .catch(err => {
-        console.log(err);
         this.popUpManager.showErrorToast(this.translate.instant('GLOBAL.sin_periodo'));
         this.periodos = [];
       });
@@ -356,7 +355,6 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   }
 
   manageChangesInGeneralPTD(event: any) {
-    console.log('manageChangesInGeneral:', event)
     const xd = this.detallesGeneral.carga[0].filter((c: any) => c.docente != event.docente_id)
     console.log(xd)
   }
