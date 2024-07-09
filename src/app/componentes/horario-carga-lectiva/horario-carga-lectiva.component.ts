@@ -106,6 +106,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   aprobacion: any = undefined;
   EspaciosProyecto: any = undefined;
   manageByTime: boolean = false;
+  puedeGuardarPTD: boolean = false;
 
   constructor(
     private popUpManager: PopUpManager,
@@ -140,7 +141,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     };
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.getSedes().then(() => {
       this.OutLoading.emit(false);
     });
@@ -179,7 +180,6 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     this.ubicacionForm.get("fecha_ini")?.updateValueAndValidity();
     this.ubicacionForm.get("fecha_fin")?.setValidators(validador);
     this.ubicacionForm.get("fecha_fin")?.updateValueAndValidity();
-    console.log(this.ubicacionForm);
   }
 
   ngOnChanges() {
@@ -201,6 +201,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       this.getActividades().then(() => {
         this.loadCarga();
       });
+      this.setPuedeGuardarPTD();
     } else {
       this.listaCargaLectiva = [];
     }
@@ -482,9 +483,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         prevPosition: { x: x, y: y },
         finalPosition: { x: x, y: y },
       };
-      console.log("el nuevO:", newElement);
       this.listaCargaLectiva.push(newElement);
-      console.log("listaCargaLectiva:", this.listaCargaLectiva);
     } else {
       if (this.isInsideGrid(this.editandoAsignacion)) {
         const coord = this.getPositionforMatrix(this.editandoAsignacion);
@@ -598,34 +597,48 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     if (elementClicked.bloqueado) {
       return;
     }
-  
-    this.popUpManager.showPopUpGeneric(this.translate.instant('ptd.borrar'), this.translate.instant('ptd.ask_borrar'), MODALS.QUESTION, true).then(
-      action => {
+
+    this.popUpManager
+      .showPopUpGeneric(
+        this.translate.instant("ptd.borrar"),
+        this.translate.instant("ptd.ask_borrar"),
+        MODALS.QUESTION,
+        true
+      )
+      .then((action) => {
         if (action.value) {
           this.OutLoading.emit(true);
           if (this.isInsideGrid(elementClicked)) {
             const coord = this.getPositionforMatrix(elementClicked);
-            this.changeStateRegion(coord.x, coord.y, elementClicked.horas, false);
+            this.changeStateRegion(
+              coord.x,
+              coord.y,
+              elementClicked.horas,
+              false
+            );
           }
-          const idx = this.listaCargaLectiva.findIndex(element => element.id == elementClicked.id);
+          const idx = this.listaCargaLectiva.findIndex(
+            (element) => element.id == elementClicked.id
+          );
           this.listaCargaLectiva.splice(idx, 1);
           if (elementClicked.idCarga) {
-            this.planTrabajoDocenteService.delete('carga_plan', { Id: elementClicked.idCarga }).subscribe(
-              (response: any) => {
+            this.planTrabajoDocenteService
+              .delete("carga_plan", { Id: elementClicked.idCarga })
+              .subscribe((response: any) => {
                 this.OutLoading.emit(false);
                 this.DataChanged.emit(this.listaCargaLectiva);
               });
           } else {
             this.OutLoading.emit(false);
           }
-          
+
           // Obtener el contenedor y verificar la relación padre-hijo
           const c: Element = this.contenedorCargaLectiva.nativeElement;
-          
+
           // Asegurarse de que el elemento a eliminar está dentro del contenedor
           let parentElement = htmlElement.parentElement;
           let isChild = false;
-  
+
           while (parentElement) {
             if (parentElement === c) {
               isChild = true;
@@ -633,19 +646,21 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
             }
             parentElement = parentElement.parentElement;
           }
-  
-          if (isChild && htmlElement.parentElement && htmlElement.parentElement.parentElement) {
+
+          if (
+            isChild &&
+            htmlElement.parentElement &&
+            htmlElement.parentElement.parentElement
+          ) {
             try {
               c.removeChild(htmlElement.parentElement.parentElement);
             } catch (error) {
               // no hacer nada
             }
-          } 
+          }
         }
       });
   }
-  
-  
 
   calcularHoras(tipo?: number) {
     let total = 0;
@@ -663,7 +678,11 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     return total;
   }
 
-  guardar_ptd() {
+  async guardar_ptd() {
+    if(!this.puedeGuardarPTD) {
+      this.popUpManager.showAlert(this.translate.instant("ptd.guardado_ptd_error"), this.translate.instant("ptd.guardado_ptd_error_msg"));
+      return;
+    }
     this.OutLoading.emit(true);
     let carga_plan = [];
 
@@ -723,7 +742,6 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       })
       .subscribe((response) => {
         this.OutLoading.emit(false);
-        console.log("RESPONSE -->", response);
         if (response.Status == 200) {
           this.popUpManager.showSuccessAlert(
             this.translate.instant("ptd.guardado_ptd_exito") +
@@ -877,5 +895,55 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       });
       this.listaOcupacion = [];
     }
+  }
+
+  getEstadoPDT(): Promise<any | null> {
+    return new Promise((resolve, reject) => {
+      this.planTrabajoDocenteService
+        .get(`plan_docente/${this.Data.plan_docente[this.seleccion]}`)
+        .subscribe(
+          (response: any) => {
+            if (response?.Status == 200) {
+              let data = response.Data;
+              const estado_plan_id = data.estado_plan_id;
+              this.planTrabajoDocenteService
+                .get(`estado_plan/${estado_plan_id}`)
+                .subscribe(
+                  (response: any) => {
+                    if (response?.Status == 200) {
+                      resolve(response.Data);
+                    } else {
+                      resolve(null);
+                    }
+                  },
+                  (error) => {
+                    reject(false);
+                  }
+                );
+            } else {
+              resolve(null);
+            }
+          },
+          (error) => {
+            reject(false);
+          }
+        );
+    });
+  }
+
+  setPuedeGuardarPTD(): void{
+    if(this.isCoordinador) {
+      this.puedeGuardarPTD = true;
+      return;
+    }
+    if(this.isDocente) {
+      this.getEstadoPDT().then((estado) => {
+        if(estado) {
+          this.puedeGuardarPTD = estado.codigo_abreviacion === "ENV_COO";
+        }
+      });
+      return;
+    }
+    this.puedeGuardarPTD = false;
   }
 }
