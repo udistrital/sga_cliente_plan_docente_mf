@@ -106,7 +106,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   aprobacion: any = undefined;
   EspaciosProyecto: any = undefined;
   manageByTime: boolean = false;
-  puedeGuardarPTD: boolean = false;
+  puedeEditarPTD: boolean = false;
 
   constructor(
     private popUpManager: PopUpManager,
@@ -182,7 +182,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     this.ubicacionForm.get("fecha_fin")?.updateValueAndValidity();
   }
 
-  ngOnChanges() {
+  async ngOnChanges() {
     if (this.Data) {
       this.edit = this.WorkingMode == ACTIONS.EDIT;
       this.isDocente = this.Rol == ROLES.DOCENTE;
@@ -201,7 +201,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       this.getActividades().then(() => {
         this.loadCarga();
       });
-      this.setPuedeGuardarPTD();
+      await this.setPuedeEditarPTD();
+      this.bloquearElementosTabla();
     } else {
       this.listaCargaLectiva = [];
     }
@@ -679,7 +680,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   async guardar_ptd() {
-    if(!this.puedeGuardarPTD) {
+    if(!this.puedeEditarPTD) {
       this.popUpManager.showAlert(this.translate.instant("ptd.guardado_ptd_error"), this.translate.instant("ptd.guardado_ptd_error_msg"));
       return;
     }
@@ -931,19 +932,38 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     });
   }
 
-  setPuedeGuardarPTD(): void{
-    if(this.isCoordinador) {
-      this.puedeGuardarPTD = true;
-      return;
-    }
-    if(this.isDocente) {
-      this.getEstadoPDT().then((estado) => {
-        if(estado) {
-          this.puedeGuardarPTD = estado.codigo_abreviacion === "ENV_COO";
+  async setPuedeEditarPTD(): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      if (this.isCoordinador) {
+        this.puedeEditarPTD = true;
+        resolve();
+        return;
+      }
+  
+      if (this.isDocente) {
+        try {
+          const estado = await this.getEstadoPDT();
+          if (estado) {
+            this.puedeEditarPTD = estado.codigo_abreviacion === "ENV_COO";
+          }
+        } catch (error) {
+          this.puedeEditarPTD = false;
+        } finally {
+          resolve();
         }
+        return;
+      }
+  
+      this.puedeEditarPTD = false;
+      resolve();
+    });
+  }
+
+  bloquearElementosTabla(): void {
+    if(!this.puedeEditarPTD) {
+      this.listaCargaLectiva.forEach((element) => {
+        element.bloqueado = true;
       });
-      return;
     }
-    this.puedeGuardarPTD = false;
   }
 }

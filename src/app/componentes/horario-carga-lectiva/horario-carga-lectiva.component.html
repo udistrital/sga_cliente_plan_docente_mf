@@ -1,5 +1,5 @@
 <!-- Selector de carga o actividad segun rol -->
-<div class="margin-y" *ngIf="(isCoordinador || isDocente) && edit">
+<div class="margin-y" *ngIf="(isCoordinador || isDocente) && puedeEditarPTD">
   <h3 class="margin-y" *ngIf="isCoordinador">
     {{ "ptd.select_carga_lectiva" | translate }}
   </h3>
@@ -55,7 +55,7 @@
 </div>
 
 <!-- EDITAR  -->
-<ng-container *ngIf="edit">
+<ng-container *ngIf="!puedeEditarPTD">
   <div [hidden]="!ubicacionActive">
     <h4 class="margin-y">{{ "ptd.espacio_fisico" | translate }}</h4>
     <form
@@ -430,7 +430,7 @@
   </h4>
   <mat-form-field class="form-field">
     <mat-label>{{ "GLOBAL.observaciones" | translate }}:</mat-label>
-    <textarea [(ngModel)]="observacion" matInput [disabled]="!edit"></textarea>
+    <textarea [(ngModel)]="observacion" matInput [disabled]="!puedeEditarPTD"></textarea>
   </mat-form-field>
   <ng-container *ngIf="Data.aprobacion" class="margin-y">
     <h4>
@@ -448,7 +448,7 @@
       </mat-select>
     </mat-form-field>
   </ng-container>
-  <div *ngIf="puedeGuardarPTD" style="display: flex; justify-content: center;" >
+  <div *ngIf="puedeEditarPTD" style="display: flex; justify-content: center;" >
     <button
       mat-flat-button
       color="accent"
