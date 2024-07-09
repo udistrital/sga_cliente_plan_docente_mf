@@ -448,19 +448,17 @@
       </mat-select>
     </mat-form-field>
   </ng-container>
-  <ng-container style="display: flex; justify-content: center;">
+  <div *ngIf="puedeGuardarPTD" style="display: flex; justify-content: center;" >
     <button
       mat-flat-button
       color="accent"
-      style="background-color: var(--success-accent)"
       (click)="guardar_ptd()"
-      [disabled]="Data.aprobacion || !aprobacion"
-      [hidden]="!edit"
+      [disabled]="Data.aprobacion && !aprobacion"
     >
       <mat-icon>save</mat-icon>
       {{ "ptd.guardar_ptd" | translate }}
     </button>
-  </ng-container>
+  </div>
 
   <br />
   <mat-divider></mat-divider>
