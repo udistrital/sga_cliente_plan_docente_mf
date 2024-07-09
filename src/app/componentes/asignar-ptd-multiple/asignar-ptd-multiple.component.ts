@@ -228,7 +228,6 @@ export class AsignarPtdMultipleComponent implements OnInit {
   }
 
   whatChanged(event: any) {
-    console.log("what changed is ", event)
     this.OutDetalleChanged.emit({"carga": event, "docente": this.dataDocente.docente_id})
   }
 
