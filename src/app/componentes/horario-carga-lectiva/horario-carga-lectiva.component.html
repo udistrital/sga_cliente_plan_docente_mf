@@ -55,7 +55,7 @@
 </div>
 
 <!-- EDITAR  -->
-<ng-container *ngIf="!puedeEditarPTD">
+<ng-container *ngIf="puedeEditarPTD">
   <div [hidden]="!ubicacionActive">
     <h4 class="margin-y">{{ "ptd.espacio_fisico" | translate }}</h4>
     <form
@@ -322,15 +322,6 @@
                     <!-- *{{ element.horaFormato }} <br> -->
                     {{ element.docenteName ? element.docenteName : "" }}
                   </div>
-
-                  <!-- <div class="info-contenidoBig">
-                    *{{ element.nombre ? element.nombre : '' }} <br />
-                    *{{ element.sede.CodigoAbreviacion ? sede.CodigoAbreviacion : '' }} -
-                    {{ element.edificio.Nombre ? edificio.Nombre : '' }}<br />
-                    *{{ element.salon.Nombre ? salon.Nombre : '' }} <br />
-                    *{{ element.horaFormato ? element.horaFormato : '' }} <br />
-                    {{ element.docenteName ? element.docenteName : '' }}
-                  </div> -->
 
                   <div class="info-contenidoBig">
                     *{{ element.nombre ? element.nombre : "" }} <br />
