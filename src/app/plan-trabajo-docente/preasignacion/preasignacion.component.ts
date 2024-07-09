@@ -175,7 +175,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
             "no-preasignaciones": [],
             docente: true,
           };
-          console.log(this.dataSource.data);
           this.dataSource.data.forEach((preasignacion) => {
             if (preasignacion.aprobacion_docente.value) {
               req.preasignaciones.push({ "Id": preasignacion.id });
@@ -263,7 +262,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
 
   selectPeriodo(periodo: any) {
     this.periodo = periodo.value;
-    console.log(this.periodo)
     if (this.periodo) {
       this.loadPreasignaciones();
     } else {
