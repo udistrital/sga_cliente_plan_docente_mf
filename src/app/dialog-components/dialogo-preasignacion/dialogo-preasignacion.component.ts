@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from "@angular/core";
+import { ChangeDetectorRef, Component, Inject, OnInit } from "@angular/core";
 import { TranslateService } from "@ngx-translate/core";
 import { PopUpManager } from "../../managers/popUpManager";
 import {
@@ -8,7 +8,14 @@ import {
   MatDialogRef,
 } from "@angular/material/dialog";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { BehaviorSubject, combineLatest, Subject, Observable, of } from "rxjs";
+import {
+  BehaviorSubject,
+  combineLatest,
+  Subject,
+  Observable,
+  of,
+  Subscription,
+} from "rxjs";
 import {
   debounceTime,
   distinctUntilChanged,
@@ -16,6 +23,8 @@ import {
   map,
   switchMap,
   startWith,
+  catchError,
+  tap,
 } from "rxjs/operators";
 import { ParametrosService } from "../../services/parametros.service";
 import { SgaPlanTrabajoDocenteMidService } from "../../services/sga-plan-trabajo-docente-mid.service";
@@ -40,7 +49,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
 
   searchTerm$ = new Subject<any>();
   opcionesDocente: any[] = [];
-  filteredDocentes: Observable<any[]> = of([]);
+  filteredDocentes: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
   docente: any;
 
   opcionesEspaciosAcademicos: EspaciosAcademicos[] = [];
@@ -63,6 +72,8 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     { id: 299, nombre: "Hora cátedra por honorarios" },
   ];
 
+  tipoVinculacionFiltered: any[] = [];
+
   constructor(
     public dialogRef: MatDialogRef<DialogoPreAsignacionPtdComponent>,
     private translate: TranslateService,
@@ -74,6 +85,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     private tercerosService: TercerosService,
     private builder: FormBuilder,
     private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
     @Inject(MAT_DIALOG_DATA) private data: any
   ) {
     this.preasignacionForm = this.builder.group({});
@@ -125,38 +137,54 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     this.preasignacionForm.get("proyecto")?.disable();
     this.preasignacionForm.get("nivel")?.disable();
     this.preasignacionForm.get("doc_docente")?.disable();
-
-    this.filteredDocentes =
-      this.preasignacionForm.get("docente")?.valueChanges.pipe(
-        startWith(""),
-        map((value) => this._filterDocente(value || ""))
-      ) || of([]);
+    this.preasignacionForm.get("tipo_vinculacion")?.disable();
 
     this.preasignacionForm
-      .get("tipo_vinculacion")
-      ?.valueChanges.subscribe((value) => {
-        if (this.preasignacionForm.get("periodo")?.value != null) {
-          this.preasignacionForm.get("docente")?.enable();
-          this.preasignacionForm.get("doc_docente")?.enable();
-        }
-      });
+      .get("docente")
+      ?.valueChanges.pipe(
+        startWith(""),
+        map((value) => {
+          if (value === "") {
+            this.filteredDocentes.next([]);
+          }
+          return value;
+        })
+      )
+      .subscribe();
 
-    this.preasignacionForm.get("periodo")?.valueChanges.subscribe((periodo) => {
-      if (periodo.Activo) {
-        this.periodo = periodo;
-        if (this.preasignacionForm.get("tipo_vinculacion")?.value != null) {
-          this.preasignacionForm.get("docente")?.enable();
-          this.preasignacionForm.get("doc_docente")?.enable();
-        }
-      } else {
-        this.preasignacionForm.get("periodo")?.setValue(null);
-        this.preasignacionForm.get("docente")?.disable();
-        this.preasignacionForm.get("doc_docente")?.disable();
-        this.popUpManager.showErrorToast(
-          this.translate.instant("pdt.perido_inactivo")
-        );
-      }
-    });
+    let periodoSubscription: Subscription | undefined;
+
+    const subscribeToPeriodoChanges = () => {
+      periodoSubscription = this.preasignacionForm
+        .get("periodo")
+        ?.valueChanges.subscribe((periodo) => {
+          if (periodo) {
+            if (periodo.Activo) {
+              this.periodo = periodo;
+              this.preasignacionForm.get("docente")?.enable();
+              this.preasignacionForm.get("doc_docente")?.enable();
+            } else {
+              this.popUpManager.showErrorToast(
+                this.translate.instant("pdt.perido_inactivo")
+              );
+            }
+          } else {
+            if (periodoSubscription) {
+              periodoSubscription.unsubscribe();
+            }
+            this.preasignacionForm
+              .get("periodo")
+              ?.setValue(null, { emitEvent: false });
+            this.preasignacionForm.get("docente")?.disable();
+            this.preasignacionForm.get("doc_docente")?.disable();
+            this.cdr.detectChanges();
+            subscribeToPeriodoChanges(); // Resubscribe después de cambiar el valor
+          }
+        });
+    };
+
+    // Inicializa la suscripción
+    subscribeToPeriodoChanges();
 
     this.cargarPeriodo()
       .then((periodos) => {
@@ -169,7 +197,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
             }
           })
           .catch((error) => {
-            console.log(error);
             this.popUpManager.showErrorToast(
               this.translate.instant("ERROR.sin_espacios_academicos")
             );
@@ -177,7 +204,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
           });
       })
       .catch((error) => {
-        console.log(error);
         this.popUpManager.showErrorToast(
           this.translate.instant("ERROR.sin_periodos")
         );
@@ -185,39 +211,64 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
       });
 
     this.opcionesDocente = [];
-    this.searchTerm$
-      .pipe(
-        debounceTime(700),
-        distinctUntilChanged(),
-        filter((data) => data.text.length > 3),
-        switchMap(({ text, field }) => this.buscarNombreDocentes(text, field))
-      )
-      .subscribe((response: any) => {
-        this.opcionesDocente = response.queryOptions.Data.filter(
-          (value: any, index: any, array: any) =>
-            index == array.findIndex((item: any) => item.Id == value.Id)
-        );
-      });
-
-    this.dialogRef.backdropClick().subscribe(() => {
-      this.dialogRef.close();
-    });
   }
 
   event2text(event: Event): string {
     return (event.target as HTMLInputElement).value;
   }
 
-  private _filterDocente(value: string): string[] {
-    if (value.length > 1) {
-      const filterValue = value.toLowerCase();
-      if (this.opcionesDocente.length > 0) {
-        return this.opcionesDocente.filter((option) =>
-          option.Nombre.toLowerCase().includes(filterValue)
-        );
-      }
+  private _filterDocente(value: any): any[] {
+    if (typeof value !== "string") {
+      return this.opcionesDocente;
     }
-    return [];
+
+    const filterValue = value.toLowerCase();
+    console.log("Filtering docente options with:", filterValue); // Verifica el valor de filtrado
+    return this.opcionesDocente.filter((docente) =>
+      docente.Nombre.toLowerCase().includes(filterValue)
+    );
+  }
+
+  ngAfterViewInit() {
+    this.searchTerm$
+      .pipe(
+        debounceTime(700),
+        distinctUntilChanged(),
+        filter((data) => data.text.length > 0),
+        tap((data) => console.log("Search term:", data)), // Verifica los valores emitidos
+        switchMap(({ text, field }) =>
+          this.buscarNombreDocentes(text, field).pipe(
+            tap((response) =>
+              console.log("Response from buscarNombreDocentes:", response)
+            ), // Verifica la respuesta combinada
+            catchError((error) => {
+              console.error("Error during search", error);
+              return of({ queryOptions: { Data: [] } }); // return an empty array or handle error as needed
+            })
+          )
+        )
+      )
+      .subscribe((response: any) => {
+        if (
+          response.queryOptions &&
+          Array.isArray(response.queryOptions.Data)
+        ) {
+          console.log("Filtered data:", response.queryOptions.Data); // Verifica los datos filtrados
+          this.opcionesDocente = response.queryOptions.Data.filter(
+            (value: any, index: any, array: any) =>
+              index == array.findIndex((item: any) => item.Id == value.Id)
+          );
+          const filtered = this._filterDocente(
+            this.preasignacionForm.get("docente")?.value || ""
+          );
+          this.filteredDocentes.next(filtered);
+        } else {
+          this.opcionesDocente = [];
+          this.filteredDocentes.next([]);
+        }
+        this.cdr.detectChanges(); // Fuerza la detección de cambios
+        console.log("Opciones Docente:", this.opcionesDocente); // Verifica las opciones finales
+      });
   }
 
   enviarPreasignacion() {
@@ -271,7 +322,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                 MODALS.ERROR,
                 false
               );
-              console.log(err);
             },
           });
       }
@@ -321,12 +371,15 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   buscarNombreDocentes(text: string, field: any) {
-    let query = `docente/nombre?nombre=${text}&vinculacion=${
-      this.preasignacionForm.get("tipo_vinculacion")?.value
-    }`;
+    let query = `docente/nombre?nombre=${text}`;
+    console.log("Query URL:", query); // Verifica la URL de la consulta
     const channelOptions = new BehaviorSubject<any>({ field: field });
     const options$ = channelOptions.asObservable();
-    const queryOptions$ = this.sgaPlanTrabajoDocenteMidService.get(query);
+    const queryOptions$ = this.sgaPlanTrabajoDocenteMidService.get(query).pipe(
+      tap((response) =>
+        console.log("API response in buscarNombreDocentes:", response)
+      ) // Verifica la respuesta de la API
+    );
 
     return combineLatest([options$, queryOptions$]).pipe(
       map(([options$, queryOptions$]) => ({
@@ -337,15 +390,39 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     );
   }
 
-  setDocente(element: any) {
+  handlerSelectDocente(element: any) {
     this.docente = element.option.value;
-    this.documento_docente = this.docente.Documento;
-    this.preasignacionForm.get("doc_docente")?.setValue(this.documento_docente);
-    this.preasignacionForm
-      .get("docente")
-      ?.setValue(element.option.value.Nombre);
-    this.preasignacionForm.get("codigo")?.enable();
-    this.preasignacionForm.get("espacio_academico")?.enable();
+    this.setDocente();
+  }
+
+  setDocente() {
+    if (this.docente) {
+      this.documento_docente = this.docente.Documento;
+      this.preasignacionForm
+        .get("doc_docente")
+        ?.setValue(this.docente.Documento);
+      this.preasignacionForm.get("docente")?.setValue(this.docente.Nombre);
+      this.tipoVinculacionFiltered = this.tipoVinculacion.filter(
+        (vinculacion) =>
+          this.docente?.Vinculaciones.some(
+            (vinculacion_docente: number) =>
+              vinculacion_docente == vinculacion.id
+          )
+      );
+      this.preasignacionForm.get("codigo")?.enable();
+      this.preasignacionForm.get("espacio_academico")?.enable();
+      this.preasignacionForm.get("tipo_vinculacion")?.enable();
+    } else {
+      this.preasignacionForm.get("codigo")?.disable();
+      this.preasignacionForm.get("espacio_academico")?.disable();
+      this.preasignacionForm.get("tipo_vinculacion")?.disable();
+      this.preasignacionForm.get("docente")?.setValue(null);
+      this.documento_docente = null;
+      this.tipoVinculacionFiltered = [];
+      this.popUpManager.showErrorAlert(
+        this.translate.instant("ptd.error_no_found_docente")
+      );
+    }
   }
 
   cargarPeriodo(): Promise<Periodo[]> {
@@ -372,7 +449,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
       this.espaciosAcademicosService
         .get(
           "espacio-academico?query=activo:true,espacio_academico_padre" +
-            "&limit=0&fields=codigo,nombre,_id"
+            "&limit=0&fields=codigo,nombre,_id,espacio_modular"
         )
         .subscribe({
           next: (resp: RespFormat) => {
@@ -389,39 +466,36 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     });
   }
 
-  buscarDocenteDocumento() {
+  buscarDocenteDocumento(event: any) {
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+    }
     if (this.preasignacionForm.get("doc_docente")?.value != null) {
       this.sgaPlanTrabajoDocenteMidService
         .get(
           `docente/documento?documento=${
             this.preasignacionForm.get("doc_docente")?.value
-          }` +
-            `&vinculacion=${
-              this.preasignacionForm.get("tipo_vinculacion")?.value
-            }`
+          }`
         )
         .subscribe({
           next: (resp: RespFormat) => {
             if (checkResponse(resp) && checkContent(resp.Data)) {
               this.docente = resp.Data[0];
-              this.documento_docente = this.docente.Documento;
-              this.preasignacionForm
-                .get("doc_docente")
-                ?.setValue(this.docente.Documento);
-              this.preasignacionForm
-                .get("docente")
-                ?.setValue(this.docente.Nombre);
-              this.preasignacionForm.get("codigo")?.enable();
-              this.preasignacionForm.get("espacio_academico")?.enable();
             } else {
-              this.popUpManager.showErrorAlert(
-                this.translate.instant("ptd.error_no_found_docente")
-              );
+              this.docente = null;
             }
+            this.setDocente();
           },
           error: (err) => {
-            console.log(err);
-            this.popUpManager.showErrorToast(
+            this.preasignacionForm.get("codigo")?.disable();
+            this.preasignacionForm.get("espacio_academico")?.disable();
+            this.preasignacionForm.get("tipo_vinculacion")?.disable();
+            this.preasignacionForm.get("docente")?.setValue(null);
+            this.docente = null;
+            this.documento_docente = null;
+            this.tipoVinculacionFiltered = [];
+            this.popUpManager.showErrorAlert(
               this.translate.instant("ptd.error_no_found_docente")
             );
           },
@@ -433,17 +507,23 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     }
   }
 
-  buscarEspacioAcademico() {
+  buscarEspacioAcademico(event: any) {
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+    }
     if (this.preasignacionForm.get("codigo")?.value != null) {
       this.espaciosAcademicosService
         .get(
           `espacio-academico?query=codigo:${
             this.preasignacionForm.get("codigo")?.value
-          },activo:true,espacio_academico_padre` + `&fields=codigo,nombre,_id`
+          },activo:true,espacio_academico_padre` +
+            `&fields=codigo,nombre,_id,espacio_modular`
         )
         .subscribe({
           next: (resp: RespFormat) => {
             if (checkResponse(resp) && checkContent(resp.Data)) {
+             
               this.preasignacionForm
                 .get("espacio_academico")
                 ?.setValue(
@@ -466,7 +546,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
             }
           },
           error: (err) => {
-            console.log(err);
             this.preasignacionForm.get("espacio_academico")?.setValue(null);
             this.preasignacionForm.get("grupo")?.disable();
             this.preasignacionForm.get("proyecto")?.disable();
@@ -522,7 +601,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
               }
             },
             error: (err) => {
-              console.log(err);
               this.showAcademicSpaceGroup2AssingPeriod(
                 this.espacio_academico._id
               );
@@ -578,7 +656,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
       )
       .subscribe((res: any) => {
         this.preasignacionForm.get("doc_docente")?.setValue(res[0].Numero);
-        this.buscarDocenteDocumento();
+        this.buscarDocenteDocumento(null);
         this.preasignacionForm
           .get("espacio_academico")
           ?.setValue(
@@ -691,5 +769,10 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
           this.preasignacionForm.get("nivel")?.disable();
         });
     });
+  }
+
+  get isEspacioModular(): boolean {
+    const espacio = this.preasignacionForm.get('espacio_academico')?.value;
+    return espacio ? espacio.espacio_modular : false;
   }
 }
