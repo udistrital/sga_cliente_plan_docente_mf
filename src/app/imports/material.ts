@@ -18,7 +18,6 @@ import { MatTabsModule } from "@angular/material/tabs";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatDividerModule } from "@angular/material/divider";
-import { MatGridListModule } from "@angular/material/grid-list";
 
 export const MATERIAL_MODULES = [
   MatCardModule,
@@ -41,5 +40,4 @@ export const MATERIAL_MODULES = [
   MatSlideToggleModule,
   MatToolbarModule,
   MatDividerModule,
-  MatGridListModule,
 ];
