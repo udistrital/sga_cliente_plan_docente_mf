@@ -20,7 +20,7 @@ import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { PopUpManager } from "src/app/managers/popUpManager";
 import { PlanTrabajoDocenteService } from "src/app/services/plan-trabajo-docente.service";
 import { OikosService } from "src/app/services/oikos.service";
-import { ACTIONS, MODALS, ROLES } from "src/app/models/diccionario";
+import { ACTIONS, MODALS, ROLES, VIEWS } from "src/app/models/diccionario";
 import { CardDetalleCarga, CoordXY } from "src/app/models/card-detalle-carga";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
 
@@ -198,9 +198,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       this.calcularHoras();
       this.calcularHoras(this.tipo.actividades);
       this.calcularHoras(this.tipo.carga_lectiva);
-      this.getActividades().then(() => {
-        this.loadCarga();
-      });
+      await this.getActividades();
+      this.loadCarga();
       await this.setPuedeEditarPTD();
       this.bloquearElementosTabla();
     } else {
@@ -771,6 +770,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   blockcargas() {
+    console.log("blockcargas");
     this.listaCargaLectiva.forEach((element: CardDetalleCarga) => {
       if (this.asignaturas.find((asignatura) => asignatura.id == element.id)) {
         element.bloqueado = false;
@@ -960,7 +960,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   bloquearElementosTabla(): void {
-    if(!this.puedeEditarPTD) {
+    console.log("bloquearElementosTabla");
+    if(!this.puedeEditarPTD || this.WorkingMode === ACTIONS.VIEW) {
       this.listaCargaLectiva.forEach((element) => {
         element.bloqueado = true;
       });

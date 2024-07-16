@@ -71,7 +71,9 @@ export class AsignarPtdMultipleComponent implements OnInit {
       }
       if (r) {
         this.rolIs = r;
-        this.canEdit = ACTIONS.EDIT;
+        if(!this.soloLectura){
+          this.canEdit = ACTIONS.EDIT;
+        }
       }
     });
     
