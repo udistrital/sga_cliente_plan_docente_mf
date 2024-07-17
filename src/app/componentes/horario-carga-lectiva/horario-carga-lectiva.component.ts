@@ -770,7 +770,6 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   blockcargas() {
-    console.log("blockcargas");
     this.listaCargaLectiva.forEach((element: CardDetalleCarga) => {
       if (this.asignaturas.find((asignatura) => asignatura.id == element.id)) {
         element.bloqueado = false;
@@ -960,7 +959,6 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   bloquearElementosTabla(): void {
-    console.log("bloquearElementosTabla");
     if(!this.puedeEditarPTD || this.WorkingMode === ACTIONS.VIEW) {
       this.listaCargaLectiva.forEach((element) => {
         element.bloqueado = true;

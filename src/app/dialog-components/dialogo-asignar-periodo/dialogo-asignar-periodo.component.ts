@@ -90,7 +90,6 @@ export class DialogoAsignarPeriodoComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.log(error);
           this.popUpManager.showErrorAlert(this.translate.instant('ptd.error_no_found_espacio_academico'));
           this.dialogRef.close();
           reject(error);

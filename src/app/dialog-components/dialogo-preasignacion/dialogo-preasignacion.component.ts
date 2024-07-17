@@ -223,7 +223,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     }
 
     const filterValue = value.toLowerCase();
-    console.log("Filtering docente options with:", filterValue); // Verifica el valor de filtrado
     return this.opcionesDocente.filter((docente) =>
       docente.Nombre.toLowerCase().includes(filterValue)
     );
@@ -235,12 +234,8 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         debounceTime(700),
         distinctUntilChanged(),
         filter((data) => data.text.length > 0),
-        tap((data) => console.log("Search term:", data)), // Verifica los valores emitidos
         switchMap(({ text, field }) =>
           this.buscarNombreDocentes(text, field).pipe(
-            tap((response) =>
-              console.log("Response from buscarNombreDocentes:", response)
-            ), // Verifica la respuesta combinada
             catchError((error) => {
               console.error("Error during search", error);
               return of({ queryOptions: { Data: [] } }); // return an empty array or handle error as needed
@@ -253,7 +248,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
           response.queryOptions &&
           Array.isArray(response.queryOptions.Data)
         ) {
-          console.log("Filtered data:", response.queryOptions.Data); // Verifica los datos filtrados
           this.opcionesDocente = response.queryOptions.Data.filter(
             (value: any, index: any, array: any) =>
               index == array.findIndex((item: any) => item.Id == value.Id)
@@ -267,7 +261,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
           this.filteredDocentes.next([]);
         }
         this.cdr.detectChanges(); // Fuerza la detección de cambios
-        console.log("Opciones Docente:", this.opcionesDocente); // Verifica las opciones finales
       });
   }
 
@@ -372,14 +365,9 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
 
   buscarNombreDocentes(text: string, field: any) {
     let query = `docente/nombre?nombre=${text}`;
-    console.log("Query URL:", query); // Verifica la URL de la consulta
     const channelOptions = new BehaviorSubject<any>({ field: field });
     const options$ = channelOptions.asObservable();
-    const queryOptions$ = this.sgaPlanTrabajoDocenteMidService.get(query).pipe(
-      tap((response) =>
-        console.log("API response in buscarNombreDocentes:", response)
-      ) // Verifica la respuesta de la API
-    );
+    const queryOptions$ = this.sgaPlanTrabajoDocenteMidService.get(query);
 
     return combineLatest([options$, queryOptions$]).pipe(
       map(([options$, queryOptions$]) => ({
