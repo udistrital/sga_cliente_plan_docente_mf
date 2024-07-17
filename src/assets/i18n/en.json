@@ -1291,7 +1291,8 @@
         "datos_generales": "General data",
         "datos_del_docente": "Teacher data",
         "datos_del_espacio_academico": "Academic space data",
-        "espacio_academico_modular": "Modular academic space"
+        "espacio_academico_modular": "Modular academic space",
+        "sin_asignaciones_de_carga_academica_por_periodo": "No academic load assignments found for the selected period."
     },
     "espacios_academicos": {
         "espacios_academicos":"Academic Spaces",

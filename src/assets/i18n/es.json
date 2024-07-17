@@ -1292,7 +1292,8 @@
         "datos_generales": "Datos generales",
         "datos_del_docente": "Datos del docente",
         "datos_del_espacio_academico": "Datos del espacio académico",
-        "espacio_academico_modular": "Espacio académico modular"
+        "espacio_academico_modular": "Espacio académico modular",
+        "sin_asignaciones_de_carga_academica_por_periodo" : "No se encontraron asignaciones de carga académica para el periodo seleccionado"
     },
     "espacios_academicos": {
         "espacios_academicos":"Espacios Académicos",
