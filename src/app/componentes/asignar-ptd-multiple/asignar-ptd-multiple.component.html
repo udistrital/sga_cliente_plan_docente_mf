@@ -1,54 +1,105 @@
-<!-- info docente -->
-<!-- <ngx-dinamicform [normalform]="formDocente" [modeloData]="dataDocente">
-</ngx-dinamicform> -->
-<mat-card class="card-fieldset">
-    <div class="fieldset-legend">{{ 'ptd.info_docente' | translate }}</div>
-    <form [formGroup]="formDocente">
-        <mat-form-field style="width: 30%;">
-            <mat-label>{{ 'GLOBAL.nombre' | translate }}</mat-label>
-            <input matInput type="text" formControlName="Nombre" [placeholder]="'practicas_academicas.placeholder_nombre' | translate" readonly>
-        </mat-form-field>
-        &nbsp;
-        <mat-form-field style="width: 30%;">
-            <mat-label>{{ 'GLOBAL.Documento' | translate }}</mat-label>
-            <input matInput type="text" formControlName="Documento" [placeholder]="'practicas_academicas.placeholder_docDocente' | translate" readonly>
-        </mat-form-field>
-        &nbsp;
-        <mat-form-field style="width: 30%;">
-            <mat-label>{{ 'calendario.periodo' | translate }}</mat-label>
-            <input matInput type="text" formControlName="Periodo" [placeholder]="'practicas_academicas.placeholder_periodo' | translate" readonly>
-        </mat-form-field>
-    </form>
-</mat-card>
-<!-- clon ptd -->
-<mat-card class="card-fieldset" *ngIf="!soloLectura">
-    <div class="fieldset-legend">{{ 'ptd.copy_ptd' | translate }}</div>
-    <div class="unaLinea">
-    <mat-form-field style="width: 40%;">
-        <mat-label>{{ 'GLOBAL.periodo' | translate }}:</mat-label>
-        <mat-select [(ngModel)]="periodoCopia" [disabled]='false'>
-            <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
-            <ng-container *ngIf="(canEdit == ACTIONS.EDIT)">
-                <mat-option *ngFor="let item of periodosAnteriores" [value]="item">
-                    {{item.Nombre}}
-                </mat-option>
-            </ng-container>
-        </mat-select>
-    </mat-form-field>
-    <button mat-raised-button color="primary" style="margin-left: 1.5rem;" [disabled]="!periodoCopia || (canEdit != ACTIONS.EDIT)" (click)="copy_ptd()"> {{
-        'GLOBAL.copiar' | translate }} </button>
-    <div class="advertencia" *ngIf="periodoCopia">{{ 'ptd.mensaje_copiar_plan' | translate }}</div>
+<!-- INFORMCION DEL DOCENTE -->
+<div class="margin-y">
+  <h3 class="margin-y">{{ "ptd.info_docente" | translate }}</h3>
+  <form [formGroup]="formDocente">
+    <div class="form-grid3">
+      <mat-form-field class="form-col1 form-field">
+        <mat-label>{{ "GLOBAL.nombre" | translate }}</mat-label>
+        <input
+          matInput
+          type="text"
+          formControlName="Nombre"
+          [placeholder]="'practicas_academicas.placeholder_nombre' | translate"
+          readonly
+        />
+      </mat-form-field>
+      <mat-form-field class="form-col1 form-field">
+        <mat-label>{{ "GLOBAL.Documento" | translate }}</mat-label>
+        <input
+          matInput
+          type="text"
+          formControlName="Documento"
+          [placeholder]="
+            'practicas_academicas.placeholder_docDocente' | translate
+          "
+          readonly
+        />
+      </mat-form-field>
+      <mat-form-field class="form-col1 form-field">
+        <mat-label>{{ "calendario.periodo" | translate }}</mat-label>
+        <input
+          matInput
+          type="text"
+          formControlName="Periodo"
+          [placeholder]="'practicas_academicas.placeholder_periodo' | translate"
+          readonly
+        />
+      </mat-form-field>
     </div>
-</mat-card>
+  </form>
+</div>
+
+<!-- BARRA DE HERRAMIENTAS -->
+<mat-toolbar>
+  <button
+    mat-flat-button
+    color="accent"
+    *ngIf="!soloLectura"
+    (click)="onClickCopyPTD()"
+  >
+    <mat-icon>content_copy</mat-icon>
+    {{ "ptd.copy_ptd" | translate }}
+  </button>
+</mat-toolbar>
+<!-- clon ptd -->
+<div *ngIf="showCopyPTD">
+  <h3 class="margin-y">
+    {{ "ptd.copy_ptd" | translate }}
+  </h3>
+
+  <mat-form-field class="form-field">
+    <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
+    <mat-select [(ngModel)]="periodoCopia" [disabled]="false">
+      <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
+      <ng-container *ngIf="canEdit == ACTIONS.EDIT">
+        <mat-option *ngFor="let item of periodosAnteriores" [value]="item">
+          {{ item.Nombre }}
+        </mat-option>
+      </ng-container>
+    </mat-select>
+  </mat-form-field>
+  <button
+    mat-flat-button
+    color="accent"
+    [disabled]="!periodoCopia || canEdit != ACTIONS.EDIT"
+    (click)="copy_ptd()"
+  >
+    {{ "GLOBAL.copiar" | translate }}
+  </button>
+  <div class="alert warning" *ngIf="!periodoCopia">
+    {{ "ptd.mensaje_copiar_plan" | translate }}
+  </div>
+</div>
 <!-- horario carga lectiva -->
-<horario-carga-lectiva [WorkingMode]="soloLectura ? ACTIONS.VIEW : canEdit" [Rol]="rolIs" [Data]="detalleAsignacion"
-    (OutLoading)="doReload($event)" (DataChanged)="whatChanged($event)"></horario-carga-lectiva>
+<horario-carga-lectiva
+  [WorkingMode]="soloLectura ? ACTIONS.VIEW : canEdit"
+  [Rol]="rolIs"
+  [Data]="detalleAsignacion"
+  (OutLoading)="doReload($event)"
+  (DataChanged)="whatChanged($event)"
+></horario-carga-lectiva>
 <!-- reportes -->
 <mat-card class="card-fieldset" *ngIf="verReportes">
-    <div class="fieldset-legend">{{ 'GLOBAL.reportes' | translate }}</div>
-    <div class="posicion-centro-separado">
-        <button mat-raised-button color="primary" (click)="generarReporte('C')"> {{ 'ptd.gen_rep_carga_lectiva' | translate }} </button>
-        <button mat-raised-button color="primary" (click)="generarReporte('A')"> {{ 'ptd.gen_rep_actividades' | translate }} </button>
-        <button mat-raised-button color="primary" (click)="generarReporte('CA')"> {{ 'ptd.gen_rep_total' | translate }} </button>
-    </div>
+  <div class="fieldset-legend">{{ "GLOBAL.reportes" | translate }}</div>
+  <div class="posicion-centro-separado">
+    <button mat-raised-button color="primary" (click)="generarReporte('C')">
+      {{ "ptd.gen_rep_carga_lectiva" | translate }}
+    </button>
+    <button mat-raised-button color="primary" (click)="generarReporte('A')">
+      {{ "ptd.gen_rep_actividades" | translate }}
+    </button>
+    <button mat-raised-button color="primary" (click)="generarReporte('CA')">
+      {{ "ptd.gen_rep_total" | translate }}
+    </button>
+  </div>
 </mat-card>

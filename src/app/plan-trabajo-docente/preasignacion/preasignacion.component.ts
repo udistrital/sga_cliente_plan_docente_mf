@@ -60,7 +60,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     })
     this.cargarPeriodo().then(resp => this.periodos = resp)
       .catch(err => {
-        console.log(err);
         this.popUpManager.showErrorToast(this.translate.instant('GLOBAL.sin_periodo'));
         this.periodos = [];
       });
@@ -108,7 +107,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
               this.loadPreasignaciones();
             },
             error: (err) => {
-              console.log(err);
               this.popUpManager.showErrorToast(this.translate.instant('ptd.error_aprobacion_preasignacion'));
             }
           });
@@ -145,7 +143,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
               this.loadPreasignaciones();
             },
             error: (err) => {
-              console.log(err);
               this.popUpManager.showErrorToast(this.translate.instant('ptd.error_preasignacion_eliminada'));
             }
           });
@@ -175,7 +172,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
             "no-preasignaciones": [],
             docente: true,
           };
-          console.log(this.dataSource.data);
           this.dataSource.data.forEach((preasignacion) => {
             if (preasignacion.aprobacion_docente.value) {
               req.preasignaciones.push({ "Id": preasignacion.id });
@@ -194,7 +190,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
                 this.loadPreasignaciones();
               },
               error: (err) => {
-                console.log(err);
                 this.popUpManager.showErrorToast(this.translate.instant('ptd.error_aprobacion_preasignacion'));
               }
             });
@@ -214,7 +209,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
           }
         },
         error: err => {
-          console.log(err);
           this.dataSource = new MatTableDataSource();
           this.popUpManager.showErrorToast(this.translate.instant('ptd.error_no_found_preasignaciones'));
         }
@@ -231,13 +225,11 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
             }
           },
           error: err => {
-            console.log(err);
             this.dataSource = new MatTableDataSource();
             this.popUpManager.showErrorToast(this.translate.instant('ptd.error_no_found_preasignaciones'));
           }
         });
       }).catch(err => {
-        console.log(err);
         this.dataSource = new MatTableDataSource();
         this.popUpManager.showErrorToast(this.translate.instant('GLOBAL.error_no_found_tercero_id'));
       });
@@ -263,7 +255,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
 
   selectPeriodo(periodo: any) {
     this.periodo = periodo.value;
-    console.log(this.periodo)
     if (this.periodo) {
       this.loadPreasignaciones();
     } else {

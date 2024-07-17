@@ -252,7 +252,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   valuechanged(event: any) {
-    console.log(event);
+    console.info(event);
   }
 
   nuevoEditarConsolidado(consolidado: any) {

@@ -1,182 +1,292 @@
 <mat-card [ngSwitch]="vista">
-    <!-- Vista de tabla lista planes -->
-    <ng-container *ngSwitchCase="VIEWS.LIST">
-        <mat-card-header>
-            <div class="ancho-100 texto-centro">
-                <mat-card-title>
-                    {{ 'ptd.verificacion_ptd' | translate }}
-                </mat-card-title>
-            </div>
-        </mat-card-header>
-        <mat-card-content>
-            <mat-card class="card-fieldset">
-                <div class="fieldset-legend">{{ 'ptd.list_planes' | translate }}</div>
+  <!-- Vista de tabla lista planes -->
+  <ng-container *ngSwitchCase="VIEWS.LIST">
+    <mat-card-header>
+      <mat-card-title>
+        <h2>{{ "ptd.verificacion_ptd" | translate }}</h2>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <h3 class="margin-y">{{ "ptd.list_planes" | translate }}</h3>
+      <div class="form-grid2">
+        <mat-form-field class="form-col1 form-field">
+          <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
+          <mat-select
+            [(ngModel)]="periodos.select"
+            (selectionChange)="filtrarPlanes()"
+          >
+            <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
+            <mat-option *ngFor="let item of periodos.opciones" [value]="item">
+              {{ item.Nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="form-col1 form-field">
+          <mat-label>{{ "GLOBAL.proyecto_academico" | translate }}:</mat-label>
+          <mat-select
+            [(ngModel)]="proyectos.select"
+            (selectionChange)="filtrarPlanes()"
+          >
+            <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
+            <mat-option *ngFor="let item of proyectos?.opciones" [value]="item">
+              {{ item.Nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <mat-toolbar>
+        <button
+          mat-flat-button
+          color="warn"
+          *ngIf="this.periodos.select && this.proyectos.select"
+          (click)="filtrarPlanes()"
+        >
+          <mat-icon>refresh</mat-icon>
+          {{ "GLOBAL.actualizar" | translate }}
+        </button>
+      </mat-toolbar>
 
-                <div class="ancho-50">
-                    <mat-form-field style="width: 20%;">
-                        <mat-label>{{ 'GLOBAL.periodo' | translate }}:</mat-label>
-                        <mat-select [(ngModel)]="periodos.select" (selectionChange)="filtrarPlanes()">
-                            <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
-                            <mat-option *ngFor="let item of periodos.opciones" [value]="item">
-                                {{item.Nombre}}
-                            </mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                    &nbsp;
-                    <mat-form-field style="width: 50%;">
-                        <mat-label>{{ 'GLOBAL.proyecto_academico' | translate }}:</mat-label>
-                        <mat-select [(ngModel)]="proyectos.select" (selectionChange)="filtrarPlanes()">
-                            <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
-                            <mat-option *ngFor="let item of proyectos?.opciones" [value]="item">
-                                {{item.Nombre}}
-                            </mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                    &nbsp;<button mat-stroked-button *ngIf="this.periodos.select && this.proyectos.select" (click)="filtrarPlanes()"> {{ 'GLOBAL.actualizar' | translate }} </button>
-                </div>
-
-                <div>
-                    <mat-form-field>
-                        <mat-label>{{ 'GLOBAL.filtrar' | translate }}</mat-label>
-                        <input matInput (keyup)="applyFilter($event)" #input>
-                    </mat-form-field>
-                    <mat-table mat-table [dataSource]="dataSource" matSort>
-                        <ng-container matColumnDef="nombre">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.nombre' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.nombre}} </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="identificacion">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.Documento' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.identificacion}} </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="tipo_vinculacion">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.tipo_vinculacion' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.tipo_vinculacion}} </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="periodo_academico">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'calendario.periodo' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.periodo_academico}} </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="soporte_documental">
-                            <mat-header-cell *matHeaderCellDef > <b>{{ 'GLOBAL.soporte_documental' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row">
-                                <action-button [rowData]="row" [value]="row.soporte_documental" (valueChanged)="accionSoporte($event)"></action-button>
-                            </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="gestion">
-                            <mat-header-cell *matHeaderCellDef> <b>{{ 'ptd.gest' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row">
-                                <action-button [rowData]="row" [value]="row.gestion" (valueChanged)="accionGestion($event)"></action-button>
-                            </mat-cell>
-                        </ng-container>
-                        <ng-container matColumnDef="estado">
-                            <mat-header-cell *matHeaderCellDef mat-sort-header> <b>{{ 'GLOBAL.estado' | translate }}</b> </mat-header-cell>
-                            <mat-cell *matCellDef="let row"> {{row.estado}} </mat-cell>
-                        </ng-container>
-                        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-                        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-                    </mat-table>
-                    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of users"></mat-paginator>
-                </div>
-
-            </mat-card>
-        </mat-card-content>
-        <mat-card-footer>
-            <br>
-        </mat-card-footer>
-    </ng-container>
-    <!-- Vista de verificar ptd -->
-    <ng-container *ngSwitchCase="VIEWS.FORM">
-        <mat-card-header>
-            <div class="ancho-100 texto-centro">
-                <mat-card-title>
-                    {{ 'ptd.verif_plan' | translate }}
-                </mat-card-title>
+      <div class="margin-y">
+        <mat-form-field class="form-field">
+          <mat-label>{{ "GLOBAL.filtrar" | translate }}</mat-label>
+          <input matInput (keyup)="applyFilter($event)" #input />
+        </mat-form-field>
+        <div class="table">
+          <mat-table mat-table [dataSource]="dataSource" matSort>
+            <ng-container matColumnDef="nombre">
+              <mat-header-cell *matHeaderCellDef mat-sort-header>
+                <b>{{ "GLOBAL.nombre" | translate }}</b>
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row"> {{ row.nombre }} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="identificacion">
+              <mat-header-cell *matHeaderCellDef mat-sort-header>
+                <b>{{ "GLOBAL.Documento" | translate }}</b>
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.identificacion }}
+              </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="tipo_vinculacion">
+              <mat-header-cell *matHeaderCellDef mat-sort-header>
+                <b>{{ "GLOBAL.tipo_vinculacion" | translate }}</b>
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.tipo_vinculacion }}
+              </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="periodo_academico">
+              <mat-header-cell *matHeaderCellDef mat-sort-header>
+                <b>{{ "calendario.periodo" | translate }}</b>
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.periodo_academico }}
+              </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="soporte_documental">
+              <mat-header-cell *matHeaderCellDef>
+                <b>{{ "GLOBAL.soporte_documental" | translate }}</b>
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <action-button
+                  [rowData]="row"
+                  [value]="row.soporte_documental"
+                  (valueChanged)="accionSoporte($event)"
+                ></action-button>
+              </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="gestion">
+              <mat-header-cell *matHeaderCellDef>
+                <b>{{ "ptd.gest" | translate }}</b>
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <action-button
+                  [rowData]="row"
+                  [value]="row.gestion"
+                  (valueChanged)="accionGestion($event)"
+                ></action-button>
+              </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="estado">
+              <mat-header-cell *matHeaderCellDef mat-sort-header>
+                <b>{{ "GLOBAL.estado" | translate }}</b>
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row"> {{ row.estado }} </mat-cell>
+            </ng-container>
+            <mat-header-row
+              *matHeaderRowDef="displayedColumns"
+            ></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
+          <mat-paginator
+            [pageSizeOptions]="[5, 10, 25, 100]"
+            aria-label="Select page of users"
+          ></mat-paginator>
+        </div>
+      </div>
+    </mat-card-content>
+  </ng-container>
+  <!-- Vista de verificar ptd -->
+  <ng-container *ngSwitchCase="VIEWS.FORM">
+    <mat-card-header>
+      <mat-card-title>
+        <h2>{{ "ptd.verif_plan" | translate }}</h2>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- info docente -->
+      <div class="margin-y">
+        <h3 class="margin-y">{{ "ptd.info_docente" | translate }}</h3>
+        <form [formGroup]="formDocente">
+          <div class="form-grid3">
+            <mat-form-field class="form-col1 form-field">
+              <mat-label>{{ "GLOBAL.nombre" | translate }}</mat-label>
+              <input
+                matInput
+                type="text"
+                formControlName="Nombre"
+                [placeholder]="
+                  'practicas_academicas.placeholder_nombre' | translate
+                "
+                readonly
+              />
+            </mat-form-field>
+            <mat-form-field class="form-col1 form-field">
+              <mat-label>{{ "GLOBAL.Documento" | translate }}</mat-label>
+              <input
+                matInput
+                type="text"
+                formControlName="Documento"
+                [placeholder]="
+                  'practicas_academicas.placeholder_docDocente' | translate
+                "
+                readonly
+              />
+            </mat-form-field>
+            <mat-form-field class="form-col1 form-field">
+              <mat-label>{{ "calendario.periodo" | translate }}</mat-label>
+              <input
+                matInput
+                type="text"
+                formControlName="Periodo"
+                [placeholder]="
+                  'practicas_academicas.placeholder_periodo' | translate
+                "
+                readonly
+              />
+            </mat-form-field>
+          </div>
+        </form>
+      </div>
+      <!-- horario ptd -->
+      <horario-carga-lectiva [Data]="infoPlan"></horario-carga-lectiva>
+      <!-- info verificar -->
+      <div>
+        <h4>{{ "ptd.verif_plan" | translate }}</h4>
+        <form [formGroup]="formVerificar" (ngSubmit)="validarFormVerificar()">
+          <div class="grid">
+            <mat-slide-toggle formControlName="DeAcuerdo" class="margin-y">{{
+              "ptd.deacuerdo_concertado" | translate
+            }}</mat-slide-toggle>
+            <br />
+            <mat-form-field class="form-field">
+              <mat-label>{{ "ptd.select_aprobar" | translate }}:</mat-label>
+              <mat-select formControlName="EstadoAprobado">
+                <mat-option
+                  >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
+                >
+                <mat-option
+                  *ngFor="let item of estadosPlan.opcionesfiltradas"
+                  [value]="item"
+                >
+                  {{ item.nombre }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <br />
+            <mat-form-field class="form-field">
+              <mat-label>{{ "GLOBAL.observaciones" | translate }}</mat-label>
+              <textarea
+                matInput
+                formControlName="Observaciones"
+                placeholder="{{ 'GLOBAL.placeholder_observacion' | translate }}"
+                matTextareaAutosize
+                matAutosizeMinRows="3"
+                matAutosizeMaxRows="6"
+              ></textarea>
+            </mat-form-field>
+            <div class="form-grid2">
+              <mat-form-field class="form-col1 form-field">
+                <mat-label>{{ "ptd.quien_responde" | translate }}</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  formControlName="QuienResponde"
+                  placeholder="ptd.placeholder_quien_responde"
+                />
+              </mat-form-field>
+              <mat-form-field class="form-col1 form-field">
+                <mat-label>{{ "GLOBAL.rol" | translate }}</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  formControlName="Rol"
+                  placeholder="{{ 'GLOBAL.rol' | translate }}"
+                  readonly
+                />
+              </mat-form-field>
             </div>
-        </mat-card-header>
-        <mat-card-content>
-            <!-- info docente -->
-            <mat-card class="card-fieldset">
-                <div class="fieldset-legend">{{ 'ptd.info_docente' | translate }}</div>
-                <form [formGroup]="formDocente">
-                    <mat-form-field style="width: 30%;">
-                        <mat-label>{{ 'GLOBAL.nombre' | translate }}</mat-label>
-                        <input matInput type="text" formControlName="Nombre" [placeholder]="'practicas_academicas.placeholder_nombre' | translate" readonly>
-                    </mat-form-field>
-                    &nbsp;
-                    <mat-form-field style="width: 30%;">
-                        <mat-label>{{ 'GLOBAL.Documento' | translate }}</mat-label>
-                        <input matInput type="text" formControlName="Documento" [placeholder]="'practicas_academicas.placeholder_docDocente' | translate" readonly>
-                    </mat-form-field>
-                    &nbsp;
-                    <mat-form-field style="width: 30%;">
-                        <mat-label>{{ 'calendario.periodo' | translate }}</mat-label>
-                        <input matInput type="text" formControlName="Periodo" [placeholder]="'practicas_academicas.placeholder_periodo' | translate" readonly>
-                    </mat-form-field>
-                </form>
-            </mat-card>
-            <!-- horario ptd -->
-            <horario-carga-lectiva [Data]="infoPlan"></horario-carga-lectiva>
-            <!-- info verificar -->
-            <mat-card class="card-fieldset">
-                <div class="fieldset-legend">{{ 'ptd.verif_plan' | translate }}</div>
-                <form [formGroup]="formVerificar" (ngSubmit)="validarFormVerificar()">
-                    <div class="grid">
-                        <mat-slide-toggle formControlName="DeAcuerdo">{{ 'ptd.deacuerdo_concertado' | translate }}</mat-slide-toggle>
-                        <br>
-                        <mat-form-field style="width: 25%;">
-                            <mat-label>{{ 'ptd.select_aprobar' | translate }}:</mat-label>
-                            <mat-select formControlName="EstadoAprobado">
-                                <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
-                                <mat-option *ngFor="let item of estadosPlan.opcionesfiltradas" [value]="item">
-                                    {{item.nombre}}
-                                </mat-option>
-                            </mat-select>
-                        </mat-form-field>
-                        <br>
-                        <mat-form-field style="width: 100%;">
-                            <mat-label>{{ 'GLOBAL.observaciones' | translate }}</mat-label>
-                            <textarea matInput formControlName="Observaciones" placeholder="{{ 'GLOBAL.placeholder_observacion' | translate }}"
-                                matTextareaAutosize matAutosizeMinRows="3" matAutosizeMaxRows="6"></textarea>
-                        </mat-form-field>
-                        <mat-form-field style="width: 40%;">
-                            <mat-label>{{ 'ptd.quien_responde' | translate }}</mat-label>
-                            <input matInput type="text" formControlName="QuienResponde" placeholder="ptd.placeholder_quien_responde">
-                        </mat-form-field>
-                        &nbsp;
-                        <mat-form-field>
-                            <mat-label>{{ 'GLOBAL.rol' | translate }}</mat-label>
-                            <input matInput type="text" formControlName="Rol" placeholder="GLOBAL.rol" readonly>
-                        </mat-form-field>
-                    </div>
-                    <div class="ancho-100 posicion-centro">
-                        <button mat-raised-button color="primary" type="submit" [disabled]="formVerificar.invalid">
-                            <ng-container *ngIf="!editVerif">
-                                {{ 'GLOBAL.guardar' | translate }}
-                            </ng-container>
-                            <ng-container *ngIf="editVerif">
-                                {{ 'ptd.editar_respuesta' | translate }}
-                            </ng-container>
-                        </button>
-                    </div>
-                </form>
-            </mat-card>
-            <!-- reportes -->
-            <mat-card class="card-fieldset">
-                <div class="fieldset-legend">{{ 'GLOBAL.reportes' | translate }}</div>
-                <div class="ancho-100 posicion-centro-separado">
-                    <button mat-raised-button color="primary" (click)="generarReporte('C')"> {{ 'ptd.gen_rep_carga_lectiva' | translate }} </button>
-                    <button mat-raised-button color="primary" (click)="generarReporte('A')"> {{ 'ptd.gen_rep_actividades' | translate }} </button>
-                    <button mat-raised-button color="primary" (click)="generarReporte('CA')"> {{ 'ptd.gen_rep_total' | translate }} </button>
-                </div>
-            </mat-card>
-        </mat-card-content>
-        <mat-card-actions>
-            <div class="ancho-100 posicion-centro">
-                <button mat-stroked-button color="primary" (click)="regresar()">{{ 'GLOBAL.regresar' | translate }}</button>
-            </div>
-        </mat-card-actions>
-        <mat-card-footer>
-        </mat-card-footer>
-    </ng-container>
+          </div>
+          <div class="ancho-100 posicion-centro">
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              [disabled]="formVerificar.invalid"
+            >
+              <ng-container *ngIf="!editVerif">
+                {{ "GLOBAL.guardar" | translate }}
+              </ng-container>
+              <ng-container *ngIf="editVerif">
+                {{ "ptd.editar_respuesta" | translate }}
+              </ng-container>
+            </button>
+          </div>
+        </form>
+      </div>
+      <!-- reportes -->
+      <div class="margin-y">
+        <h3>{{ "GLOBAL.reportes" | translate }}</h3>
+        <div class="ancho-100 posicion-centro-separado">
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="generarReporte('C')"
+          >
+            {{ "ptd.gen_rep_carga_lectiva" | translate }}
+          </button>
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="generarReporte('A')"
+          >
+            {{ "ptd.gen_rep_actividades" | translate }}
+          </button>
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="generarReporte('CA')"
+          >
+            {{ "ptd.gen_rep_total" | translate }}
+          </button>
+        </div>
+    </div>
+    </mat-card-content>
+    <mat-card-actions>
+        <button mat-flat-button color="warn" (click)="regresar()">
+          {{ "GLOBAL.regresar" | translate }}
+        </button>
+    </mat-card-actions>
+    <mat-card-footer> </mat-card-footer>
+  </ng-container>
 </mat-card>
