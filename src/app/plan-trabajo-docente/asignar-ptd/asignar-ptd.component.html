@@ -7,7 +7,7 @@
       </mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <h3>{{ "ptd.list_docente" | translate }}</h3>
+      <h3 class="margin-y">{{ "ptd.list_docente" | translate }}</h3>
       <mat-form-field class="form-field">
         <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
         <mat-select (selectionChange)="selectPeriodo($event)">
@@ -141,22 +141,17 @@
       <div *ngIf="dataSource.data.length === 0" class="margin-y alert info">
         <mat-icon class="icon">sentiment_very_dissatisfied</mat-icon>
         {{
-          "ptd.sin_preasignaciones_de_carga_academica_por_periodo" | translate
+          "ptd.sin_asignaciones_de_carga_academica_por_periodo" | translate
         }}
       </div>
     </mat-card-content>
-    <mat-card-footer>
-      <br />
-    </mat-card-footer>
   </ng-container>
   <!-- Vista de gestión ptd -->
   <ng-container *ngSwitchCase="VIEWS.FORM">
     <mat-card-header>
-      <div class="anchoads-100 texto-centro">
         <mat-card-title>
           {{ "ptd.gest_ptd" | translate }}
         </mat-card-title>
-      </div>
     </mat-card-header>
     <mat-card-content>
       <!-- PDT Simple no modular -->
@@ -199,6 +194,7 @@
                 [detalleAsignacion]="detalleAsign"
                 [periodosAnteriores]="periodosAnteriores"
                 (OutDetalleChanged)="manageChangesInGeneralPTD($event)"
+                [soloLectura]="true"
               ></asignar-ptd-multiple>
             </mat-tab>
           </ng-container>
@@ -226,12 +222,10 @@
       </ng-container>
     </mat-card-content>
     <mat-card-actions>
-      <div class="ancho-100 posicion-centro">
-        <button mat-stroked-button color="primary" (click)="regresar()">
+      
+        <button mat-flat-button color="primary" (click)="regresar()">
           {{ "GLOBAL.regresar" | translate }}
         </button>
-      </div>
     </mat-card-actions>
-    <mat-card-footer> </mat-card-footer>
   </ng-container>
 </mat-card>

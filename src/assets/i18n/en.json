@@ -1287,7 +1287,12 @@
         "seccion_tiempo": "Time section",
         "perido_inactivo": "Inactive period",
         "sin_planes_docente": "No work plans found.",
-        "sin_preasignaciones_de_carga_academica_por_periodo": "No academic load pre-assignments found for the selected period."
+        "sin_preasignaciones_de_carga_academica_por_periodo": "No academic load pre-assignments found for the selected period.",
+        "datos_generales": "General data",
+        "datos_del_docente": "Teacher data",
+        "datos_del_espacio_academico": "Academic space data",
+        "espacio_academico_modular": "Modular academic space",
+        "sin_asignaciones_de_carga_academica_por_periodo": "No academic load assignments found for the selected period."
     },
     "espacios_academicos": {
         "espacios_academicos":"Academic Spaces",
