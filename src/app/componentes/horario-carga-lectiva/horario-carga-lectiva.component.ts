@@ -42,7 +42,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     x: this.horarioSize.days,
     y: this.horarioSize.hourEnd - this.horarioSize.hourIni,
   };
-  readonly snapGridSize = { x: 150, y: 75, ymin: 75 * 0.25 }; //px no olvide editarlas en scss si las cambia
+  readonly snapGridSize = { x: 110, y: 75, ymin: 75 * 0.25 }; //px no olvide editarlas en scss si las cambia
   readonly containerGridsize = {
     x: this.containerGridLengths.x * this.snapGridSize.x,
     y: this.containerGridLengths.y * this.snapGridSize.y,
