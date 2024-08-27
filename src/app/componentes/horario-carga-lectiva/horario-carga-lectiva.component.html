@@ -290,9 +290,7 @@
                       class="center-top"
                       title="{{ 'ptd.mover' | translate }}"
                     >
-                      <mat-icon fontIcon="apps"></mat-icon
-                      ><mat-icon fontIcon="apps"></mat-icon
-                      ><mat-icon fontIcon="apps"></mat-icon>
+                      <mat-icon fontIcon="apps"></mat-icon>
                     </label>
                     <label
                       class="right-top"
@@ -421,7 +419,11 @@
   </h4>
   <mat-form-field class="form-field">
     <mat-label>{{ "GLOBAL.observaciones" | translate }}:</mat-label>
-    <textarea [(ngModel)]="observacion" matInput [disabled]="!puedeEditarPTD"></textarea>
+    <textarea
+      [(ngModel)]="observacion"
+      matInput
+      [disabled]="!puedeEditarPTD"
+    ></textarea>
   </mat-form-field>
   <ng-container *ngIf="Data.aprobacion" class="margin-y">
     <h4>
@@ -439,7 +441,7 @@
       </mat-select>
     </mat-form-field>
   </ng-container>
-  <div *ngIf="puedeEditarPTD" style="display: flex; justify-content: center;" >
+  <div *ngIf="puedeEditarPTD" style="display: flex; justify-content: center">
     <button
       mat-flat-button
       color="accent"
