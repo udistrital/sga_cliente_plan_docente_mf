@@ -1,0 +1,72 @@
+<mat-card class="dialogo">
+  <mat-card-header class="shadow">
+    <div class="row mb-3">
+      <div class="col-12 center-v center-h">
+        <mat-icon color="primary">add_to_photos</mat-icon>
+        <p class="ml-3 mb-0">
+          <strong>{{ "ptd.crear_grupo_espacio" | translate }}</strong
+          ><br />{{ "ptd.descripcion_crear_grupo_espacio" | translate }}
+        </p>
+      </div>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="container">
+      <div class="alert info class mt-4">
+        <mat-icon class="icon">info</mat-icon>
+        <span>{{
+          "ptd.mensaje_crear_grupo_espacio_academico" | translate
+        }}</span>
+      </div>
+      <div class="mt-4 ml-2">
+        <div class="row mb-3 center-v">
+          <div class="col-5 center-v">
+            <mat-icon color="primary">today</mat-icon>
+            <p class="ml-3 mb-0">
+              <strong>{{ "ptd.periodo" | translate }}</strong
+              ><br />{{ dataEntrante.periodo.Nombre }}
+            </p>
+          </div>
+          <div class="col-7 center-v">
+            <mat-icon color="primary">bookmark_border</mat-icon>
+            <p class="ml-3 mb-0">
+              <strong>{{ "ptd.espacio_academico" | translate }}</strong
+              ><br />{{ dataEntrante.espacioAcademico.nombre }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <form [formGroup]="formCrearGrupo">
+        <div class="row mt-4 center-h">
+          <ng-container *ngFor="let field of inputsCrearGrupo">
+            <mat-form-field class="col-8 medium" appearance="outline">
+              <mat-label>{{ field.label | translate }}</mat-label>
+              <mat-icon class="mat-icon-outlined" color="primary" matPrefix>{{
+                field.icon
+              }}</mat-icon>
+              <input
+                type="{{ field.type }}"
+                matInput
+                formControlName="{{ field.name }}"
+              />
+            </mat-form-field>
+          </ng-container>
+        </div>
+      </form>
+      <mat-dialog-actions align="start">
+        <button mat-stroked-button color="primary" [mat-dialog-close]>
+          {{ "GLOBAL.cancelar" | translate }}
+        </button>
+        <button
+          [disabled]="!formCrearGrupo.valid"
+          mat-raised-button
+          color="primary"
+          (click)="crearGrupoEspacioAcademico()"
+        >
+          {{ "GLOBAL.guardar" | translate }}
+        </button>
+      </mat-dialog-actions>
+    </div>
+  </mat-card-content>
+</mat-card>

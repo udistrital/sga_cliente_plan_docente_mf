@@ -37,6 +37,7 @@ import { checkContent, checkResponse } from "src/app/utils/verify-response";
 import { EspaciosAcademicos } from "src/app/models/espacios-academicos/espacios-academicos";
 import { MODALS } from "src/app/models/diccionario";
 import { DialogoAsignarPeriodoComponent } from "../dialogo-asignar-periodo/dialogo-asignar-periodo.component";
+import { DialogoCrearEspacioGrupoComponent } from "../dialogo-crear-espacio-grupo/dialogo-crear-espacio-grupo.component";
 
 @Component({
   selector: "dialogo-preasignacion",
@@ -455,7 +456,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   buscarDocenteDocumento(event: any) {
-    if(event){
+    if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
@@ -496,7 +497,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   buscarEspacioAcademico(event: any) {
-    if(event){
+    if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
@@ -511,7 +512,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         .subscribe({
           next: (resp: RespFormat) => {
             if (checkResponse(resp) && checkContent(resp.Data)) {
-             
               this.preasignacionForm
                 .get("espacio_academico")
                 ?.setValue(
@@ -588,13 +588,13 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                 resolve(this.opcionesGrupos);
               }
             },
-            error: (err) => {
-              this.showAcademicSpaceGroup2AssingPeriod(
-                this.espacio_academico._id
-              );
-              //this.popUpManager.showErrorToast(this.translate.instant('ptd.error_no_found_proyectos'));
-              //reject(this.opcionesGrupos);
-            },
+            // error: (err) => {
+            //   this.showAcademicSpaceGroup2AssingPeriod(
+            //     this.espacio_academico._id
+            //   );
+            //   //this.popUpManager.showErrorToast(this.translate.instant('ptd.error_no_found_proyectos'));
+            //   //reject(this.opcionesGrupos);
+            // },
           });
       } else {
         this.preasignacionForm.get("codigo")?.setValue(null);
@@ -760,7 +760,24 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   get isEspacioModular(): boolean {
-    const espacio = this.preasignacionForm.get('espacio_academico')?.value;
+    const espacio = this.preasignacionForm.get("espacio_academico")?.value;
     return espacio ? espacio.espacio_modular : false;
+  }
+
+  abrirDialogoCrearEspacioGrupo(espacioAcademico: any) {
+    const dialogRef = this.dialog.open(DialogoCrearEspacioGrupoComponent, {
+      width: "50%",
+      height: "auto",
+      data: {
+        espacioAcademico: espacioAcademico,
+        periodo: this.preasignacionForm.get("periodo")?.value,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((grupoEspacio) => {
+      if (grupoEspacio && grupoEspacio.creado) {
+        this.loadProyectos();
+      }
+    });
   }
 }

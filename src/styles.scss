@@ -1,139 +1,144 @@
 /* You can add global styles to this file, and also import other style files */
-@import './assets/styles/sga-sweetalert2/sga-sweetalert2.scss';
+@import "./assets/styles/sga-sweetalert2/sga-sweetalert2.scss";
+@import "./assets/styles/estilos-generales.scss";
 
 //para notificaciones tipo toast
 .mat-mdc-snack-bar-container {
-    &.info-snackbar {
-        --mdc-snackbar-container-color: #f6f2cf;
-        --mat-mdc-snack-bar-button-color: #3c220c;
-        --mdc-snackbar-supporting-text-color: #3c220c;
-        border: 1px solid #ddc342;
-        border-radius: 5px;
-    }
-    &.error-snackbar {
-        --mdc-snackbar-container-color: #e15a52;
-        --mat-mdc-snack-bar-button-color: #fdf4f3;
-        --mdc-snackbar-supporting-text-color: #fdf4f3;
-        border-radius: 5px;
-    }
-    &.success-snackbar {
-        --mdc-snackbar-container-color: #72b771;
-        --mat-mdc-snack-bar-button-color: #fff;
-        --mdc-snackbar-supporting-text-color: #fff;
-        border-radius: 5px;
-    }
+  &.info-snackbar {
+    --mdc-snackbar-container-color: #f6f2cf;
+    --mat-mdc-snack-bar-button-color: #3c220c;
+    --mdc-snackbar-supporting-text-color: #3c220c;
+    border: 1px solid #ddc342;
+    border-radius: 5px;
+  }
+  &.error-snackbar {
+    --mdc-snackbar-container-color: #e15a52;
+    --mat-mdc-snack-bar-button-color: #fdf4f3;
+    --mdc-snackbar-supporting-text-color: #fdf4f3;
+    border-radius: 5px;
+  }
+  &.success-snackbar {
+    --mdc-snackbar-container-color: #72b771;
+    --mat-mdc-snack-bar-button-color: #fff;
+    --mdc-snackbar-supporting-text-color: #fff;
+    border-radius: 5px;
+  }
 }
 
-.mat-mdc-snack-bar-container .mat-mdc-button.mat-mdc-snack-bar-action:not(:disabled) {
-    color: #fff !important;
-    --mat-mdc-button-persistent-ripple-color: #eeeeee !important;
+.mat-mdc-snack-bar-container
+  .mat-mdc-button.mat-mdc-snack-bar-action:not(:disabled) {
+  color: #fff !important;
+  --mat-mdc-button-persistent-ripple-color: #eeeeee !important;
 }
 
-.mat-mdc-snack-bar-container .mat-mdc-button.mat-mdc-snack-bar-action:not(:disabled):hover {
-    color: #000 !important;
+.mat-mdc-snack-bar-container
+  .mat-mdc-button.mat-mdc-snack-bar-action:not(:disabled):hover {
+  color: #000 !important;
 }
 
 // Tamaño del texto:
 .texto {
-    // tamaño de 0.25 a 2 paso de 0.25
-    @for $i from 1 through 8 {
-        $size: $i * 0.25;
-        $decimal_part: $size - floor($size); // Extraer la parte decimal del número
-        $class: #{floor($size)}_#{$decimal_part * 100}; // Concatenar la parte entera y decimal como cadena de texto
-        &-#{$class} {
-            font-size: $i * 0.25rem;
-        }
+  // tamaño de 0.25 a 2 paso de 0.25
+  @for $i from 1 through 8 {
+    $size: $i * 0.25;
+    $decimal_part: $size - floor($size); // Extraer la parte decimal del número
+    $class: #{floor($size)}_#{$decimal_part *
+      100}; // Concatenar la parte entera y decimal como cadena de texto
+    &-#{$class} {
+      font-size: $i * 0.25rem;
     }
+  }
 
-    &-negrita {
-        font-weight: bold;
-    }
-    &-cursiva {
-        font-style: italic;
-    }
-    &-subrayado {
-        text-decoration: underline;
-    }
-    &-tachado {
-        text-decoration: underline;
-    }
+  &-negrita {
+    font-weight: bold;
+  }
+  &-cursiva {
+    font-style: italic;
+  }
+  &-subrayado {
+    text-decoration: underline;
+  }
+  &-tachado {
+    text-decoration: underline;
+  }
 
-    &-mayusculas {
-        text-transform: uppercase;
-    }
-    &-minusculas {
-        text-transform: lowercase;
-    }
-    &-capitalizado {
-        text-transform: capitalize;
-    }
+  &-mayusculas {
+    text-transform: uppercase;
+  }
+  &-minusculas {
+    text-transform: lowercase;
+  }
+  &-capitalizado {
+    text-transform: capitalize;
+  }
 
-    &-izquierda {
-        text-align: left;
-    }
-    &-centro {
-        text-align: center;
-    }
-    &-derecha {
-        text-align: right;
-    }
-    &-justificado {
-        text-align: justify;
-    }
+  &-izquierda {
+    text-align: left;
+  }
+  &-centro {
+    text-align: center;
+  }
+  &-derecha {
+    text-align: right;
+  }
+  &-justificado {
+    text-align: justify;
+  }
 }
 
 .posicion {
-    &-izquierda {
-        display: flex;
-        justify-content: flex-start;
-    }
-    &-centro {
-        display: flex;
-        justify-content: center;
-    }
-    &-derecha {
-        display: flex;
-        justify-content: flex-end;
-    }
-    &-centro-separado {
-        display: flex;
-        justify-content: space-evenly;
-    }
+  &-izquierda {
+    display: flex;
+    justify-content: flex-start;
+  }
+  &-centro {
+    display: flex;
+    justify-content: center;
+  }
+  &-derecha {
+    display: flex;
+    justify-content: flex-end;
+  }
+  &-centro-separado {
+    display: flex;
+    justify-content: space-evenly;
+  }
 }
 
 // ancho% de 5 a 100 paso de 5
 @for $i from 1 through 20 {
-    .ancho-#{$i * 5} {
-        width: $i * 5%;
-    }
+  .ancho-#{$i * 5} {
+    width: $i * 5%;
+  }
 }
 
 // escala de 0.25 a 4 paso de 0.25
 @for $i from 1 through 16 {
-    $size: $i * 0.25;
-    $decimal_part: $size - floor($size); // Extraer la parte decimal del número
-    $class: #{floor($size)}_#{$decimal_part * 100}; // Concatenar la parte entera y decimal como cadena de texto
-    .escala-#{$class} {
-        transform: scale($i * 0.25);
-    }
+  $size: $i * 0.25;
+  $decimal_part: $size - floor($size); // Extraer la parte decimal del número
+  $class: #{floor($size)}_#{$decimal_part *
+    100}; // Concatenar la parte entera y decimal como cadena de texto
+  .escala-#{$class} {
+    transform: scale($i * 0.25);
+  }
 }
 
 mat-card .card-fieldset {
-    font-family: "Raleway", "Open Sans", sans-serif;
-    border: 2px solid var(--primary);
-    padding: 1rem;
-    margin-top: 1rem;
-    .fieldset-legend {
-        width: calc(100% - 2rem);
-        padding-left: 1rem;
-        position: absolute;
-        top: -0.65rem;
-        left: 1rem;
-        background: inherit;
-    }
+  font-family: "Raleway", "Open Sans", sans-serif;
+  border: 2px solid var(--primary);
+  padding: 1rem;
+  margin-top: 1rem;
+  .fieldset-legend {
+    width: calc(100% - 2rem);
+    padding-left: 1rem;
+    position: absolute;
+    top: -0.65rem;
+    left: 1rem;
+    background: inherit;
+  }
 }
 
 .unaLinea {
-    display: flex;
-    align-items: flex-start;
+  display: flex;
+  align-items: flex-start;
 }
