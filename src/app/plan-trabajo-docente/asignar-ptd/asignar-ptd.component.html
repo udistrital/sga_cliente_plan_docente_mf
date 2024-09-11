@@ -24,7 +24,8 @@
               ></div>
               <b>{{ item.Nombre }}</b>
               <small style="margin-left: 5px; font-size: 0.8em; color: gray">
-                (Inicio vigencia: {{ item.InicioVigencia | date : "yyyy-MM-dd" }})
+                (Inicio vigencia:
+                {{ item.InicioVigencia | date : "yyyy-MM-dd" }})
               </small>
             </div>
           </mat-option>
@@ -140,18 +141,16 @@
       <!-- MENSAJE DE VACIO -->
       <div *ngIf="dataSource.data.length === 0" class="margin-y alert info">
         <mat-icon class="icon">sentiment_very_dissatisfied</mat-icon>
-        {{
-          "ptd.sin_asignaciones_de_carga_academica_por_periodo" | translate
-        }}
+        {{ "ptd.sin_asignaciones_de_carga_academica_por_periodo" | translate }}
       </div>
     </mat-card-content>
   </ng-container>
   <!-- Vista de gestión ptd -->
   <ng-container *ngSwitchCase="VIEWS.FORM">
     <mat-card-header>
-        <mat-card-title>
-          {{ "ptd.gest_ptd" | translate }}
-        </mat-card-title>
+      <mat-card-title>
+        {{ "ptd.gest_ptd" | translate }}
+      </mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <!-- PDT Simple no modular -->
@@ -222,10 +221,9 @@
       </ng-container>
     </mat-card-content>
     <mat-card-actions>
-      
-        <button mat-flat-button color="primary" (click)="regresar()">
-          {{ "GLOBAL.regresar" | translate }}
-        </button>
+      <button mat-flat-button color="primary" (click)="regresar()">
+        {{ "GLOBAL.regresar" | translate }}
+      </button>
     </mat-card-actions>
   </ng-container>
 </mat-card>

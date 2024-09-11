@@ -1301,7 +1301,8 @@
     "crear_grupo_espacio": "Create academic group",
     "descripcion_crear_grupo_espacio": "Form to create a new academic group.",
     "periodo": "Academic period",
-    "indicador_grupo": "Group indicator:"
+    "indicador_grupo": "Group indicator:",
+    "no_poder_eliminar_grupo_tiene_colocaciones": "The group cannot be deleted as it has assigned placements."
   },
   "espacios_academicos": {
     "espacios_academicos": "Academic Spaces",
