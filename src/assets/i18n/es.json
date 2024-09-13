@@ -1206,7 +1206,7 @@
     "copiar_plan_ver_docente_p2": "* No se crucen con las que ya hayan sido registradas (no se reescribirán las actividades registradas en el periodo actual)",
     "copiar_plan_ver_docente_p3": "* No se crucen con la carga académica registrada",
     "copiar_plan_ver_docente_p4": "* Correspondan a un espacio físico disponible",
-    "placeholder_nombre_docente": "Debe ingreso al menos 3 caracteres en el campo para buscar el docente.",
+    "placeholder_nombre_docente": "Debe ingresar al menos 3 caracteres en el campo para buscar el docente.",
     "preasignar_ptd": "Preasignación de carga académica",
     "preasignacion": "Preasignación",
     "aprobacion_docente": "Aprobación docente",
@@ -1303,7 +1303,9 @@
     "descripcion_crear_grupo_espacio": "Formulario para crear un nuevo grupo de espacio académico.",
     "periodo": "Periodo académico",
     "indicador_grupo": "Indicador para el grupo:",
-    "no_poder_eliminar_preasignacion_tiene_colocaciones": "La preasignación no puede ser eliminada ya que el espacio académico relacionado, cuenta con colocaciones asignadas."
+    "no_poder_eliminar_preasignacion_tiene_colocaciones": "La preasignación no puede ser eliminada ya que el espacio académico relacionado, cuenta con colocaciones asignadas.",
+    "mensaje_espacio_sin_grupos": "El espacio académico no tiene grupos asignados para el periodo seleccionado. Puede crearlo en la opción de grupo.",
+    "mensaje_buscar_docente": "A continuación, puede buscar el docente de interés por número de documento o nombre."
   },
   "espacios_academicos": {
     "espacios_academicos": "Espacios Académicos",
