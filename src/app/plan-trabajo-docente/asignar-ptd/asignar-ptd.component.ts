@@ -197,7 +197,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   accionEnviar(event: any) {
     const title = this.coordinador
       ? this.translate.instant("ptd.enviar_a_docente")
-      : this.translate.instant("ptd.enviar_a_coordinacion");
+      : this.translate.instant("ptd.mensaje_enviar_a_coordinacion");
     this.popUpManager
       .showPopUpGeneric(
         title,

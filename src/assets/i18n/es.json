@@ -1248,10 +1248,11 @@
     "no_info_copia_actividades": "Sin actividades para el periodo seleccionado, o información incompleta",
     "enviar_a_docente": "Enviar a docente",
     "enviar_a_coordinacion": "Enviar a coordinación",
+    "mensaje_enviar_a_coordinacion": "Con esta acción está aceptando el plan docente y firmando electrónicamente.",
     "pregunta_enviar_a_docente": "¿Enviar para aprobación de docente? Esta acción significa que ha sido aprobado por el Proyecto Curricular",
     "pregunta_enviar_a_coordinacion": "¿Enviar aprobación a coordinación? Los espacios académicos aprobados harán parte de su Plan Trabajo Docente",
     "pregunta_editar": "La edición de la preasignación requiere nuevamente el proceso de aprobación, ¿Continuar?",
-    "pregunta_eliminar": "¿Eliminar la preasignación seleccionada?",
+    "pregunta_eliminar": "¿Esta seguro de eliminar la preasignación seleccionada?",
     "pregunta_enviar": "Al enviar no podrá seguir editando, ¿continuar?",
     "plan_enviado_ok": "El plan ha sido enviado",
     "error_enviar_plan": "No se pudo enviar el plan",
@@ -1305,7 +1306,8 @@
     "indicador_grupo": "Indicador para el grupo:",
     "no_poder_eliminar_preasignacion_tiene_colocaciones": "La preasignación no puede ser eliminada ya que el espacio académico relacionado, cuenta con colocaciones asignadas.",
     "mensaje_espacio_sin_grupos": "El espacio académico no tiene grupos asignados para el periodo seleccionado. Puede crearlo en la opción de grupo.",
-    "mensaje_buscar_docente": "A continuación, puede buscar el docente de interés por número de documento o nombre."
+    "mensaje_buscar_docente": "A continuación, puede buscar el docente de interés por número de documento o nombre.",
+    "eliminar_preasignacion_tiene_repetir_proceso_ptd": "¿Está seguro de eliminar la preasignación? Esto reiniciará el proceso del plan docente para el docente."
   },
   "espacios_academicos": {
     "espacios_academicos": "Espacios Académicos",

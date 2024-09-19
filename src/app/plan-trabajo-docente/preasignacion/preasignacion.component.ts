@@ -168,42 +168,50 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
       });
   }
 
-  accionBorrar(event: any) {
-    console.log(event);
+  preguntarBorradoPreAsignacion(event: any) {
     this.popUpManager
-      .showPopUpGeneric(
-        this.translate.instant("ptd.preasignacion"),
-        this.translate.instant("ptd.pregunta_eliminar"),
-        MODALS.WARNING,
-        false
-      )
+      .showConfirmAlert(this.translate.instant("ptd.pregunta_eliminar"))
       .then((action) => {
         if (action.value) {
-          this.planDocenteMid
-            .delete("preasignacion", { Id: event.rowData.id })
-            .subscribe({
-              next: (resp: RespFormat) => {
-                if (resp.Message == "tiene colocaciones") {
-                  return this.popUpManager.showErrorAlert(
-                    this.translate.instant(
-                      "ptd.no_poder_eliminar_preasignacion_tiene_colocaciones"
-                    )
-                  );
-                }
-
-                this.popUpManager.showSuccessAlert(
-                  this.translate.instant("ptd.preasignacion_eliminada")
-                );
-
-                this.loadPreasignaciones();
-              },
-              error: (err) => {
-                this.popUpManager.showErrorToast(
-                  this.translate.instant("ptd.error_preasignacion_eliminada")
-                );
-              },
+          this.popUpManager
+            .showConfirmAlert(
+              this.translate.instant(
+                "ptd.eliminar_preasignacion_tiene_repetir_proceso_ptd"
+              )
+            )
+            .then((action) => {
+              if (action.value) {
+                this.eliminarPreAsignacion(event.rowData.id);
+              }
             });
         }
+      });
+  }
+
+  eliminarPreAsignacion(preAsignacionId: any) {
+    this.planDocenteMid
+      .delete("preasignacion", { Id: preAsignacionId })
+      .subscribe({
+        next: (resp: RespFormat) => {
+          if (resp.Message == "tiene colocaciones") {
+            return this.popUpManager.showErrorAlert(
+              this.translate.instant(
+                "ptd.no_poder_eliminar_preasignacion_tiene_colocaciones"
+              )
+            );
+          }
+
+          this.popUpManager.showSuccessAlert(
+            this.translate.instant("ptd.preasignacion_eliminada")
+          );
+
+          this.loadPreasignaciones();
+        },
+        error: (err) => {
+          this.popUpManager.showErrorToast(
+            this.translate.instant("ptd.error_preasignacion_eliminada")
+          );
+        },
       });
   }
 

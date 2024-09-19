@@ -1245,6 +1245,7 @@
     "no_info_copia_actividades": "No activities for the selected period, or incomplete information",
     "enviar_a_docente": "Send to teacher",
     "enviar_a_coordinacion": "Send to coordination",
+    "mensaje_enviar_a_coordinacion": "With this action, you are accepting the teaching plan and signing electronically.",
     "pregunta_enviar_a_docente": "Send for Teacher Approval? This action means that it has been approved by the Curricular Project",
     "pregunta_enviar_a_coordinacion": "Send approval to coordination? The approved academic spaces will be part of your Teacher Work Plan",
     "pregunta_editar": "Editing the preassignment requires the approval process again, Continue?",
@@ -1304,7 +1305,8 @@
     "indicador_grupo": "Group indicator:",
     "no_poder_eliminar_grupo_tiene_colocaciones": "The group cannot be deleted as it has assigned placements.",
     "mensaje_espacio_sin_grupos": "The academic space has no assigned groups for the selected period. You can create it in the group option.",
-    "mensaje_buscar_docente": "You can search for the desired teacher by document number or name below."
+    "mensaje_buscar_docente": "You can search for the desired teacher by document number or name below.",
+    "eliminar_preasignacion_tiene_repetir_proceso_ptd": "Are you sure you want to delete the preassignment? This will restart the teaching plan process for the teacher."
   },
   "espacios_academicos": {
     "espacios_academicos": "Academic Spaces",
