@@ -183,23 +183,18 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
             .delete("preasignacion", { Id: event.rowData.id })
             .subscribe({
               next: (resp: RespFormat) => {
-                if (checkResponse(resp)) {
-                  if (resp.Message == "tiene colocaciones") {
-                    return this.popUpManager.showErrorAlert(
-                      this.translate.instant(
-                        "ptd.no_poder_eliminar_preasignacion_tiene_colocaciones"
-                      )
-                    );
-                  }
-
-                  this.popUpManager.showSuccessAlert(
-                    this.translate.instant("ptd.preasignacion_eliminada")
-                  );
-                } else {
-                  this.popUpManager.showErrorAlert(
-                    this.translate.instant("ptd.error_preasignacion_eliminada")
+                if (resp.Message == "tiene colocaciones") {
+                  return this.popUpManager.showErrorAlert(
+                    this.translate.instant(
+                      "ptd.no_poder_eliminar_preasignacion_tiene_colocaciones"
+                    )
                   );
                 }
+
+                this.popUpManager.showSuccessAlert(
+                  this.translate.instant("ptd.preasignacion_eliminada")
+                );
+
                 this.loadPreasignaciones();
               },
               error: (err) => {

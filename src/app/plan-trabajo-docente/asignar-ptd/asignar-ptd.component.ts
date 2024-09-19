@@ -143,6 +143,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       )
       .subscribe(
         (res: any) => {
+          console.log(res);
           this.detalleAsignacion = res.Data;
           this.dataDocente = {
             Nombre: event.rowData.docente,

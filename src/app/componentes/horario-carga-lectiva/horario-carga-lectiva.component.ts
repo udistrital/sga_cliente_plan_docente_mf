@@ -516,6 +516,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     this.listaCargaLectiva = [];
 
     this.Data.carga[this.seleccion].forEach((carga: any) => {
+      console.log(carga);
       this.identificador++;
       let nombre;
       if (carga.espacio_academico_id != "NA") {
@@ -679,8 +680,11 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   async guardar_ptd() {
-    if(!this.puedeEditarPTD) {
-      this.popUpManager.showAlert(this.translate.instant("ptd.guardado_ptd_error"), this.translate.instant("ptd.guardado_ptd_error_msg"));
+    if (!this.puedeEditarPTD) {
+      this.popUpManager.showAlert(
+        this.translate.instant("ptd.guardado_ptd_error"),
+        this.translate.instant("ptd.guardado_ptd_error_msg")
+      );
       return;
     }
     this.OutLoading.emit(true);
@@ -697,7 +701,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           sede_id: element.sede.Id,
           edificio_id: element.edificio?.Id ? element.edificio.Id : "",
           salon_id: element.salon?.Id ? element.salon.Id : "",
-          horario: JSON.stringify({
+          horario: {
             horas: element.horas,
             horaFormato: element.horaFormato,
             tipo: element.tipo,
@@ -705,7 +709,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
             dragPosition: element.dragPosition,
             prevPosition: element.prevPosition,
             finalPosition: element.finalPosition,
-          }),
+          },
           hora_inicio: horaInicio,
           duracion: element.horas,
           activo: true,
@@ -938,7 +942,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         resolve();
         return;
       }
-  
+
       if (this.isDocente) {
         try {
           const estado = await this.getEstadoPDT();
@@ -952,14 +956,14 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         }
         return;
       }
-  
+
       this.puedeEditarPTD = false;
       resolve();
     });
   }
 
   bloquearElementosTabla(): void {
-    if(!this.puedeEditarPTD || this.WorkingMode === ACTIONS.VIEW) {
+    if (!this.puedeEditarPTD || this.WorkingMode === ACTIONS.VIEW) {
       this.listaCargaLectiva.forEach((element) => {
         element.bloqueado = true;
       });
