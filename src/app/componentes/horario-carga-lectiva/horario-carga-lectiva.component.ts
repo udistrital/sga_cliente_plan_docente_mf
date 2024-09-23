@@ -23,6 +23,7 @@ import { OikosService } from "src/app/services/oikos.service";
 import { ACTIONS, MODALS, ROLES, VIEWS } from "src/app/models/diccionario";
 import { CardDetalleCarga, CoordXY } from "src/app/models/card-detalle-carga";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
+import { HorarioMidService } from "src/app/services/horario-mid.service";
 
 @Component({
   selector: "horario-carga-lectiva",
@@ -67,7 +68,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   @ViewChild("contenedorCargaLectiva", { static: false })
   contenedorCargaLectiva: ElementRef;
   listaCargaLectiva: any[] = [];
-  listaOcupacion: any[] = [];
+  listaEspaciosFisicosOcupados: any[] = [];
   /*************************** */
 
   /** Entradas y Salidas */
@@ -102,17 +103,18 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   ubicacionForm: FormGroup;
   ubicacionActive: boolean = false;
   editandoAsignacion: CardDetalleCarga;
-  ocupados: any[] = [];
   aprobacion: any = undefined;
   EspaciosProyecto: any = undefined;
   manageByTime: boolean = false;
   puedeEditarPTD: boolean = false;
+  private dragEnabled = false;
 
   constructor(
     private popUpManager: PopUpManager,
     private translate: TranslateService,
-    private sgaPlanTrabajoDocenteMidService: SgaPlanTrabajoDocenteMidService,
-    private planTrabajoDocenteService: PlanTrabajoDocenteService,
+    private horarioMid: HorarioMidService,
+    private planDocenteMid: SgaPlanTrabajoDocenteMidService,
+    private planDocenteService: PlanTrabajoDocenteService,
     private builder: FormBuilder,
     private oikosService: OikosService,
     private readonly elementRef: ElementRef
@@ -263,6 +265,11 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   onDragMoved(event: CdkDragMove, elementMoved: CardDetalleCarga) {
+    if (!this.dragEnabled) {
+      event.source._dragRef.setFreeDragPosition(elementMoved.prevPosition);
+      return;
+    }
+
     if (this.isInsideGrid(elementMoved)) {
       const coord = this.getPositionforMatrix(elementMoved);
       this.changeStateRegion(coord.x, coord.y, elementMoved.horas, false);
@@ -293,46 +300,40 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   onDragStarted(elementMoved: CardDetalleCarga) {
-    this.limpiarOcupado();
-    if (this.isCoordinador) {
-      this.OutLoading.emit(true);
-      this.sgaPlanTrabajoDocenteMidService
-        .get(
-          `espacio-fisico/disponibilidad?salon=${
-            elementMoved.salon.Id
-          }&vigencia=${this.Data.vigencia}&plan=${
-            this.Data.plan_docente[this.seleccion]
-          }`
-        )
-        .subscribe((res) => {
-          this.ocupados = res.Success == 200 ? res.Data : [];
-          this.OutLoading.emit(false);
-          this.ocupados.forEach((newElement) => {
-            const newElementFormat: CardDetalleCarga = {
-              id: null,
-              nombre: this.translate.instant("ptd.espacio_ocupado"),
-              idCarga: newElement.id,
-              idEspacioAcademico: null,
-              idActividad: null,
-              horas: newElement.horas,
-              horaFormato: null,
-              tipo: null,
-              sede: null,
-              edificio: null,
-              salon: null,
-              estado: null,
-              bloqueado: true,
-              dragPosition: newElement.finalPosition,
-              prevPosition: newElement.finalPosition,
-              finalPosition: newElement.finalPosition,
+    console.log;
+    const periodoId = 31;
+    const espacioFisicoId = elementMoved.salon.Id;
+
+    // Desactiva el drag and drop
+    this.dragEnabled = false;
+
+    this.horarioMid
+      .get(
+        `espacio-fisico/ocupados?espacio-fisico-id=${espacioFisicoId}&periodo-id=${periodoId}`
+      )
+      .subscribe((res: any) => {
+        if (res.Success && res.Data.length > 0) {
+          res.Data.forEach((element: any) => {
+            const ocupado: any = {
+              horas: element.horas,
+              estado: this.estado.ubicado,
+              dragPosition: element.finalPosition,
+              prevPosition: element.finalPosition,
+              finalPosition: element.finalPosition,
             };
-            this.listaOcupacion.push(newElementFormat);
-            const coord = this.getPositionforMatrix(newElement);
-            this.changeStateRegion(coord.x, coord.y, newElement.horas, true);
+            if (
+              !this.listaCargaLectiva.some(
+                (carga) => carga.idColocacionEspacioAcademico === element._id
+              )
+            ) {
+              const coord = this.getPositionforMatrix(ocupado);
+              this.changeStateRegion(coord.x, coord.y, ocupado.horas, true);
+              this.listaEspaciosFisicosOcupados.push(ocupado);
+            }
           });
-          this.OutLoading.emit(false);
-        });
-    }
+        }
+        this.dragEnabled = true;
+      });
   }
 
   calculateTimeSpan(dragPosition: CoordXY, h: number): string {
@@ -355,7 +356,14 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   onDragReleased(event: CdkDragRelease, elementMoved: CardDetalleCarga) {
-    this.limpiarOcupado();
+    this.limpiarListaEspaciosFisicosOcupados();
+    if (!this.dragEnabled) {
+      elementMoved.dragPosition = elementMoved.prevPosition;
+      elementMoved.finalPosition = elementMoved.prevPosition;
+      event.source._dragRef.setFreeDragPosition(elementMoved.prevPosition);
+      return;
+    }
+
     this.popUpManager
       .showPopUpGeneric(
         this.translate.instant("ptd.asignar"),
@@ -379,7 +387,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
             const coord = this.getPositionforMatrix(elementMoved);
             this.changeStateRegion(coord.x, coord.y, elementMoved.horas, false);
           }
-          elementMoved.dragPosition = { x: this.snapGridSize.x * -2.25, y: 0 };
+          elementMoved.dragPosition = elementMoved.finalPosition;
           elementMoved.prevPosition = elementMoved.dragPosition;
           elementMoved.finalPosition = elementMoved.dragPosition;
           event.source._dragRef.setFreeDragPosition(elementMoved.prevPosition);
@@ -394,7 +402,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
 
   async formularioEspacioFisico() {
     if (this.asignaturaSelected) {
-      this.sgaPlanTrabajoDocenteMidService
+      this.planDocenteMid
         .get(
           "espacio-fisico/dependencia?dependencia=" +
             this.asignaturaSelected.proyecto_id
@@ -534,6 +542,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         nombre: nombre,
         idCarga: carga.id,
         idEspacioAcademico: carga.espacio_academico_id,
+        idColocacionEspacioAcademico: carga.colocacion_espacio_academico_id,
         idActividad: carga.actividad_id,
         horas: carga.horario.horas,
         horaFormato: carga.horario.horaFormato,
@@ -623,7 +632,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           );
           this.listaCargaLectiva.splice(idx, 1);
           if (elementClicked.idCarga) {
-            this.planTrabajoDocenteService
+            this.planDocenteService
               .delete("carga_plan", { Id: elementClicked.idCarga })
               .subscribe((response: any) => {
                 this.OutLoading.emit(false);
@@ -738,7 +747,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       estado_plan: estado_plan_is,
     };
 
-    this.sgaPlanTrabajoDocenteMidService
+    this.planDocenteMid
       .put("plan/", {
         carga_plan: carga_plan,
         plan_docente: plan_docente,
@@ -877,7 +886,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
 
   getActividades() {
     return new Promise((resolve, reject) => {
-      this.planTrabajoDocenteService
+      this.planDocenteService
         .get("actividad?query=activo:true&fields=nombre")
         .subscribe(
           (res: any) => {
@@ -891,26 +900,26 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     });
   }
 
-  limpiarOcupado() {
-    if (this.listaOcupacion.length > 0) {
-      this.listaOcupacion.forEach((ocupado) => {
+  limpiarListaEspaciosFisicosOcupados() {
+    if (this.listaEspaciosFisicosOcupados.length > 0) {
+      this.listaEspaciosFisicosOcupados.forEach((ocupado) => {
         const coord = this.getPositionforMatrix(ocupado);
         this.changeStateRegion(coord.x, coord.y, ocupado.horas, false);
       });
-      this.listaOcupacion = [];
+      this.listaEspaciosFisicosOcupados = [];
     }
   }
 
   getEstadoPDT(): Promise<any | null> {
     return new Promise((resolve, reject) => {
-      this.planTrabajoDocenteService
+      this.planDocenteService
         .get(`plan_docente/${this.Data.plan_docente[this.seleccion]}`)
         .subscribe(
           (response: any) => {
             if (response?.Status == 200) {
               let data = response.Data;
               const estado_plan_id = data.estado_plan_id;
-              this.planTrabajoDocenteService
+              this.planDocenteService
                 .get(`estado_plan/${estado_plan_id}`)
                 .subscribe(
                   (response: any) => {

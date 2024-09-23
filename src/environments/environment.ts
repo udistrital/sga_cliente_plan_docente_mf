@@ -20,4 +20,5 @@ export const environment = {
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/documento_crud/v2/",
   PROYECTO_ACADEMICO_SERVICE:
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/proyecto_academico_crud/v1/",
+  HORARIO_MID_SERVICE: "http://localhost:8099/v1/",
 };

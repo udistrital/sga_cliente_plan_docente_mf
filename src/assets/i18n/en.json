@@ -1306,7 +1306,7 @@
     "no_poder_eliminar_grupo_tiene_colocaciones": "The group cannot be deleted as it has assigned placements.",
     "mensaje_espacio_sin_grupos": "The academic space has no assigned groups for the selected period. You can create it in the group option.",
     "mensaje_buscar_docente": "You can search for the desired teacher by document number or name below.",
-    "eliminar_preasignacion_tiene_repetir_proceso_ptd": "Are you sure you want to delete the preassignment? This will restart the teaching plan process for the teacher."
+    "eliminar_preasignacion_tiene_repetir_proceso_ptd": "This will restart the teaching plan process for the teacher. Are you sure you want to delete the preassignment?"
   },
   "espacios_academicos": {
     "espacios_academicos": "Academic Spaces",

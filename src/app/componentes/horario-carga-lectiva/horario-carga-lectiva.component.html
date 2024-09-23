@@ -340,15 +340,18 @@
 
                 <div
                   class="element-ocupado"
-                  *ngFor="let element of listaOcupacion"
+                  *ngFor="let element of listaEspaciosFisicosOcupados"
                   style="position: absolute"
                   [style.height.px]="element.horas * snapGridSize.y"
                   cdkDrag
                   [cdkDragFreeDragPosition]="element.dragPosition"
                   [cdkDragDisabled]="element.bloqueado"
                   cdkDragBoundary=".grid-carga-lectiva"
+                  [cdkDragDisabled]="true"
                 >
-                  <div class="contenido">*{{ element.nombre }}</div>
+                  <div class="center">
+                    <mat-icon class="icono-lock">lock</mat-icon>
+                  </div>
                 </div>
               </div>
             </td>

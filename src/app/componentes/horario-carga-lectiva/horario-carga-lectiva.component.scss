@@ -13,7 +13,8 @@ table {
 }
 
 /* estilo cuadricula tabla horario - headers */
-th, td {
+th,
+td {
   width: $snap-grid-width;
   min-width: $snap-grid-width;
   background-color: var(--primary);
@@ -74,8 +75,7 @@ td {
   display: flex;
   flex-direction: column;
   transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
-  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
-    0 2px 2px 0 rgba(0, 0, 0, 0.14),
+  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
     0 1px 5px 0 rgba(0, 0, 0, 0.12);
   transition: height 0.5s ease-in-out, background-color 0.5s ease-in-out;
 }
@@ -92,16 +92,11 @@ td {
 .flotando {
   background: lavender !important;
   box-shadow: 0 10px 5px -5px rgba(0, 0, 0, 0.2),
-    0 8px 10px 1px rgba(0, 0, 0, 0.14),
-    0 3px 14px 2px rgba(0, 0, 0, 0.12);
+    0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
 
   .info-tooltip {
     visibility: visible;
   }
-}
-
-.ocupado {
-  background: var(--danger-accent) !important;
 }
 
 .element-carga-lectiva:not(:active):hover {
@@ -119,7 +114,6 @@ td {
   visibility: visible;
 }
 
-
 .element-carga-lectiva:not(:active):hover .info-contenidoBig {
   transition-delay: 0.5s;
   visibility: visible;
@@ -130,25 +124,7 @@ td {
   z-index: 50;
   background: var(--color200);
   box-shadow: 0 10px 5px -5px rgba(0, 0, 0, 0.2),
-    0 8px 10px 1px rgba(0, 0, 0, 0.14),
-    0 3px 14px 2px rgba(0, 0, 0, 0.12);
-}
-
-/* estilo para espacio ocupado */
-.element-ocupado {
-  background: lightgray;
-  width: $snap-grid-width;
-  height: $snap-grid-height;
-  border: solid 1px #ccc;
-  color: black;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  border-radius: 4px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
+    0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
 }
 
 /* estilo para iconos de opciones */
@@ -204,7 +180,7 @@ td {
   color: black;
   border-radius: 3px;
   visibility: hidden;
-  box-shadow: 0 10px 5px -5px rgba(0, 0, 0, 0.2),
+  box-shadow: 0 10px 5px -5px rgba(0, 0, 0, 0.2);
 }
 
 i {
@@ -216,7 +192,7 @@ i {
   display: flex;
   align-items: center;
   flex-direction: row;
-  justify-content: space-evenly
+  justify-content: space-evenly;
 }
 
 .row {
@@ -226,7 +202,6 @@ i {
   margin-right: -15px;
   margin-left: -15px;
 }
-
 
 .campos {
   width: 100%;
@@ -248,7 +223,7 @@ i {
   width: 200%;
   height: 130px;
   padding: 3px;
-  background-color: rgba(255, 255, 255, 0.90);
+  background-color: rgba(255, 255, 255, 0.9);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -256,7 +231,27 @@ i {
   overflow-y: auto;
   border-radius: 3px;
   visibility: hidden;
-  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
-  0 2px 2px 0 rgba(0, 0, 0, 0.14),
-  0 1px 5px 0 rgba(0, 0, 0, 0.12);
+  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+    0 1px 5px 0 rgba(0, 0, 0, 0.12);
+}
+
+.element-ocupado {
+  background-color: #f8d7da; /* Rojo pastel */
+  border: 1px solid #f5c6cb; /* Rojo claro para el borde */
+  width: $snap-grid-width;
+  height: $snap-grid-height;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.2); /* Sombras rojas luminosas */
+  color: #8f032e; /* Color del texto */
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.icono-lock {
+  color: #8f032e;
 }
