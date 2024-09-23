@@ -33,6 +33,8 @@ import { AsignarPtdMultipleComponent } from "./componentes/asignar-ptd-multiple/
 import { DialogoFirmaPtdComponent } from "./dialog-components/dialogo-firma-ptd/dialogo-firma-ptd.component";
 import { DialogPreviewFileComponent } from "./dialog-components/dialog-preview-file/dialog-preview-file.component";
 import { DialogoCrearEspacioGrupoComponent } from "./dialog-components/dialogo-crear-espacio-grupo/dialogo-crear-espacio-grupo.component";
+import { MatCardModule } from "@angular/material/card";
+import { DialogoVerDetalleColocacionComponent } from "./dialog-components/dialogo-ver-detalles-colocacion/dialogo-ver-detalle-colocacion.component";
 export function createTranslateLoader(http: HttpClient) {
   return new TranslateHttpLoader(
     http,
@@ -61,6 +63,7 @@ export function createTranslateLoader(http: HttpClient) {
     DialogoFirmaPtdComponent,
     DialogPreviewFileComponent,
     DialogoCrearEspacioGrupoComponent,
+    DialogoVerDetalleColocacionComponent,
     // ? componentes transversales
     HorarioCargaLectivaComponent,
     AsignarPtdMultipleComponent,
@@ -81,6 +84,7 @@ export function createTranslateLoader(http: HttpClient) {
       },
     }),
     FormsModule,
+    MatCardModule,
     ReactiveFormsModule,
   ],
   providers: [

@@ -1,7 +1,7 @@
 /* Valor de ancho de la cuadrícula */
 $snap-grid-width: 110px;
 /* Valor de alto de la cuadrícula */
-$snap-grid-height: 75px;
+$snap-grid-height: 90px;
 
 #ubicacion {
   scroll-margin-block: 130px;
@@ -139,7 +139,6 @@ td {
 .left-top {
   cursor: pointer;
   font-size: 1.25rem;
-  color: var(--primary);
 }
 
 .center-top {
@@ -150,7 +149,6 @@ td {
 .right-top {
   cursor: pointer;
   font-size: 1.25rem;
-  color: var(--primary);
 }
 
 .contenido {
@@ -254,4 +252,45 @@ i {
 
 .icono-lock {
   color: #8f032e;
+}
+
+.truncate {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  padding-bottom: 1.5px; /* Número de líneas a mostrar */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.icono-carta {
+  color: #013960;
+}
+
+.carta-flotante {
+  position: fixed;
+  bottom: 20px; /* Ubica el bloque 20px desde la parte inferior de la pantalla */
+  left: 50%; /* Lo coloca en el 50% de la pantalla horizontalmente */
+  transform: translateX(
+    -50%
+  ); /* Lo desplaza hacia la izquierda para que quede centrado */
+  background-color: rgba(255, 255, 255, 1);
+  padding: 20px;
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  text-align: center;
+  animation: floating 3s ease-in-out infinite;
+  z-index: 1000;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  border: 0.5px solid #03668e;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.1s ease-in-out;
+  height: 100%;
+  width: auto;
+  padding: 10px;
 }

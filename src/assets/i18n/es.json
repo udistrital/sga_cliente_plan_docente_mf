@@ -1159,6 +1159,7 @@
     "edificio": "Edificio",
     "salon": "Salón",
     "horas": "Horas",
+    "hora": "Hora",
     "modificar": "Modificar",
     "total_horas": "Total Horas",
     "carga_lectiva": "Carga lectiva",
@@ -1307,7 +1308,13 @@
     "no_poder_eliminar_preasignacion_tiene_colocaciones": "La preasignación no puede ser eliminada ya que el espacio académico relacionado, cuenta con colocaciones asignadas.",
     "mensaje_espacio_sin_grupos": "El espacio académico no tiene grupos asignados para el periodo seleccionado. Puede crearlo en la opción de grupo.",
     "mensaje_buscar_docente": "A continuación, puede buscar el docente de interés por número de documento o nombre.",
-    "eliminar_preasignacion_tiene_repetir_proceso_ptd": "Esto reiniciará el proceso del plan docente para el docente. ¿Está seguro de eliminar la preasignación? "
+    "eliminar_preasignacion_tiene_repetir_proceso_ptd": "Esto reiniciará el proceso del plan docente para el docente. ¿Está seguro de eliminar la preasignación? ",
+    "detalle_colocacion": "Detalle de la colocación",
+    "descripcion_detalle_colocacion": "Detalle completo de la colocación seleccionada",
+    "asignar_docente": "Asignar docente",
+    "actividad": "Actividad",
+    "no_suelte_tarjeta_hasta_restricciones": "Por favor, espere a que se carguen las restricciones antes de soltar la tarjeta.",
+    "mensaje_horario": "Arrastre las colocaciones al horario deseado. Para ver más detalles, haga clic en el nombre del espacio o actividad correspondiente."
   },
   "espacios_academicos": {
     "espacios_academicos": "Espacios Académicos",

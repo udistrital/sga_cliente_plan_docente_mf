@@ -24,6 +24,8 @@ import { ACTIONS, MODALS, ROLES, VIEWS } from "src/app/models/diccionario";
 import { CardDetalleCarga, CoordXY } from "src/app/models/card-detalle-carga";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
 import { HorarioMidService } from "src/app/services/horario-mid.service";
+import { MatDialog } from "@angular/material/dialog";
+import { DialogoVerDetalleColocacionComponent } from "src/app/dialog-components/dialogo-ver-detalles-colocacion/dialogo-ver-detalle-colocacion.component";
 
 @Component({
   selector: "horario-carga-lectiva",
@@ -43,7 +45,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     x: this.horarioSize.days,
     y: this.horarioSize.hourEnd - this.horarioSize.hourIni,
   };
-  readonly snapGridSize = { x: 110, y: 75, ymin: 75 * 0.25 }; //px no olvide editarlas en scss si las cambia
+  readonly snapGridSize = { x: 110, y: 90, ymin: 90 * 0.25 }; //px no olvide editarlas en scss si las cambia
   readonly containerGridsize = {
     x: this.containerGridLengths.x * this.snapGridSize.x,
     y: this.containerGridLengths.y * this.snapGridSize.y,
@@ -109,7 +111,10 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   puedeEditarPTD: boolean = false;
   private dragEnabled = false;
 
+  banderaInfoNoSoltarTarjeta = false;
+
   constructor(
+    public dialog: MatDialog,
     private popUpManager: PopUpManager,
     private translate: TranslateService,
     private horarioMid: HorarioMidService,
@@ -300,8 +305,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   onDragStarted(elementMoved: CardDetalleCarga) {
-    console.log;
-    const periodoId = 31;
+    this.banderaInfoNoSoltarTarjeta = true;
+    const periodoId = this.Data.vigencia;
     const espacioFisicoId = elementMoved.salon.Id;
 
     // Desactiva el drag and drop
@@ -333,6 +338,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           });
         }
         this.dragEnabled = true;
+        this.banderaInfoNoSoltarTarjeta = false;
       });
   }
 
@@ -385,14 +391,13 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         } else {
           if (this.isInsideGrid(elementMoved)) {
             const coord = this.getPositionforMatrix(elementMoved);
-            this.changeStateRegion(coord.x, coord.y, elementMoved.horas, false);
+            this.changeStateRegion(coord.x, coord.y, elementMoved.horas, true);
           }
           elementMoved.dragPosition = elementMoved.finalPosition;
           elementMoved.prevPosition = elementMoved.dragPosition;
           elementMoved.finalPosition = elementMoved.dragPosition;
           event.source._dragRef.setFreeDragPosition(elementMoved.prevPosition);
           event.source._dragRef.disabled = true;
-          elementMoved.estado = this.estado.flotando;
           event.source
             .getRootElement()
             .scrollIntoView({ block: "center", behavior: "smooth" });
@@ -977,5 +982,22 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         element.bloqueado = true;
       });
     }
+  }
+
+  abrirDialogoVerDetalleEspacio(infoEspacio: any) {
+    const dialogRef = this.dialog.open(DialogoVerDetalleColocacionComponent, {
+      data: {
+        ...infoEspacio,
+        // ...this.infoAdicionalColocacion,
+      },
+      width: "50%",
+      height: "auto",
+    });
+
+    dialogRef.afterClosed().subscribe((docenteAsignado) => {
+      if (docenteAsignado) {
+        // this.cargarColocaciones();
+      }
+    });
   }
 }

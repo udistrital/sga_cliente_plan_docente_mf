@@ -1157,6 +1157,7 @@
     "edificio": "Building",
     "salon": "Classroom",
     "horas": "Hours",
+    "hora": "Hour",
     "modificar": "Modify",
     "total_horas": "Total Hours",
     "carga_lectiva": "Study Load",
@@ -1306,7 +1307,13 @@
     "no_poder_eliminar_grupo_tiene_colocaciones": "The group cannot be deleted as it has assigned placements.",
     "mensaje_espacio_sin_grupos": "The academic space has no assigned groups for the selected period. You can create it in the group option.",
     "mensaje_buscar_docente": "You can search for the desired teacher by document number or name below.",
-    "eliminar_preasignacion_tiene_repetir_proceso_ptd": "This will restart the teaching plan process for the teacher. Are you sure you want to delete the preassignment?"
+    "eliminar_preasignacion_tiene_repetir_proceso_ptd": "This will restart the teaching plan process for the teacher. Are you sure you want to delete the preassignment?",
+    "detalle_colocacion": "Placement Detail",
+    "descripcion_detalle_colocacion": "Full detail of the selected placement",
+    "asignar_docente": "Assign teacher",
+    "actividad": "Activity",
+    "no_suelte_tarjeta_hasta_restricciones": "Please wait for the restrictions to load before releasing the card.",
+    "mensaje_horario": "Drag the placements to the desired schedule. To see more details, click on the name of the corresponding space or activity."
   },
   "espacios_academicos": {
     "espacios_academicos": "Academic Spaces",
