@@ -1314,7 +1314,10 @@
     "asignar_docente": "Asignar docente",
     "actividad": "Actividad",
     "no_suelte_tarjeta_hasta_restricciones": "Por favor, espere a que se carguen las restricciones antes de soltar la tarjeta.",
-    "mensaje_horario": "Arrastre las colocaciones al horario deseado. Para ver más detalles, haga clic en el nombre del espacio o actividad correspondiente."
+    "mensaje_horario": "Arrastre las colocaciones al horario deseado. Para ver más detalles, haga clic en el nombre del espacio o actividad correspondiente.",
+    "convenciones": "Convenciones",
+    "docente_asignado": "Docente asignado",
+    "espacios_fisicos_ocupados": "Espacios físicos ocupados"
   },
   "espacios_academicos": {
     "espacios_academicos": "Espacios Académicos",

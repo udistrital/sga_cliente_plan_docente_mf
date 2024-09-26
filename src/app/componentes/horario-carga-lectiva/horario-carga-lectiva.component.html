@@ -21,7 +21,12 @@
     </mat-form-field>
     <mat-form-field class="form-col1 form-field" *ngIf="isCoordinador">
       <mat-label>{{ "ptd.select_asignatura" | translate }}:</mat-label>
-      <mat-select [(ngModel)]="asignaturaSelected">
+      <mat-select
+        [(ngModel)]="asignaturaSelected"
+        (selectionChange)="
+          verificarSiEspacioTieneColocacionEnModuloHorario($event)
+        "
+      >
         <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
         <mat-option *ngFor="let item of asignaturas" [value]="item">
           {{ item.nombre }}
@@ -233,14 +238,14 @@
   </div>
   <div class="row center-h mb-3" *ngIf="edit">
     <div class="col-4 card">
-      <b class="center-h mb-2">Convenciones</b>
+      <b class="center-h mb-2">{{ "ptd.convenciones" | translate }}</b>
       <p class="center-v">
-        <mat-icon color="primary" class="mr-2">assignment_ind</mat-icon>Docente
-        asignado
+        <mat-icon color="primary" class="mr-2">how_to_reg</mat-icon
+        >{{ "ptd.docente_asignado" | translate }}
       </p>
       <p class="center-v">
-        <mat-icon class="icono-lock mr-2">lock</mat-icon>Espacios fisicos
-        ocupados
+        <mat-icon class="icono-lock mr-2">lock</mat-icon
+        >{{ "ptd.espacios_fisicos_ocupados" | translate }}
       </p>
     </div>
   </div>

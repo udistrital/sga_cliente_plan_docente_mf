@@ -1313,7 +1313,10 @@
     "asignar_docente": "Assign teacher",
     "actividad": "Activity",
     "no_suelte_tarjeta_hasta_restricciones": "Please wait for the restrictions to load before releasing the card.",
-    "mensaje_horario": "Drag the placements to the desired schedule. To see more details, click on the name of the corresponding space or activity."
+    "mensaje_horario": "Drag the placements to the desired schedule. To see more details, click on the name of the corresponding space or activity.",
+    "convenciones": "Conventions",
+    "docente_asignado": "Assigned teacher",
+    "espacios_fisicos_ocupados": "Occupied physical spaces"
   },
   "espacios_academicos": {
     "espacios_academicos": "Academic Spaces",

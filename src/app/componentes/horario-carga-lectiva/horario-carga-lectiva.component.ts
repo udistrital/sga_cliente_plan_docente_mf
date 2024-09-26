@@ -26,6 +26,7 @@ import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-traba
 import { HorarioMidService } from "src/app/services/horario-mid.service";
 import { MatDialog } from "@angular/material/dialog";
 import { DialogoVerDetalleColocacionComponent } from "src/app/dialog-components/dialogo-ver-detalles-colocacion/dialogo-ver-detalle-colocacion.component";
+import { HorarioService } from "src/app/services/horario.service";
 
 @Component({
   selector: "horario-carga-lectiva",
@@ -118,6 +119,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     private popUpManager: PopUpManager,
     private translate: TranslateService,
     private horarioMid: HorarioMidService,
+    private horarioService: HorarioService,
     private planDocenteMid: SgaPlanTrabajoDocenteMidService,
     private planDocenteService: PlanTrabajoDocenteService,
     private builder: FormBuilder,
@@ -694,6 +696,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   async guardar_ptd() {
+    const periodoId = this.Data.vigencia;
     if (!this.puedeEditarPTD) {
       this.popUpManager.showAlert(
         this.translate.instant("ptd.guardado_ptd_error"),
@@ -710,6 +713,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         carga_plan.push({
           espacio_academico_id: element.idEspacioAcademico,
           actividad_id: element.idActividad,
+          periodo_id: periodoId,
           id: element.idCarga,
           plan_docente_id: this.Data.plan_docente[this.seleccion],
           sede_id: element.sede.Id,
@@ -999,5 +1003,41 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         // this.cargarColocaciones();
       }
     });
+  }
+
+  verificarSiEspacioTieneColocacionEnModuloHorario(espacio: any) {
+    const periodoId = this.Data.vigencia;
+    const espacioFisicoId = espacio.value.id;
+    this.horarioService
+      .get(
+        `colocacion-espacio-academico?query=PeriodoId:${periodoId},EspacioAcademicoId:${espacioFisicoId},Activo:true&limit=0`
+      )
+      .subscribe((res: any) => {
+        if (res.Success) {
+          // Se queda con las cocolocaciones que coinciden entre
+          // modulo de horario y las del docente segun el espacio y periodo
+          const colocacionesComunes = new Set(
+            this.listaCargaLectiva.map(
+              (item: any) => item.idColocacionEspacioAcademico
+            )
+          );
+
+          // Aqui se quitan las colocacionesComunes del total de colocaciones
+          // del modulo de horario, para quedarse solo con las que no tienen
+          // el docente asignado
+          const colocacionesDeModuloHorario = res.Data.filter(
+            (item: any) => !colocacionesComunes.has(item._id)
+          );
+
+          this.manejarSiEspacioTieneColocacionEnModuloHorario(
+            colocacionesDeModuloHorario
+          );
+        }
+      });
+  }
+
+  manejarSiEspacioTieneColocacionEnModuloHorario(colocaciones: any) {
+    if (colocaciones.length > 0) {
+    }
   }
 }
