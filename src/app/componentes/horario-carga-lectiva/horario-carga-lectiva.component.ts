@@ -14,7 +14,7 @@ import {
   CdkDragStart,
 } from "@angular/cdk/drag-drop";
 import { TranslateService } from "@ngx-translate/core";
-import { Subject } from "rxjs";
+import { forkJoin, Subject } from "rxjs";
 import { distinctUntilChanged } from "rxjs/operators";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { PopUpManager } from "src/app/managers/popUpManager";
@@ -51,7 +51,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     x: this.containerGridLengths.x * this.snapGridSize.x,
     y: this.containerGridLengths.y * this.snapGridSize.y,
   };
-  readonly tipo = { carga_lectiva: 1, actividades: 2 };
+  readonly tipo = { carga_lectiva: 1, actividades: 2, carga_horario: 3 };
   readonly estado = { flotando: 1, ubicado: 2, ocupado: 3 };
 
   matrixBusy = Array(this.containerGridLengths.x)
@@ -72,6 +72,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   contenedorCargaLectiva: ElementRef;
   listaCargaLectiva: any[] = [];
   listaEspaciosFisicosOcupados: any[] = [];
+  listaColocacionesModuloHorario: any[] = [];
   /*************************** */
 
   /** Entradas y Salidas */
@@ -319,7 +320,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         `espacio-fisico/ocupados?espacio-fisico-id=${espacioFisicoId}&periodo-id=${periodoId}`
       )
       .subscribe((res: any) => {
-        if (res.Success && res.Data.length > 0) {
+        if (res.Data && res.Data.length > 0) {
           res.Data.forEach((element: any) => {
             const ocupado: any = {
               horas: element.horas,
@@ -531,7 +532,6 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     this.listaCargaLectiva = [];
 
     this.Data.carga[this.seleccion].forEach((carga: any) => {
-      console.log(carga);
       this.identificador++;
       let nombre;
       if (carga.espacio_academico_id != "NA") {
@@ -1006,6 +1006,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   verificarSiEspacioTieneColocacionEnModuloHorario(espacio: any) {
+    this.listaColocacionesModuloHorario = [];
+
     const periodoId = this.Data.vigencia;
     const espacioFisicoId = espacio.value.id;
     this.horarioService
@@ -1024,20 +1026,76 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
 
           // Aqui se quitan las colocacionesComunes del total de colocaciones
           // del modulo de horario, para quedarse solo con las que no tienen
-          // el docente asignado
+          // asignado al docente
           const colocacionesDeModuloHorario = res.Data.filter(
             (item: any) => !colocacionesComunes.has(item._id)
           );
 
-          this.manejarSiEspacioTieneColocacionEnModuloHorario(
-            colocacionesDeModuloHorario
-          );
+          if (colocacionesDeModuloHorario.length > 0) {
+            this.manejarSiEspacioTieneColocacionEnModuloHorario(
+              colocacionesDeModuloHorario
+            );
+          }
         }
       });
   }
 
   manejarSiEspacioTieneColocacionEnModuloHorario(colocaciones: any) {
-    if (colocaciones.length > 0) {
-    }
+    const observables = colocaciones.map((colocacion: any) => {
+      const colocacionId = colocacion._id;
+      return this.horarioMid.get(
+        `colocacion-espacio-academico/info-adicional/${colocacionId}`
+      );
+    });
+
+    forkJoin(observables).subscribe((respuestas: any) => {
+      respuestas.forEach((res: any) => {
+        const colocacion = res.Data;
+
+        if (!colocacion.Docente) {
+          const colocacionModuloHorario =
+            this.construirObjetoCargaDeModuloHorario(colocacion);
+          this.listaColocacionesModuloHorario.push(colocacionModuloHorario);
+        }
+      });
+      this.popUpManager.showAlert(
+        this.translate.instant(
+          "ptd.mensaje_si_espacio_tiene_colocacion_en_modulo_horario_1"
+        ),
+        this.translate.instant(
+          "ptd.mensaje_si_espacio_tiene_colocacion_en_modulo_horario_2"
+        )
+      );
+    });
+  }
+
+  construirObjetoCargaDeModuloHorario(colocacion: any) {
+    this.identificador++;
+    const horarioColocacion =
+      colocacion.ResumenColocacionEspacioFisico.colocacion;
+    const espacioFisico =
+      colocacion.ResumenColocacionEspacioFisico.espacio_fisico;
+
+    const colocacionModuloHorario: CardDetalleCarga = {
+      id: this.identificador,
+      idColocacionEspacioAcademico: colocacion._id,
+      nombre: colocacion.EspacioAcademico.nombre,
+      idEspacioAcademico: colocacion.EspacioAcademico._id,
+      sede: espacioFisico.sede,
+      edificio: espacioFisico.edificio,
+      salon: espacioFisico.salon,
+      horas: horarioColocacion.horas,
+      horaFormato: horarioColocacion.horaFormato,
+      estado: horarioColocacion.estado,
+      dragPosition: horarioColocacion.dragPosition,
+      prevPosition: horarioColocacion.prevPosition,
+      finalPosition: horarioColocacion.finalPosition,
+      idCarga: "NA",
+      idActividad: "NA",
+      bloqueado: true,
+      tipo: 3,
+    };
+
+    return colocacionModuloHorario;
   }
 }

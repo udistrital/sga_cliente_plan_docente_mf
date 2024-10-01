@@ -1316,7 +1316,10 @@
     "mensaje_horario": "Drag the placements to the desired schedule. To see more details, click on the name of the corresponding space or activity.",
     "convenciones": "Conventions",
     "docente_asignado": "Assigned teacher",
-    "espacios_fisicos_ocupados": "Occupied physical spaces"
+    "espacios_fisicos_ocupados": "Occupied physical spaces",
+    "colocacion_modulo_horario": "Placement made from the scheduling module",
+    "mensaje_si_espacio_tiene_colocacion_en_modulo_horario_1": "The group for the selected academic space has already been assigned to the schedule from the scheduling module.",
+    "mensaje_si_espacio_tiene_colocacion_en_modulo_horario_2": "The assigned spaces are highlighted. You can assign a teacher by clicking on the space name. If you need to add another placement for this space, you can do so as well."
   },
   "espacios_academicos": {
     "espacios_academicos": "Academic Spaces",

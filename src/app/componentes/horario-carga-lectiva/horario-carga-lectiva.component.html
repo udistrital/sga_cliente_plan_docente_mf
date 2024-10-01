@@ -237,11 +237,11 @@
     <span>{{ "ptd.mensaje_horario" | translate }}</span>
   </div>
   <div class="row center-h mb-3" *ngIf="edit">
-    <div class="col-4 card">
+    <div class="col-5 card">
       <b class="center-h mb-2">{{ "ptd.convenciones" | translate }}</b>
       <p class="center-v">
-        <mat-icon color="primary" class="mr-2">how_to_reg</mat-icon
-        >{{ "ptd.docente_asignado" | translate }}
+        <mat-icon color="primary" class="mr-2">date_range</mat-icon
+        >{{ "ptd.colocacion_modulo_horario" | translate }}
       </p>
       <p class="center-v">
         <mat-icon class="icono-lock mr-2">lock</mat-icon
@@ -276,7 +276,7 @@
               <div class="day">{{ "ptd.lu" | translate }}</div>
               <div class="grid-carga-lectiva" #contenedorCargaLectiva>
                 <div
-                  class="element-carga-lectiva"
+                  class="tarjeta-colocacion"
                   *ngFor="let element of listaCargaLectiva"
                   style="position: absolute"
                   [style.height.px]="element.horas * snapGridSize.y"
@@ -348,13 +348,46 @@
                 </div>
 
                 <div
+                  class="tarjeta-colocacion colocacion-modulo-horario"
+                  *ngFor="let element of listaColocacionesModuloHorario"
+                  style="position: absolute"
+                  [style.height.px]="element.horas * snapGridSize.y"
+                  cdkDrag
+                  [cdkDragFreeDragPosition]="element.dragPosition"
+                  cdkDragBoundary=".grid-carga-lectiva"
+                  [cdkDragDisabled]="true"
+                >
+                  <div class="contenido">
+                    <div class="row">
+                      <div class="col-12 mt-4">
+                        <b
+                          class="truncate"
+                          (click)="abrirDialogoVerDetalleEspacio(element)"
+                          >{{ element.nombre }}
+                        </b>
+                      </div>
+                      <div class="col-12 mt-2">
+                        {{ element.horaFormato }}
+                        <label class="center-h mt-2">
+                          <mat-icon *ngIf="element.docenteName"
+                            >assignment_ind</mat-icon
+                          >
+                        </label>
+                        <div class="center">
+                          <mat-icon>date_range</mat-icon>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
                   class="element-ocupado"
                   *ngFor="let element of listaEspaciosFisicosOcupados"
                   style="position: absolute"
                   [style.height.px]="element.horas * snapGridSize.y"
                   cdkDrag
                   [cdkDragFreeDragPosition]="element.dragPosition"
-                  [cdkDragDisabled]="element.bloqueado"
                   cdkDragBoundary=".grid-carga-lectiva"
                   [cdkDragDisabled]="true"
                 >

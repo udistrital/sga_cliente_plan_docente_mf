@@ -1311,13 +1311,16 @@
     "eliminar_preasignacion_tiene_repetir_proceso_ptd": "Esto reiniciará el proceso del plan docente para el docente. ¿Está seguro de eliminar la preasignación? ",
     "detalle_colocacion": "Detalle de la colocación",
     "descripcion_detalle_colocacion": "Detalle completo de la colocación seleccionada",
-    "asignar_docente": "Asignar docente",
+    "asignar_docente": "Asignarle el docente",
     "actividad": "Actividad",
     "no_suelte_tarjeta_hasta_restricciones": "Por favor, espere a que se carguen las restricciones antes de soltar la tarjeta.",
     "mensaje_horario": "Arrastre las colocaciones al horario deseado. Para ver más detalles, haga clic en el nombre del espacio o actividad correspondiente.",
     "convenciones": "Convenciones",
     "docente_asignado": "Docente asignado",
-    "espacios_fisicos_ocupados": "Espacios físicos ocupados"
+    "espacios_fisicos_ocupados": "Espacios físicos ocupados",
+    "colocacion_modulo_horario": "Colocación realizada desde el módulo de horarios",
+    "mensaje_si_espacio_tiene_colocacion_en_modulo_horario_1": "El grupo del espacio académico seleccionado ya ha sido asignado al horario desde el módulo de horarios.",
+    "mensaje_si_espacio_tiene_colocacion_en_modulo_horario_2": "Los espacios asignados están resaltados. Puede asignar un docente haciendo clic sobre el nombre del espacio. Si necesita agregar otra colocación para este espacio, también puede hacerlo."
   },
   "espacios_academicos": {
     "espacios_academicos": "Espacios Académicos",

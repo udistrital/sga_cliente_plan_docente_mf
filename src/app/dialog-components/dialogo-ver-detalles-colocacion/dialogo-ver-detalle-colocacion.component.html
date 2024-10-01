@@ -1,4 +1,4 @@
-<mat-card class="dialogo" *ngIf="!banderaAsignarDocente">
+<mat-card class="dialogo">
   <mat-card-header class="shadow">
     <div class="row mb-3">
       <div class="col-12 center-v center-h">
@@ -62,97 +62,13 @@
     <button mat-stroked-button color="primary" [mat-dialog-close]>
       {{ "GLOBAL.cerrar" | translate }}
     </button>
-    <button mat-flat-button color="primary" *ngIf="false">
-      <p>
-        {{ "ptd.asignar_docente" | translate }}
-      </p>
-    </button>
-  </mat-dialog-actions>
-  <br />
-</mat-card>
-
-<mat-card class="dialogo" *ngIf="banderaAsignarDocente">
-  <mat-card-header class="shadow">
-    <div class="row mb-3">
-      <div class="col-12 center-v center-h">
-        <mat-icon color="primary">info</mat-icon>
-        <p class="ml-3 mb-0">
-          <strong *ngIf="!docenteYaAsignado">{{
-            "gestion_horarios.asignar_docente" | translate
-          }}</strong>
-          <strong *ngIf="docenteYaAsignado">{{
-            "gestion_horarios.reasignar_docente" | translate
-          }}</strong>
-          <br />{{ "gestion_horarios.descripcion_asignar_docente" | translate }}
-        </p>
-      </div>
-    </div>
-  </mat-card-header>
-  <mat-card-content>
-    <div class="alert info class mt-4 mr-3 ml-3">
-      <mat-icon class="icon">info</mat-icon>
-      <span>{{ "ptd.descripcion_asignar_docente" | translate }}</span>
-    </div>
-    <form [formGroup]="formDocente" class="mr-3 ml-3 mt-4">
-      <div class="row mt-3">
-        <ng-container *ngFor="let field of inputsFormDocente">
-          <mat-form-field class="col-12 medium" appearance="outline">
-            <mat-label>{{ field.label | translate }}</mat-label>
-            <mat-icon class="mat-icon-outlined" color="primary" matPrefix>{{
-              field.icon
-            }}</mat-icon>
-            <input
-              type="{{ field.type }}"
-              matInput
-              formControlName="{{ field.name }}"
-              (keyup.enter)="
-                cargarDatosDocente(formDocente.get('documento')!.value)
-              "
-            />
-          </mat-form-field>
-        </ng-container>
-        <ng-container>
-          <mat-form-field class="col-12 medium" appearance="outline">
-            <mat-label>{{
-              "gestion_horarios.select_vinculacion" | translate
-            }}</mat-label>
-            <mat-icon class="mat-icon-outlined" color="primary" matPrefix
-              >assignment_ind</mat-icon
-            >
-            <mat-select formControlName="vinculacion">
-              <mat-option disabled value=""
-                >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
-              >
-              <mat-option
-                *ngFor="let item of vinculacionesDocente"
-                [value]="item"
-                >{{ item.Nombre }}</mat-option
-              >
-            </mat-select>
-          </mat-form-field>
-        </ng-container>
-      </div>
-    </form>
-  </mat-card-content>
-  <mat-dialog-actions align="center">
-    <button
-      mat-stroked-button
-      color="primary"
-      (click)="banderaAsignarDocente = false"
-    >
-      {{ "GLOBAL.regresar" | translate }}
-    </button>
     <button
       mat-flat-button
       color="primary"
-      (click)="asignarDocente()"
-      [disabled]="!formDocente.valid"
+      *ngIf="banderaEsColocacionModuloHorario"
     >
-      <p *ngIf="!docenteYaAsignado">
-        {{ "gestion_horarios.asignar_docente" | translate }}
-      </p>
-      <p *ngIf="docenteYaAsignado">
-        {{ "gestion_horarios.reasignar_docente" | translate }}
+      <p>
+        {{ "ptd.asignar_docente" | translate }}
       </p>
     </button>
   </mat-dialog-actions>
