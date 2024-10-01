@@ -611,6 +611,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   deleteElement(htmlElement: any, elementClicked: CardDetalleCarga) {
+    console.log(elementClicked);
     if (elementClicked.bloqueado) {
       return;
     }
@@ -639,11 +640,19 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           );
           this.listaCargaLectiva.splice(idx, 1);
           if (elementClicked.idCarga) {
-            this.planDocenteService
-              .delete("carga_plan", { Id: elementClicked.idCarga })
+            this.horarioMid
+              .delete(
+                "colocacion-espacio-academico",
+                elementClicked.idColocacionEspacioAcademico
+              )
               .subscribe((response: any) => {
-                this.OutLoading.emit(false);
-                this.DataChanged.emit(this.listaCargaLectiva);
+                if (response.Success) {
+                  this.OutLoading.emit(false);
+                  this.DataChanged.emit(this.listaCargaLectiva);
+                  this.popUpManager.showSuccessAlert(
+                    this.translate.instant("ptd.colocacion_eliminada")
+                  );
+                }
               });
           } else {
             this.OutLoading.emit(false);
@@ -711,10 +720,11 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       let horaInicio = parseInt(element.horaFormato.split(":")[0]);
       if (!element.bloqueado) {
         carga_plan.push({
+          id: element.idCarga,
           espacio_academico_id: element.idEspacioAcademico,
           actividad_id: element.idActividad,
+          colocacion_id: element.idColocacionEspacioAcademico,
           periodo_id: periodoId,
-          id: element.idCarga,
           plan_docente_id: this.Data.plan_docente[this.seleccion],
           sede_id: element.sede.Id,
           edificio_id: element.edificio?.Id ? element.edificio.Id : "",
@@ -992,17 +1002,39 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     const dialogRef = this.dialog.open(DialogoVerDetalleColocacionComponent, {
       data: {
         ...infoEspacio,
-        // ...this.infoAdicionalColocacion,
       },
       width: "50%",
       height: "auto",
     });
 
-    dialogRef.afterClosed().subscribe((docenteAsignado) => {
-      if (docenteAsignado) {
-        // this.cargarColocaciones();
+    dialogRef.afterClosed().subscribe((res) => {
+      if (res.asignado) {
+        this.asignarDocenteColocacion(res.idColocacionEspacioAcademico);
       }
     });
+  }
+
+  asignarDocenteColocacion(colocacionId: any) {
+    const colocacionParaAsigacionDocente =
+      this.listaColocacionesModuloHorario.findIndex(
+        (colocacion: any) =>
+          colocacion.idColocacionEspacioAcademico == colocacionId
+      );
+
+    if (colocacionParaAsigacionDocente !== -1) {
+      const colocacion =
+        this.listaColocacionesModuloHorario[colocacionParaAsigacionDocente];
+
+      colocacion.tipo = 1; //carga lectiva
+      colocacion.bloqueado = false;
+
+      this.listaColocacionesModuloHorario.splice(
+        colocacionParaAsigacionDocente,
+        1
+      );
+      this.listaCargaLectiva.push(colocacion);
+      console.log(this.listaCargaLectiva);
+    }
   }
 
   verificarSiEspacioTieneColocacionEnModuloHorario(espacio: any) {
@@ -1090,7 +1122,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       dragPosition: horarioColocacion.dragPosition,
       prevPosition: horarioColocacion.prevPosition,
       finalPosition: horarioColocacion.finalPosition,
-      idCarga: "NA",
+      idCarga: "colocacionModuloHorario",
       idActividad: "NA",
       bloqueado: true,
       tipo: 3,
