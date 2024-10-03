@@ -1321,7 +1321,9 @@
     "mensaje_si_espacio_tiene_colocacion_en_modulo_horario_1": "The group for the selected academic space has already been assigned to the schedule from the scheduling module.",
     "mensaje_si_espacio_tiene_colocacion_en_modulo_horario_2": "The assigned spaces are highlighted. You can assign a teacher by clicking on the space name. If you need to add another placement for this space, you can do so as well.",
     "colocacion_eliminada": "Placement successfully removed",
-    "desea_asignar_docente": "Do you want to assign the teacher to this placement?"
+    "desea_asignar_docente": "Do you want to assign the teacher to this placement?",
+    "restricciones_horario": "Schedule restrictions",
+    "colocaciones_grupo_estudio": "Study Group Placements"
   },
   "espacios_academicos": {
     "espacios_academicos": "Academic Spaces",

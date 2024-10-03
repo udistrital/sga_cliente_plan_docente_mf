@@ -247,6 +247,10 @@
         <mat-icon class="icono-lock mr-2">lock</mat-icon
         >{{ "ptd.espacios_fisicos_ocupados" | translate }}
       </p>
+      <p class="center-v">
+        <mat-icon class="icono-grupo-estudio mr-2">supervisor_account</mat-icon
+        >{{ "ptd.colocaciones_grupo_estudio" | translate }}
+      </p>
     </div>
   </div>
   <div style="overflow-x: auto">
@@ -348,8 +352,8 @@
                 </div>
 
                 <div
-                  class="tarjeta-colocacion colocacion-modulo-horario"
                   *ngFor="let element of listaColocacionesModuloHorario"
+                  class="tarjeta-colocacion colocacion-modulo-horario"
                   style="position: absolute"
                   [style.height.px]="element.horas * snapGridSize.y"
                   cdkDrag
@@ -382,8 +386,11 @@
                 </div>
 
                 <div
-                  class="element-ocupado"
-                  *ngFor="let element of listaEspaciosFisicosOcupados"
+                  *ngFor="let element of listaRestriccionesHorario"
+                  [ngClass]="{
+                    'element-ocupado-grupo-estudio': element.grupoEstudio,
+                    'element-ocupado-espacio-academico': element.espacioFisico
+                  }"
                   style="position: absolute"
                   [style.height.px]="element.horas * snapGridSize.y"
                   cdkDrag
@@ -392,7 +399,14 @@
                   [cdkDragDisabled]="true"
                 >
                   <div class="center">
-                    <mat-icon class="icono-lock">lock</mat-icon>
+                    <mat-icon class="icono-lock" *ngIf="element.espacioFisico"
+                      >lock</mat-icon
+                    >
+                    <mat-icon
+                      class="icono-grupo-estudio-x"
+                      *ngIf="element.grupoEstudio"
+                      >supervisor_account</mat-icon
+                    >
                   </div>
                 </div>
               </div>

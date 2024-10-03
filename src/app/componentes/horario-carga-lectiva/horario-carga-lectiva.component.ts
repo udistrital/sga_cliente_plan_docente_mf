@@ -27,6 +27,7 @@ import { HorarioMidService } from "src/app/services/horario-mid.service";
 import { MatDialog } from "@angular/material/dialog";
 import { DialogoVerDetalleColocacionComponent } from "src/app/dialog-components/dialogo-ver-detalles-colocacion/dialogo-ver-detalle-colocacion.component";
 import { HorarioService } from "src/app/services/horario.service";
+import { EspaciosAcademicosService } from "src/app/services/espacios-academicos.service";
 
 @Component({
   selector: "horario-carga-lectiva",
@@ -71,7 +72,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   @ViewChild("contenedorCargaLectiva", { static: false })
   contenedorCargaLectiva: ElementRef;
   listaCargaLectiva: any[] = [];
-  listaEspaciosFisicosOcupados: any[] = [];
+  listaRestriccionesHorario: any[] = [];
   listaColocacionesModuloHorario: any[] = [];
   /*************************** */
 
@@ -117,6 +118,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
 
   constructor(
     public dialog: MatDialog,
+    private espacioAcademicoService: EspaciosAcademicosService,
     private popUpManager: PopUpManager,
     private translate: TranslateService,
     private horarioMid: HorarioMidService,
@@ -308,41 +310,98 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   onDragStarted(elementMoved: CardDetalleCarga) {
+    this.listaColocacionesModuloHorario = [];
+    this.cargarRestriccionesDeHorario(elementMoved);
+  }
+
+  async cargarRestriccionesDeHorario(elementMoved: CardDetalleCarga) {
     this.banderaInfoNoSoltarTarjeta = true;
+    this.dragEnabled = false;
+    await this.cargarRestricionesGrupoEstudio(elementMoved);
+    await this.cargarRestricionesEspaciosFisicos(elementMoved);
+    this.dragEnabled = true;
+    this.banderaInfoNoSoltarTarjeta = false;
+  }
+
+  async cargarRestricionesEspaciosFisicos(
+    elementMoved: CardDetalleCarga
+  ): Promise<void> {
     const periodoId = this.Data.vigencia;
     const espacioFisicoId = elementMoved.salon.Id;
 
-    // Desactiva el drag and drop
-    this.dragEnabled = false;
-
-    this.horarioMid
+    const res: any = await this.horarioMid
       .get(
         `espacio-fisico/ocupados?espacio-fisico-id=${espacioFisicoId}&periodo-id=${periodoId}`
       )
-      .subscribe((res: any) => {
-        if (res.Data && res.Data.length > 0) {
-          res.Data.forEach((element: any) => {
-            const ocupado: any = {
-              horas: element.horas,
-              estado: this.estado.ubicado,
-              dragPosition: element.finalPosition,
-              prevPosition: element.finalPosition,
-              finalPosition: element.finalPosition,
-            };
-            if (
-              !this.listaCargaLectiva.some(
-                (carga) => carga.idColocacionEspacioAcademico === element._id
-              )
-            ) {
-              const coord = this.getPositionforMatrix(ocupado);
-              this.changeStateRegion(coord.x, coord.y, ocupado.horas, true);
-              this.listaEspaciosFisicosOcupados.push(ocupado);
-            }
-          });
-        }
-        this.dragEnabled = true;
-        this.banderaInfoNoSoltarTarjeta = false;
+      .toPromise();
+
+    if (res.Data && res.Data.length > 0) {
+      this.agregarRestriccionesAlHorario(res.Data, { espacioFisico: true });
+    }
+  }
+
+  async cargarRestricionesGrupoEstudio(
+    elementMoved: CardDetalleCarga
+  ): Promise<void> {
+    const espacioAcademicoId = elementMoved?.idEspacioAcademico!;
+    if (!espacioAcademicoId || espacioAcademicoId === "NA") {
+      return;
+    }
+
+    const periodoId = this.Data.vigencia;
+    const resEspacio: any = await this.espacioAcademicoService
+      .get(`espacio-academico/${espacioAcademicoId}`)
+      .toPromise();
+
+    const grupoEstudioId = resEspacio.Data?.grupo_estudio_id || null;
+    if (grupoEstudioId == null) {
+      return;
+    }
+    const resColocacion: any = await this.horarioMid
+      .get(
+        `colocacion-espacio-academico/sin-detalles?grupo-estudio-id=${grupoEstudioId}&periodo-id=${periodoId}`
+      )
+      .toPromise();
+
+    if (resColocacion.Data && resColocacion.Data.length > 0) {
+      this.agregarRestriccionesAlHorario(resColocacion.Data, {
+        grupoEstudio: true,
       });
+    }
+  }
+
+  agregarRestriccionesAlHorario(
+    colocaciones: any[],
+    options: { grupoEstudio?: boolean; espacioFisico?: boolean }
+  ): void {
+    colocaciones.forEach((element: any) => {
+      const ocupado: any = {
+        id: element._id,
+        horas: element.horas,
+        estado: this.estado.ubicado,
+        dragPosition: element.finalPosition,
+        prevPosition: element.finalPosition,
+        finalPosition: element.finalPosition,
+        //se pone true dependiendo del tipo de restriccion
+        grupoEstudio: options.grupoEstudio || false,
+        espacioFisico: options.espacioFisico || false,
+      };
+      if (
+        !this.listaCargaLectiva.some(
+          (carga) => carga.idColocacionEspacioAcademico === element._id
+        )
+      ) {
+        const exists = this.listaRestriccionesHorario.some(
+          (restriccion) => restriccion.id === ocupado.id
+        );
+
+        if (!exists) {
+          const coord = this.getPositionforMatrix(ocupado);
+          this.changeStateRegion(coord.x, coord.y, ocupado.horas, true);
+          this.listaRestriccionesHorario.push(ocupado);
+        }
+      }
+    });
   }
 
   calculateTimeSpan(dragPosition: CoordXY, h: number): string {
@@ -920,12 +979,12 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   limpiarListaEspaciosFisicosOcupados() {
-    if (this.listaEspaciosFisicosOcupados.length > 0) {
-      this.listaEspaciosFisicosOcupados.forEach((ocupado) => {
+    if (this.listaRestriccionesHorario.length > 0) {
+      this.listaRestriccionesHorario.forEach((ocupado) => {
         const coord = this.getPositionforMatrix(ocupado);
         this.changeStateRegion(coord.x, coord.y, ocupado.horas, false);
       });
-      this.listaEspaciosFisicosOcupados = [];
+      this.listaRestriccionesHorario = [];
     }
   }
 
@@ -1008,7 +1067,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     });
 
     dialogRef.afterClosed().subscribe((res) => {
-      if (res.asignado) {
+      if (res?.asignado) {
         this.asignarDocenteColocacion(res.idColocacionEspacioAcademico);
       }
     });
@@ -1033,7 +1092,6 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         1
       );
       this.listaCargaLectiva.push(colocacion);
-      console.log(this.listaCargaLectiva);
     }
   }
 
@@ -1081,6 +1139,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     });
 
     forkJoin(observables).subscribe((respuestas: any) => {
+      let existeColocacionModuloHorario = false;
       respuestas.forEach((res: any) => {
         const colocacion = res.Data;
 
@@ -1088,16 +1147,20 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           const colocacionModuloHorario =
             this.construirObjetoCargaDeModuloHorario(colocacion);
           this.listaColocacionesModuloHorario.push(colocacionModuloHorario);
+          existeColocacionModuloHorario = true;
         }
       });
-      this.popUpManager.showAlert(
-        this.translate.instant(
-          "ptd.mensaje_si_espacio_tiene_colocacion_en_modulo_horario_1"
-        ),
-        this.translate.instant(
-          "ptd.mensaje_si_espacio_tiene_colocacion_en_modulo_horario_2"
-        )
-      );
+
+      if (existeColocacionModuloHorario) {
+        this.popUpManager.showAlert(
+          this.translate.instant(
+            "ptd.mensaje_si_espacio_tiene_colocacion_en_modulo_horario_1"
+          ),
+          this.translate.instant(
+            "ptd.mensaje_si_espacio_tiene_colocacion_en_modulo_horario_2"
+          )
+        );
+      }
     });
   }
 

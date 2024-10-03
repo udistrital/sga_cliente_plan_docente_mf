@@ -1322,7 +1322,8 @@
     "mensaje_si_espacio_tiene_colocacion_en_modulo_horario_1": "El grupo del espacio académico seleccionado ya ha sido asignado al horario desde el módulo de horarios.",
     "mensaje_si_espacio_tiene_colocacion_en_modulo_horario_2": "Los espacios asignados están resaltados. Puede asignar un docente haciendo clic sobre el nombre del espacio. Si necesita agregar otra colocación para este espacio, también puede hacerlo.",
     "colocacion_eliminada": "Colocación eliminada con éxito",
-    "desea_asignar_docente": "¿Desea asignarle el docente a esta colocación?"
+    "desea_asignar_docente": "¿Desea asignarle el docente a esta colocación?",
+    "colocaciones_grupo_estudio": "Colocaciones del grupo de estudio"
   },
   "espacios_academicos": {
     "espacios_academicos": "Espacios Académicos",

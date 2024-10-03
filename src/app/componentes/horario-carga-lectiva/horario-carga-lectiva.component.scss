@@ -239,14 +239,13 @@ i {
     0 1px 5px 0 rgba(0, 0, 0, 0.12);
 }
 
-.element-ocupado {
-  background-color: #f8d7da; /* Rojo pastel */
-  border: 1px solid #f5c6cb; /* Rojo claro para el borde */
+.element-ocupado-espacio-academico {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
   width: $snap-grid-width;
   height: $snap-grid-height;
   border-radius: 8px;
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.2); /* Sombras rojas luminosas */
-  color: #8f032e; /* Color del texto */
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
   padding: 10px;
   display: flex;
   align-items: center;
@@ -256,8 +255,35 @@ i {
   text-align: center;
 }
 
+.element-ocupado-grupo-estudio {
+  background-color: #b3d1dd;
+  width: $snap-grid-width;
+  height: $snap-grid-height;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(#b3d1dd, 0.4);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  border: solid 2px #b3d1dd;
+}
+
 .icono-lock {
   color: #8f032e;
+}
+
+.icono-grupo-estudio {
+  color: #013960;
+}
+
+.icono-grupo-estudio-x {
+  color: #013960;
+  width: 30px;
+  height: 30px;
+  font-size: 30px;
 }
 
 .truncate {
