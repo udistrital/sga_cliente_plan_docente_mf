@@ -1,255 +1,325 @@
 <mat-card>
-  <mat-card-header>
-    <mat-card-title>
-      {{ "ptd.preasignar_ptd" | translate }}
-    </mat-card-title>
+  <mat-card-header class="shadow">
+    <div class="row mb-3">
+      <div class="col-12 center-v center-h">
+        <mat-icon color="primary">assignment</mat-icon>
+        <p class="ml-3 mb-0">
+          <strong>{{ "ptd.preasignacion" | translate }}</strong
+          ><br />
+          {{ "ptd.preasignar_ptd" | translate }}
+        </p>
+      </div>
+    </div>
   </mat-card-header>
-  <mat-card-content class="margin-y">
-    <form
-      novalidate
-      [formGroup]="preasignacionForm"
-      #fform="ngForm"
-      class="form-horizontal"
-    >
-      <h4 class="margin-y">{{ "ptd.datos_generales" | translate }}</h4>
-      <mat-form-field class="form-field">
-        <mat-label>*{{ "GLOBAL.periodo" | translate }}:</mat-label>
-        <mat-select formControlName="periodo">
-          <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
-          <mat-option *ngFor="let item of periodos" [value]="item">
-            {{ item.Nombre }}
-          </mat-option>
-        </mat-select>
-        <mat-error
-          *ngIf="
-            preasignacionForm.get('periodo')?.hasError('required') &&
-            preasignacionForm.get('periodo')?.touched
-          "
-        >
-          {{ "ptd.error_periodo" | translate }}
-        </mat-error>
-      </mat-form-field>
-
-      <mat-divider></mat-divider>
-
-      <h4 class="margin-y">{{ "ptd.datos_del_docente" | translate }}</h4>
-      <mat-form-field class="form-field">
-        <mat-label>{{ "ptd.documento_docente" | translate }}</mat-label>
-        <input
-          matInput
-          type="text"
-          formControlName="doc_docente"
-          pattern="[0-9]*"
-          placeholder="*{{ 'ptd.documento_docente' | translate }}: "
-          (keydown.enter)="buscarDocenteDocumento($event)"
-        />
-        <button
-          mat-icon-button
-          matSuffix
-          color="primary"
-          (click)="buscarDocenteDocumento($event)"
-          [disabled]="preasignacionForm.get('doc_docente')?.disabled"
-        >
-          <mat-icon>search</mat-icon>
-        </button>
-        <mat-error
-          *ngIf="
-            preasignacionForm.get('doc_docente')?.hasError('required') &&
-            preasignacionForm.get('doc_docente')?.touched
-          "
-        >
-          {{ "ptd.error_doc_docente" | translate }}
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field class="form-field">
-        <mat-label>*{{ "ptd.nombre_docente" | translate }}:</mat-label>
-        <input
-          matInput
-          type="text"
-          formControlName="docente"
-          [matAutocomplete]="auto"
-          (keyup)="
-            searchTerm$.next({
-              text: event2text($event),
-              field: fform.directives[3]
-            })
-          "
-        />
-        <mat-autocomplete
-          autoActiveFirstOption
-          #auto="matAutocomplete"
-          (optionSelected)="handlerSelectDocente($event)"
-        >
-          <mat-option
-            *ngFor="let option of filteredDocentes | async"
-            [value]="option"
-          >
-            {{ option.Nombre }}
-          </mat-option>
-        </mat-autocomplete>
-        <mat-hint style="width: 100%">
-          <div style="font-size: 13px">
-            {{ "ptd.placeholder_nombre_docente" | translate }}
+  <mat-card-content class="mt-3">
+    <div class="container">
+      <form
+        novalidate
+        [formGroup]="preasignacionForm"
+        #fform="ngForm"
+        class="form-horizontal"
+      >
+        <b class="mt-3 mb-3">{{ "ptd.datos_generales" | translate }}</b>
+        <div class="row">
+          <div class="col-6">
+            <mat-form-field class="form-field medium" appearance="outline">
+              <mat-icon color="primary" matPrefix>today</mat-icon>
+              <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
+              <mat-select formControlName="periodo">
+                <mat-option disabled
+                  >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
+                >
+                <mat-option *ngFor="let item of periodos" [value]="item">
+                  {{ item.Nombre }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="
+                  preasignacionForm.get('periodo')?.hasError('required') &&
+                  preasignacionForm.get('periodo')?.touched
+                "
+              >
+                {{ "ptd.error_periodo" | translate }}
+              </mat-error>
+            </mat-form-field>
           </div>
-        </mat-hint>
-        <mat-error
-          *ngIf="
-            preasignacionForm.get('docente')?.hasError('required') &&
-            preasignacionForm.get('docente')?.touched
-          "
-        >
-          {{ "ptd.error_docente" | translate }}
-        </mat-error>
-      </mat-form-field>
+        </div>
 
-      <mat-form-field class="form-field">
-        <mat-label>*{{ "GLOBAL.tipo_vinculacion" | translate }}:</mat-label>
-        <mat-select formControlName="tipo_vinculacion">
-          <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
-          <mat-option
-            *ngFor="let item of tipoVinculacionFiltered"
-            [value]="item.id"
-          >
-            {{ item.nombre }}
-          </mat-option>
-        </mat-select>
-        <mat-error
-          *ngIf="
-            preasignacionForm.get('tipo_vinculacion')?.hasError('required') &&
-            preasignacionForm.get('tipo_vinculacion')?.touched
-          "
-        >
-          {{ "ptd.error_tipo_vinculacion" | translate }}
-        </mat-error>
-      </mat-form-field>
+        <mat-divider></mat-divider>
 
-      <mat-divider></mat-divider>
-      <h4 class="margin-y">{{ "ptd.datos_del_espacio_academico" | translate }}</h4>
+        <b class="mt-3 mb-3">{{ "ptd.datos_del_docente" | translate }}</b>
+        <div class="row mb-3">
+          <div class="col-12 center-h">
+            <p class="center-v" style="font-size: 14px; color: #03678f">
+              <mat-icon color="primary" class="mr-2">info</mat-icon>
+              {{ "ptd.mensaje_buscar_docente" | translate }}
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <mat-form-field class="form-field medium col-6" appearance="outline">
+            <mat-label>{{ "ptd.documento_docente" | translate }}</mat-label>
+            <input
+              matInput
+              type="text"
+              formControlName="doc_docente"
+              pattern="[0-9]*"
+              placeholder="{{ 'ptd.documento_docente' | translate }}: "
+              (keydown.enter)="buscarDocenteDocumento($event)"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              color="primary"
+              (click)="buscarDocenteDocumento($event)"
+              [disabled]="preasignacionForm.get('doc_docente')?.disabled"
+            >
+              <mat-icon>search</mat-icon>
+            </button>
+            <mat-error
+              *ngIf="
+                preasignacionForm.get('doc_docente')?.hasError('required') &&
+                preasignacionForm.get('doc_docente')?.touched
+              "
+            >
+              {{ "ptd.error_doc_docente" | translate }}
+            </mat-error>
+          </mat-form-field>
 
-      <mat-form-field class="form-field">
-        <mat-label>{{ "ptd.codigo_espacio_academico" | translate }}</mat-label>
-        <input
-          matInput
-          type="text"
-          formControlName="codigo"
-          placeholder="*{{ 'ptd.codigo_espacio_academico' | translate }}: "
-          (keydown.enter)="buscarEspacioAcademico($event)"
-        />
-        <button
-          mat-icon-button
-          matSuffix
-          color="accent"
-          (click)="buscarEspacioAcademico($event)"
-          [disabled]="preasignacionForm.get('codigo')?.disabled"
-        >
-          <mat-icon>search</mat-icon>
-        </button>
-        <mat-error
-          *ngIf="
-            preasignacionForm.get('codigo')?.hasError('required') &&
-            preasignacionForm.get('codigo')?.touched
-          "
-        >
-          {{ "ptd.error_espacio_academico" | translate }}
-        </mat-error>
-      </mat-form-field>
+          <mat-form-field class="form-field col-6" appearance="outline">
+            <mat-label>{{ "ptd.nombre_docente" | translate }}:</mat-label>
+            <input
+              matInput
+              type="text"
+              formControlName="docente"
+              [matAutocomplete]="auto"
+              (keyup)="
+                searchTerm$.next({
+                  text: event2text($event),
+                  field: fform.directives[3]
+                })
+              "
+            />
+            <mat-autocomplete
+              autoActiveFirstOption
+              #auto="matAutocomplete"
+              (optionSelected)="handlerSelectDocente($event)"
+            >
+              <mat-option
+                *ngFor="let option of filteredDocentes | async"
+                [value]="option"
+              >
+                {{ option.Nombre }}
+              </mat-option>
+            </mat-autocomplete>
+            <mat-hint style="width: 100%">
+              <div style="font-size: 13px">
+                {{ "ptd.placeholder_nombre_docente" | translate }}
+              </div>
+            </mat-hint>
+            <mat-error
+              *ngIf="
+                preasignacionForm.get('docente')?.hasError('required') &&
+                preasignacionForm.get('docente')?.touched
+              "
+            >
+              {{ "ptd.error_docente" | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
 
-      <mat-form-field style="width: 100%">
-        <mat-label>*{{ "ptd.espacio_academico" | translate }}:</mat-label>
-        <mat-select
-          formControlName="espacio_academico"
-          (selectionChange)="loadProyectos()"
-        >
-          <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
-          <mat-option
-            *ngFor="let item of opcionesEspaciosAcademicos"
-            [value]="item"
-          >
-            {{ item.nombre }}
-          </mat-option>
-        </mat-select>
-        <mat-error
-          *ngIf="
-            preasignacionForm.get('espacio_academico')?.hasError('required') &&
-            preasignacionForm.get('espacio_academico')?.touched
-          "
-        >
-          {{ "ptd.error_espacio_academico" | translate }}
-        </mat-error>
-      </mat-form-field>
-      <div class="alert info" *ngIf="isEspacioModular">
-        <mat-icon class="icon">campaign</mat-icon>
-        <span>{{'ptd.espacio_academico_modular' | translate}}</span>
-      </div>
-      <div class="form-grid">
         <mat-form-field class="form-field">
-          <mat-label>*{{ "ptd.proyecto" | translate }}:</mat-label>
-          <mat-select
-            formControlName="proyecto"
-            (selectionChange)="changeProyecto()"
-          >
-            <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
-            <mat-option *ngFor="let item of opcionesProyectos" [value]="item">
-              {{ item }}
+          <mat-label>{{ "GLOBAL.tipo_vinculacion" | translate }}:</mat-label>
+          <mat-select formControlName="tipo_vinculacion">
+            <mat-option disabled
+              >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
+            >
+            <mat-option
+              *ngFor="let item of tipoVinculacionFiltered"
+              [value]="item.id"
+            >
+              {{ item.nombre }}
             </mat-option>
           </mat-select>
           <mat-error
             *ngIf="
-              preasignacionForm.get('proyecto')?.hasError('required') &&
-              preasignacionForm.get('proyecto')?.touched
+              preasignacionForm.get('tipo_vinculacion')?.hasError('required') &&
+              preasignacionForm.get('tipo_vinculacion')?.touched
             "
           >
-            {{ "ptd.error_proyecto" | translate }}
+            {{ "ptd.error_tipo_vinculacion" | translate }}
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field class="form-field">
-          <mat-label>*{{ "asignaturas.grupo" | translate }}:</mat-label>
-          <mat-select formControlName="grupo" (selectionChange)="changeGrupo()">
-            <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
-            <mat-option *ngFor="let item of opcionesGrupos" [value]="item">
-              {{ item.grupo }}
-            </mat-option>
-          </mat-select>
-          <mat-error
-            *ngIf="
-              preasignacionForm.get('grupo')?.hasError('required') &&
-              preasignacionForm.get('grupo')?.touched
-            "
-          >
-            {{ "ptd.error_grupo" | translate }}
-          </mat-error>
-        </mat-form-field>
+        <mat-divider></mat-divider>
+        <b class="mt-3 mb-3">
+          {{ "ptd.datos_del_espacio_academico" | translate }}
+        </b>
 
-        <mat-form-field class="form-field">
-          <mat-label>{{ "GLOBAL.nivel" | translate }}</mat-label>
-          <input
-            matInput
-            type="text"
-            formControlName="nivel"
-            readonly
-            placeholder="*{{ 'GLOBAL.nivel' | translate }}:"
-          />
-          <mat-error
-            *ngIf="
-              preasignacionForm.get('nivel')?.hasError('required') &&
-              preasignacionForm.get('nivel')?.touched
-            "
-          >
-            {{ "ptd.error_nivel" | translate }}
-          </mat-error>
-        </mat-form-field>
-      </div>
+        <div class="row">
+          <mat-form-field class="form-field col-6" appearance="outline">
+            <mat-label>{{
+              "ptd.codigo_espacio_academico" | translate
+            }}</mat-label>
+            <input
+              matInput
+              type="text"
+              formControlName="codigo"
+              placeholder="{{ 'ptd.codigo_espacio_academico' | translate }}: "
+              (keydown.enter)="buscarEspacioAcademico($event)"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              color="accent"
+              (click)="buscarEspacioAcademico($event)"
+              [disabled]="preasignacionForm.get('codigo')?.disabled"
+            >
+              <mat-icon>search</mat-icon>
+            </button>
+            <mat-error
+              *ngIf="
+                preasignacionForm.get('codigo')?.hasError('required') &&
+                preasignacionForm.get('codigo')?.touched
+              "
+            >
+              {{ "ptd.error_espacio_academico" | translate }}
+            </mat-error>
+          </mat-form-field>
 
-      <div style="display: flex; gap: 0.5em; flex-wrap: wrap">
-        <button mat-flat-button (click)="enviarPreasignacion()" color="accent">
-          {{ "GLOBAL.crear" | translate }}
-        </button>
-        <button mat-flat-button (click)="cancelar()">
-          {{ "GLOBAL.cancelar" | translate }}
-        </button>
-      </div>
-    </form>
+          <mat-form-field class="col-6" appearance="outline">
+            <mat-label>{{ "ptd.espacio_academico" | translate }}:</mat-label>
+            <mat-select
+              formControlName="espacio_academico"
+              (selectionChange)="loadProyectos()"
+            >
+              <mat-option disabled
+                >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
+              >
+              <mat-option
+                *ngFor="let item of opcionesEspaciosAcademicos"
+                [value]="item"
+              >
+                {{ item.nombre }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="
+                preasignacionForm
+                  .get('espacio_academico')
+                  ?.hasError('required') &&
+                preasignacionForm.get('espacio_academico')?.touched
+              "
+            >
+              {{ "ptd.error_espacio_academico" | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="alert info" *ngIf="isEspacioModular">
+          <mat-icon class="icon">campaign</mat-icon>
+          <span>{{ "ptd.espacio_academico_modular" | translate }}</span>
+        </div>
+        <div class="form-grid">
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>{{ "ptd.proyecto" | translate }}:</mat-label>
+            <mat-select
+              formControlName="proyecto"
+              (selectionChange)="changeProyecto()"
+            >
+              <mat-option disabled
+                >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
+              >
+              <mat-option *ngFor="let item of opcionesProyectos" [value]="item">
+                {{ item }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="
+                preasignacionForm.get('proyecto')?.hasError('required') &&
+                preasignacionForm.get('proyecto')?.touched
+              "
+            >
+              {{ "ptd.error_proyecto" | translate }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>{{ "asignaturas.grupo" | translate }}:</mat-label>
+            <mat-select
+              formControlName="grupo"
+              (selectionChange)="changeGrupo()"
+            >
+              <mat-option disabled
+                >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
+              >
+              <mat-option *ngFor="let item of opcionesGrupos" [value]="item">
+                {{ item.grupo }}
+              </mat-option>
+              <div
+                class="center-h mb-2"
+                (click)="
+                  abrirDialogoCrearEspacioGrupo(
+                    preasignacionForm.get('espacio_academico')?.value
+                  )
+                "
+                *ngIf="preasignacionForm.get('espacio_academico')?.value"
+              >
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  class="mt-3"
+                  mat-button
+                >
+                  <mat-icon>add_to_photos</mat-icon>
+                  {{ "ptd.crear_grupo_espacio_academico" | translate }}
+                </button>
+              </div>
+            </mat-select>
+            <mat-error
+              *ngIf="
+                preasignacionForm.get('grupo')?.hasError('required') &&
+                preasignacionForm.get('grupo')?.touched
+              "
+            >
+              {{ "ptd.error_grupo" | translate }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>{{ "GLOBAL.nivel" | translate }}</mat-label>
+            <input
+              matInput
+              type="text"
+              formControlName="nivel"
+              readonly
+              placeholder="{{ 'GLOBAL.nivel' | translate }}:"
+            />
+            <mat-error
+              *ngIf="
+                preasignacionForm.get('nivel')?.hasError('required') &&
+                preasignacionForm.get('nivel')?.touched
+              "
+            >
+              {{ "ptd.error_nivel" | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <mat-dialog-actions align="center">
+          <button mat-stroked-button color="primary" (click)="cancelar()">
+            {{ "GLOBAL.cancelar" | translate }}
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="enviarPreasignacion()"
+            color="accent"
+          >
+            {{ "GLOBAL.crear" | translate }}
+          </button>
+        </mat-dialog-actions>
+      </form>
+    </div>
   </mat-card-content>
 </mat-card>
