@@ -21,7 +21,12 @@
     </mat-form-field>
     <mat-form-field class="form-col1 form-field" *ngIf="isCoordinador">
       <mat-label>{{ "ptd.select_asignatura" | translate }}:</mat-label>
-      <mat-select [(ngModel)]="asignaturaSelected">
+      <mat-select
+        [(ngModel)]="asignaturaSelected"
+        (selectionChange)="
+          verificarSiEspacioTieneColocacionEnModuloHorario($event)
+        "
+      >
         <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
         <mat-option *ngFor="let item of asignaturas" [value]="item">
           {{ item.nombre }}
@@ -215,7 +220,6 @@
     </form>
   </div>
 </ng-container>
-
 <!-- El gráfico del horario en cuestión -->
 <div class="margin-y">
   <h3 *ngIf="!edit">
@@ -227,6 +231,28 @@
   <h3 *ngIf="isDocente && edit">
     {{ "ptd.insert_actividad" | translate }}
   </h3>
+
+  <div class="alert info class mt-3" *ngIf="edit">
+    <mat-icon class="icon">info</mat-icon>
+    <span>{{ "ptd.mensaje_horario" | translate }}</span>
+  </div>
+  <div class="row center-h mb-3" *ngIf="edit">
+    <div class="col-5 card">
+      <b class="center-h mb-2">{{ "ptd.convenciones" | translate }}</b>
+      <p class="center-v">
+        <mat-icon color="primary" class="mr-2">date_range</mat-icon
+        >{{ "ptd.colocacion_modulo_horario" | translate }}
+      </p>
+      <p class="center-v">
+        <mat-icon class="icono-lock mr-2">lock</mat-icon
+        >{{ "ptd.espacios_fisicos_ocupados" | translate }}
+      </p>
+      <p class="center-v">
+        <mat-icon class="icono-grupo-estudio mr-2">supervisor_account</mat-icon
+        >{{ "ptd.colocaciones_grupo_estudio" | translate }}
+      </p>
+    </div>
+  </div>
   <div style="overflow-x: auto">
     <div
       class="row"
@@ -254,7 +280,7 @@
               <div class="day">{{ "ptd.lu" | translate }}</div>
               <div class="grid-carga-lectiva" #contenedorCargaLectiva>
                 <div
-                  class="element-carga-lectiva"
+                  class="tarjeta-colocacion"
                   *ngFor="let element of listaCargaLectiva"
                   style="position: absolute"
                   [style.height.px]="element.horas * snapGridSize.y"
@@ -272,83 +298,116 @@
                   (cdkDragMoved)="onDragMoved($event, element)"
                   (cdkDragReleased)="onDragReleased($event, element)"
                 >
-                  <div class="info-tooltip">
+                  <div class="info-tooltip" *ngIf="!element.bloqueado">
                     <i>{{ "ptd.editar" | translate }}</i>
                     <i>{{ "ptd.mover" | translate }}</i>
                     <i>{{ "ptd.borrar" | translate }}</i>
                   </div>
-                  <div class="contenedor-opciones">
+                  <div class="contenedor-opciones" *ngIf="!element.bloqueado">
                     <label
                       class="left-top"
                       title="{{ 'ptd.editar' | translate }}"
                       (click)="editElement(element)"
                     >
-                      <mat-icon fontIcon="edit"></mat-icon>
+                      <mat-icon class="icono-carta" fontIcon="edit"></mat-icon>
                     </label>
                     <label
                       cdkDragHandle
                       class="center-top"
                       title="{{ 'ptd.mover' | translate }}"
                     >
-                      <mat-icon fontIcon="apps"></mat-icon>
+                      <mat-icon class="icono-carta" fontIcon="apps"></mat-icon>
                     </label>
                     <label
                       class="right-top"
                       title="{{ 'ptd.borrar' | translate }}"
                       (click)="deleteElement($event.target, element)"
                     >
-                      <mat-icon fontIcon="delete"></mat-icon>
+                      <mat-icon
+                        class="icono-carta"
+                        fontIcon="delete"
+                      ></mat-icon>
                     </label>
                   </div>
-                  <div class="contenido" *ngIf="element.edificio == '-'">
-                    *{{ element.nombre }} <br />
-                    *{{ element.sede.CodigoAbreviacion }} <br />
-                    <!-- *{{ element.horaFormato }} -->
-                  </div>
-                  <div class="contenido" *ngIf="element.edificio != '-'">
-                    *{{ element.nombre }} <br />
-                    *{{
-                      element.sede?.CodigoAbreviacion
-                        ? element.sede.CodigoAbreviacion
-                        : ""
-                    }}
-                    -
-                    {{ element.edificio?.Nombre ? element.edificio.Nombre : ""
-                    }}<br />
-                    *{{ element.salon?.Nombre ? element.salon.Nombre : ""
-                    }}<br />
-                    <!-- *{{ element.horaFormato }} <br> -->
-                    {{ element.docenteName ? element.docenteName : "" }}
-                  </div>
-
-                  <div class="info-contenidoBig">
-                    *{{ element.nombre ? element.nombre : "" }} <br />
-                    *{{
-                      element.sede?.CodigoAbreviacion
-                        ? element.sede.CodigoAbreviacion
-                        : ""
-                    }}
-                    -
-                    {{ element.edificio?.Nombre ? element.edificio.Nombre : ""
-                    }}<br />
-                    *{{ element.salon?.Nombre ? element.salon.Nombre : "" }}
-                    <br />
-                    *{{ element.horaFormato ? element.horaFormato : "" }} <br />
-                    {{ element.docenteName ? element.docenteName : "" }}
+                  <div class="contenido">
+                    <div class="row">
+                      <div class="col-12 mt-4">
+                        <b
+                          class="truncate"
+                          (click)="abrirDialogoVerDetalleEspacio(element)"
+                          >{{ element.nombre }}
+                        </b>
+                      </div>
+                      <div class="col-12 mt-2">
+                        {{ element.horaFormato }}
+                        <label class="center-h mt-2">
+                          <mat-icon *ngIf="element.docenteName"
+                            >assignment_ind</mat-icon
+                          >
+                          <mat-icon *ngIf="!element.docenteName"></mat-icon>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 <div
-                  class="element-ocupado"
-                  *ngFor="let element of listaOcupacion"
+                  *ngFor="let element of listaColocacionesModuloHorario"
+                  class="tarjeta-colocacion colocacion-modulo-horario"
                   style="position: absolute"
                   [style.height.px]="element.horas * snapGridSize.y"
                   cdkDrag
                   [cdkDragFreeDragPosition]="element.dragPosition"
-                  [cdkDragDisabled]="element.bloqueado"
                   cdkDragBoundary=".grid-carga-lectiva"
+                  [cdkDragDisabled]="true"
                 >
-                  <div class="contenido">*{{ element.nombre }}</div>
+                  <div class="contenido">
+                    <div class="row">
+                      <div class="col-12 mt-4">
+                        <b
+                          class="truncate"
+                          (click)="abrirDialogoVerDetalleEspacio(element)"
+                          >{{ element.nombre }}
+                        </b>
+                      </div>
+                      <div class="col-12 mt-2">
+                        {{ element.horaFormato }}
+                        <label class="center-h mt-2">
+                          <mat-icon *ngIf="element.docenteName"
+                            >assignment_ind</mat-icon
+                          >
+                        </label>
+                        <div class="center">
+                          <mat-icon>date_range</mat-icon>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  *ngFor="let element of listaRestriccionesHorario"
+                  [ngClass]="{
+                    'element-ocupado-grupo-estudio': element.grupoEstudio,
+                    'element-ocupado-espacio-academico': element.espacioFisico
+                  }"
+                  style="position: absolute"
+                  [style.height.px]="element.horas * snapGridSize.y"
+                  cdkDrag
+                  [cdkDragFreeDragPosition]="element.dragPosition"
+                  cdkDragBoundary=".grid-carga-lectiva"
+                  [cdkDragDisabled]="true"
+                >
+                  <div class="center">
+                    <mat-icon class="icono-lock" *ngIf="element.espacioFisico"
+                      >lock</mat-icon
+                    >
+                    <mat-icon
+                      class="icono-grupo-estudio-x"
+                      *ngIf="element.grupoEstudio"
+                      >supervisor_account</mat-icon
+                    >
+                  </div>
                 </div>
               </div>
             </td>
@@ -456,4 +515,9 @@
   <br />
   <mat-divider></mat-divider>
   <br />
+</div>
+
+<div class="carta-flotante" *ngIf="banderaInfoNoSoltarTarjeta">
+  <h3>{{ "GLOBAL.atencion" | translate }}</h3>
+  <p>{{ "ptd.no_suelte_tarjeta_hasta_restricciones" | translate }}</p>
 </div>

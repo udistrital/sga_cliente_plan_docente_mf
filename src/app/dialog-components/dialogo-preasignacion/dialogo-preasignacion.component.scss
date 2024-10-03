@@ -32,11 +32,6 @@
   }
 }
 
-.margin-y {
-  margin-top: 1em;
-  margin-bottom: 1em;
-}
-
 mat-form-field {
   display: flex;
   align-items: center;
@@ -53,4 +48,17 @@ mat-icon-button {
 
 .form-field {
   width: 100%;
+}
+
+.dialogo {
+  height: 100%;
+  width: 100%;
+}
+
+.shadow {
+  box-shadow: 0 0.5px 10px rgba(0, 0, 0, 0.3);
+}
+
+b {
+  color: #024a72;
 }
