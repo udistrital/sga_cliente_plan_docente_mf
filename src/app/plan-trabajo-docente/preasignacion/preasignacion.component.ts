@@ -278,7 +278,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   loadPreasignaciones() {
     if (this.coodrinador) {
       this.planDocenteMid
-        .get("preasignacion/?vigencia=" + this.periodo.Id)
+        .get("preasignacion?vigencia=" + this.periodo.Id)
         .subscribe({
           next: (resp: RespFormat) => {
             if (checkResponse(resp)) {
