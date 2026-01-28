@@ -300,7 +300,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   loadAsignaciones() {
     if (this.coordinador) {
       this.sgaPlanTrabajoDocenteMidService
-        .get("asignacion/?vigencia=" + this.periodo.Id)
+        .get("asignacion?vigencia=" + this.periodo.Id)
         .subscribe({
           next: (resp: RespFormat) => {
             if (checkResponse(resp) && checkContent(resp)) {
