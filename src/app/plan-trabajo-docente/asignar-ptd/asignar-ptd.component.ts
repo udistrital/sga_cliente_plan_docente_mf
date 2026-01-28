@@ -139,7 +139,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     }
     this.sgaPlanTrabajoDocenteMidService
       .get(
-        `plan/?docente=${event.rowData.docente_id}&vigencia=${event.rowData.periodo_id}&vinculacion=${event.rowData.tipo_vinculacion_id}`
+        `plan?docente=${event.rowData.docente_id}&vigencia=${event.rowData.periodo_id}&vinculacion=${event.rowData.tipo_vinculacion_id}`
       )
       .subscribe(
         (res: any) => {
