@@ -664,9 +664,13 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     });
     this.ubicacionForm.get("horas")?.setValue(elementClicked.horas);
     this.editandoAsignacion = elementClicked;
-    const c: Element = document.getElementById("ubicacion") as Element;
-    await new Promise((f) => setTimeout(f, 10));
-    c.scrollIntoView({ behavior: "smooth" });
+
+    // Esperar a que se muestre el contenedor
+    const c: Element | null = document.getElementById("ubicacion");
+    if (c) {
+      await new Promise((f) => setTimeout(f, 10)); // asegurar que el DOM esté actualizado
+      c.scrollIntoView({ behavior: "smooth" });
+    }
   }
 
   deleteElement(htmlElement: any, elementClicked: CardDetalleCarga) {
