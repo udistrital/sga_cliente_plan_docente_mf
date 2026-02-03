@@ -215,7 +215,7 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
   }
 
   cargarPlan(plan: any) {
-    this.sgaPlanTrabajoDocenteMidService.get(`plan/?docente=${plan.tercero_id}&vigencia=${this.periodos.select.Id}&vinculacion=${plan.vinculacion_id}`).subscribe(
+    this.sgaPlanTrabajoDocenteMidService.get(`plan?docente=${plan.tercero_id}&vigencia=${this.periodos.select.Id}&vinculacion=${plan.vinculacion_id}`).subscribe(
       (resp) => {
         this.dataDocente = {
           Nombre: plan.nombre,
