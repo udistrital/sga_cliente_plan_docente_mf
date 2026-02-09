@@ -327,15 +327,22 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     elementMoved: CardDetalleCarga
   ): Promise<void> {
     const periodoId = this.Data.vigencia;
-    const espacioFisicoId = elementMoved.salon.Id;
+    // Protección directa
+    const espacioFisicoId = elementMoved?.salon?.Id;
 
+    if (!espacioFisicoId) {
+      console.warn(
+        'cargarRestricionesEspaciosFisicos: espacioFisicoId undefined',
+        elementMoved
+      );
+      return;
+    }
     const res: any = await this.horarioMid
       .get(
         `espacio-fisico/ocupados?espacio-fisico-id=${espacioFisicoId}&periodo-id=${periodoId}`
       )
       .toPromise();
-
-    if (res.Data && res.Data.length > 0) {
+    if (res?.Data?.length) {
       this.agregarRestriccionesAlHorario(res.Data, { espacioFisico: true });
     }
   }
