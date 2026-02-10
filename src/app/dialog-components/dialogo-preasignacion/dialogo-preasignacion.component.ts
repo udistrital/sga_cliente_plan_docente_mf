@@ -653,6 +653,19 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
               (espacio) => espacio._id == this.data.espacio_academico_padre
             )
           );
+
+        // Cargar el periodo seleccionado
+        const periodoSeleccionado = this.periodos.find(
+          (periodo) => periodo.Id == this.data.periodo_id
+        );
+
+        if (periodoSeleccionado) {
+          this.periodo = periodoSeleccionado; // Asignar el periodo actual
+          this.preasignacionForm
+            .get("periodo")
+            ?.setValue(periodoSeleccionado, { emitEvent: true }); // Asignar el periodo al formulario
+        }
+
         this.loadProyectos().then((res: any) => {
           this.preasignacionForm
             .get("grupo")
@@ -666,11 +679,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         this.preasignacionForm
           .get("tipo_vinculacion")
           ?.setValue(parseInt(this.data.tipo_vinculacion_id));
-        this.preasignacionForm
-          .get("periodo")
-          ?.setValue(
-            this.periodos.find((periodo) => periodo.Id == this.data.periodo_id)
-          );
       });
   }
 
