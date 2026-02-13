@@ -360,8 +360,10 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       .get(`espacio-academico/${espacioAcademicoId}`)
       .toPromise();
 
-    const grupoEstudioId = resEspacio.Data?.grupo_estudio_id || null;
-    if (grupoEstudioId == null) {
+    const grupoEstudioId = resEspacio.Data?.grupo_estudio_id;
+
+    if (!grupoEstudioId || grupoEstudioId === 0 || grupoEstudioId === "0") {
+      console.warn("grupoEstudioId inválido:", grupoEstudioId);
       return;
     }
     const resColocacion: any = await this.horarioMid
@@ -492,7 +494,16 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
               );
             }
             this.EspaciosProyecto = res.Data;
-            this.opcionesSedes = this.EspaciosProyecto.Sedes;
+            this.opcionesSedes = this.normalizarListaEspacios(
+              this.EspaciosProyecto?.Sedes
+            );
+            this.opcionesEdificios = this.normalizarListaEspacios(
+              this.EspaciosProyecto?.Edificios
+            );
+            this.opcionesSalones = this.normalizarListaEspacios(
+              this.EspaciosProyecto?.Salones
+            );
+            this.opcionesSalonesFiltrados = this.opcionesSalones;
           },
           (err) => {
             this.popUpManager.showPopUpGeneric(
@@ -885,7 +896,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     return new Promise((resolve, reject) => {
       this.oikosService
         .get(
-          "espacio_fisico?query=TipoEspacioFisicoId.Id:38,Activo:true&limit=0&fields=Id,Nombre,CodigoAbreviacion&sortby=Nombre&order=asc"
+          "espacio_fisico?query=TipoEspacioFisicoId.Id:38,Activo:true&limit=0&fields=Id,Nombre,Descripcion,CodigoAbreviacion&sortby=Id&order=asc"
         )
         .subscribe(
           (res) => {
@@ -909,30 +920,27 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     this.ubicacionForm.get("salon")?.setValue(undefined);
     return new Promise((resolve, reject) => {
       if (this.asignaturaSelected) {
-        this.opcionesEdificios =
-          this.EspaciosProyecto.Edificios[
-            this.ubicacionForm.get("sede")?.value.Id
-          ];
-        this.opcionesEdificios.sort((a, b) => a.Nombre.localeCompare(b.Nombre));
-        this.ubicacionForm.get("edificio")?.enable();
+        this.opcionesEdificios = this.obtenerEdificiosDesdeProyecto();
+        if (this.opcionesEdificios.length > 0) {
+          this.ubicacionForm.get("edificio")?.enable();
+        }
         resolve(this.opcionesEdificios);
       } else {
         this.oikosService
           .get(
-            `espacio_fisico_padre?query=PadreId.Id:${
-              this.ubicacionForm.get("sede")?.value.Id
-            }&fields=HijoId&limit=0`
+            "espacio_fisico?query=TipoEspacioFisicoId.Id:39,Activo:true&limit=0&fields=Id,Nombre,Descripcion,CodigoAbreviacion&sortby=Id&order=asc"
           )
-          .subscribe((res) => {
-            res.forEach((element: any) => {
-              this.opcionesEdificios.push(element.HijoId);
+          .subscribe(
+            (res) => {
+              this.opcionesEdificios = res;
               this.ubicacionForm.get("edificio")?.enable();
-            });
-            this.opcionesEdificios.sort((a, b) =>
-              a.Nombre.localeCompare(b.Nombre)
-            );
-            resolve(res);
-          });
+              resolve(res);
+            },
+            (err) => {
+              console.warn("cambioSede error", err);
+              resolve([]);
+            }
+          );
       }
     });
   }
@@ -943,28 +951,24 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     this.ubicacionForm.get("salon")?.disable();
     this.ubicacionForm.get("salon")?.setValue(undefined);
     if (this.asignaturaSelected) {
-      this.opcionesSalones =
-        this.EspaciosProyecto.Salones[
-          this.ubicacionForm.get("edificio")?.value.Id
-        ];
-      this.opcionesSalones.sort((a, b) => a.Nombre.localeCompare(b.Nombre));
+      this.opcionesSalones = this.obtenerSalonesDesdeProyecto();
       this.opcionesSalonesFiltrados = this.opcionesSalones;
-      this.ubicacionForm.get("salon")?.enable();
+      if (this.opcionesSalones.length > 0) {
+        this.ubicacionForm.get("salon")?.enable();
+      }
     } else {
       this.oikosService
         .get(
-          `espacio_fisico_padre?query=PadreId.Id:${
-            this.ubicacionForm.get("edificio")?.value.Id
-          }&fields=HijoId&limit=0`
+          "espacio_fisico?query=TipoEspacioFisicoId.Id:2,Activo:true&limit=0&fields=Id,Nombre,Descripcion,CodigoAbreviacion&sortby=Id&order=asc"
         )
-        .subscribe((res) => {
-          res.forEach((element: any) => {
-            this.opcionesSalones.push(element.HijoId);
+        .subscribe(
+          (res) => {
+            this.opcionesSalones = res;
+            this.opcionesSalonesFiltrados = this.opcionesSalones;
             this.ubicacionForm.get("salon")?.enable();
-          });
-          this.opcionesSalones.sort((a, b) => a.Nombre.localeCompare(b.Nombre));
-          this.opcionesSalonesFiltrados = this.opcionesSalones;
-        });
+          },
+          (err) => console.warn("cambioEdificio error", err)
+        );
     }
   }
 
@@ -1203,5 +1207,51 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     };
 
     return colocacionModuloHorario;
+  }
+
+  private normalizarListaEspacios(fuente: any): any[] {
+    if (!fuente) {
+      return [];
+    }
+    if (Array.isArray(fuente)) {
+      return [...fuente];
+    }
+    return Object.keys(fuente).reduce((acumulado: any[], key: string) => {
+      const elementos = fuente[key];
+      if (Array.isArray(elementos)) {
+        acumulado.push(...elementos);
+      }
+      return acumulado;
+    }, []);
+  }
+
+  private obtenerEdificiosDesdeProyecto(): any[] {
+    if (!this.EspaciosProyecto?.Edificios) {
+      return [];
+    }
+    if (Array.isArray(this.EspaciosProyecto.Edificios)) {
+      return [...this.EspaciosProyecto.Edificios];
+    }
+    const sedeSeleccionada = this.ubicacionForm.get("sede")?.value;
+    const sedeId = sedeSeleccionada?.Id ?? sedeSeleccionada;
+    if (!sedeId) {
+      return [];
+    }
+    return [...(this.EspaciosProyecto.Edificios[sedeId] || [])];
+  }
+
+  private obtenerSalonesDesdeProyecto(): any[] {
+    if (!this.EspaciosProyecto?.Salones) {
+      return [];
+    }
+    if (Array.isArray(this.EspaciosProyecto.Salones)) {
+      return [...this.EspaciosProyecto.Salones];
+    }
+    const edificioSeleccionado = this.ubicacionForm.get("edificio")?.value;
+    const edificioId = edificioSeleccionado?.Id ?? edificioSeleccionado;
+    if (!edificioId) {
+      return [];
+    }
+    return [...(this.EspaciosProyecto.Salones[edificioId] || [])];
   }
 }
