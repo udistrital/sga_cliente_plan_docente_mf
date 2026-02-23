@@ -198,8 +198,8 @@ export class GestorDocumentalService {
                 firmantes: file.firmantes ? file.firmantes : [],
                 representantes: file.representantes ? file.representantes : []
             }];
-            this.requestManager.setPath('GESTOR_DOCUMENTAL_MID_SERVICE');
-            this.requestManager.post('/document/firma_electronica', sendFileDataandSigners)
+            this.requestManager.setPath('FIRMA_ELECTRONICA_MID_SERVICE');
+            this.requestManager.post('/firma_electronica', sendFileDataandSigners)
                 .subscribe((dataResponse) => {
                     documentos.push(dataResponse);
                     if (documentos.length === files.length) {
