@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   apiUrl: "http://localhost:4216/",
+  NUXEO_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
   PARAMETROS_SERVICE:
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/parametros/v1/",
   PLAN_TRABAJO_DOCENTE_SERVICE:

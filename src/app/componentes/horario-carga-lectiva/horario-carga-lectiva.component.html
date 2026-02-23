@@ -474,6 +474,71 @@
     </table>
   </div>
   <h4 class="margin-y">
+    {{ "GLOBAL.archivo" | translate }}
+  </h4>
+  <mat-form-field class="form-field">
+    <div
+      id="dropzone"
+      *ngIf="isDocente && puedeEditarPTD"
+      (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)"
+    >
+      <p>
+        {{ "GLOBAL.arrastrar_archivos" | translate }}
+        <label for="archivosSoportePTD">
+          {{ "GLOBAL.o_hacer_click" | translate }}
+        </label>
+      </p>
+      <input
+        type="file"
+        id="archivosSoportePTD"
+        name="archivosSoportePTD"
+        (change)="onChangeArchivosSeleccionados($event)"
+        multiple
+        accept=".pdf"
+      />
+    </div>
+    <div
+      *ngIf="archivosSoporte && archivosSoporte.length"
+      class="archivos-soporte"
+    >
+      <mat-list role="list">
+        <mat-list-item
+          *ngFor="let archivo of archivosSoporte"
+          role="listitem"
+        >
+          <a href="#" (click)="abrirArchivo(archivo)" class="link-archivo">
+            {{ archivo.name || archivo.nombre }}
+          </a>
+          <span
+            (click)="eliminarArchivo(archivo)"
+            class="eliminar-archivo"
+            [ngClass]="{ oculto: !isDocente || !puedeEditarPTD }"
+            >X</span
+          >
+        </mat-list-item>
+      </mat-list>
+    </div>
+    <input
+      matInput
+      [readonly]="true"
+      type="text"
+      [value]="
+        archivosSoporte.length > 0
+          ? 'Archivo(s) cargado(s)'
+          : 'Archivo(s) NO cargado(s)'
+      "
+    />
+  </mat-form-field>
+  <mat-form-field class="form-field">
+    <mat-label>{{ "GLOBAL.observaciones_archivo" | translate }}:</mat-label>
+    <textarea
+      [(ngModel)]="observacionArchivo"
+      matInput
+      [disabled]="!isDocente || !puedeEditarPTD"
+    ></textarea>
+  </mat-form-field>
+  <h4 class="margin-y">
     {{ "GLOBAL.observaciones" | translate }}
   </h4>
   <mat-form-field class="form-field">
@@ -481,7 +546,7 @@
     <textarea
       [(ngModel)]="observacion"
       matInput
-      [disabled]="!puedeEditarPTD"
+      [disabled]="!isDocente || !puedeEditarPTD"
     ></textarea>
   </mat-form-field>
   <ng-container *ngIf="Data.aprobacion" class="margin-y">

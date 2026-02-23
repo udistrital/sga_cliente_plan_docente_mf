@@ -28,6 +28,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { DialogoVerDetalleColocacionComponent } from "src/app/dialog-components/dialogo-ver-detalles-colocacion/dialogo-ver-detalle-colocacion.component";
 import { HorarioService } from "src/app/services/horario.service";
 import { EspaciosAcademicosService } from "src/app/services/espacios-academicos.service";
+import { NewNuxeoService } from "src/app/services/new_nuxeo.service";
 
 @Component({
   selector: "horario-carga-lectiva",
@@ -95,6 +96,10 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   seleccion: number = 0;
   identificador: number = 0;
   observacion: string = "";
+  observacionArchivo: string = "";
+  archivo: any = null;
+  archivosSoporte: any[] = [];
+  archivosIdsExistentes: number[] = [];
   searchTerm$ = new Subject<any>();
   opcionesEdificios: any[] = [];
   opcionesSedes: any[] = [];
@@ -127,7 +132,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     private planDocenteService: PlanTrabajoDocenteService,
     private builder: FormBuilder,
     private oikosService: OikosService,
-    private readonly elementRef: ElementRef
+    private readonly elementRef: ElementRef,
+    private gestorDocumentalService: NewNuxeoService
   ) {
     this.contenedorCargaLectiva = this.elementRef.nativeElement;
     this.ubicacionForm = this.builder.group({});
@@ -185,6 +191,208 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     return (event.target as HTMLInputElement).value;
   }
 
+  onChangeArchivosSeleccionados(event: Event) {
+    const archivosSeleccionados: FileList | null =
+      (event.target as HTMLInputElement).files;
+
+    if (!archivosSeleccionados || !archivosSeleccionados.length) {
+      return;
+    }
+
+    const archivos = Array.from(archivosSeleccionados).filter((archivo) =>
+      this.isPdf(archivo)
+    );
+
+    if (archivos.length) {
+      this.setArchivos(archivos);
+    }
+
+    (event.target as HTMLInputElement).value = "";
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    const archivosArrastrados: FileList | undefined = event.dataTransfer?.files;
+
+    if (!archivosArrastrados || !archivosArrastrados.length) {
+      return;
+    }
+
+    const archivos = Array.from(archivosArrastrados).filter((archivo) =>
+      this.isPdf(archivo)
+    );
+
+    if (archivos.length) {
+      this.setArchivos(archivos);
+    }
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  abrirArchivo(archivo: File | { url?: string }) {
+    let url = "";
+
+    if (archivo instanceof File) {
+      url = URL.createObjectURL(archivo);
+    } else if (archivo?.url) {
+      url = archivo.url;
+    }
+
+    if (url) {
+      window.open(url, "_blank");
+    }
+  }
+
+  eliminarArchivo(archivo: File | { url?: string; id?: number }) {
+    this.archivosSoporte = this.archivosSoporte.filter(
+      (item) => item !== archivo
+    );
+    if ((archivo as any).id) {
+      this.archivosIdsExistentes = this.archivosIdsExistentes.filter(
+        (id) => id !== (archivo as any).id
+      );
+    }
+    this.archivo = this.archivosSoporte[0] || null;
+  }
+
+  validarErrorArchivosSeleccionados(): boolean {
+    return !this.archivosSoporte.length;
+  }
+
+  private setArchivos(archivos: File[]) {
+    this.archivosSoporte = [...this.archivosSoporte, ...archivos];
+    this.archivo = this.archivosSoporte[0];
+  }
+
+  private isPdf(archivo: File): boolean {
+    return (
+      archivo.type === "application/pdf" ||
+      archivo.name.toLowerCase().endsWith(".pdf")
+    );
+  }
+
+  validarArchivos(
+    archivos: { type?: string; size?: number; name?: string; nombre?: string }[]
+  ): string[] {
+    const archivosErroneos: string[] = [];
+    for (const archivo of archivos) {
+      const tipo = (archivo.type || "").toLowerCase();
+      const size = archivo.size || 0;
+      const name = archivo.name || archivo.nombre || "archivo";
+
+      if (!tipo.includes("pdf")) {
+        archivosErroneos.push(`El archivo ${name} no es un PDF.`);
+      }
+      if (size > 2097152) {
+        archivosErroneos.push(
+          `El archivo ${name} supera el tamaño máximo de 2 MB.`
+        );
+      }
+    }
+    return archivosErroneos;
+  }
+
+  async prepararArchivos(archivosFuente?: any[]): Promise<any[]> {
+    const idTipoDocument = 71; // carpeta Nuxeo
+
+    const archivosBase = archivosFuente ?? this.archivosSoporte;
+
+    if (!archivosBase || archivosBase.length === 0) {
+      return [];
+    }
+
+    return Promise.all(
+      archivosBase.map(async (archivo) => {
+        const name = archivo.name ?? archivo.nombre ?? "archivo.pdf";
+
+        let file: File;
+
+        if (archivo instanceof File) {
+          file = archivo;
+        } else {
+          const response = await fetch(archivo.url);
+          const blob = await response.blob();
+          file = new File(
+            [blob],
+            name,
+            { type: blob.type || archivo.type || "application/pdf" }
+          );
+        }
+
+        return {
+          IdDocumento: idTipoDocument,
+          nombre: name.split(".")[0],
+          descripcion: "Soporte Plan Docente",
+          file: file,
+        };
+      })
+    );
+  }
+
+  async cargarArchivos(archivos: any[]): Promise<number[]> {
+    return new Promise<number[]>((resolve) => {
+      if (!archivos || archivos.length === 0) {
+        resolve([]);
+        return;
+      }
+
+      this.gestorDocumentalService.uploadFiles(archivos).subscribe(
+        (respuesta: any[]) => {
+          const listaIds = respuesta.map((f) => f.res.Id);
+          resolve(listaIds);
+        },
+        () => {
+          this.popUpManager.showAlert(
+            this.translate.instant("GLOBAL.error"),
+            this.translate.instant("GLOBAL.creacion_documento")
+          );
+          resolve([]);
+        }
+      );
+    });
+  }
+
+  private cargarArchivosDesdeResumen(ids: number[]) {
+    if (!ids || ids.length === 0) {
+      this.archivosSoporte = [];
+      this.archivo = null;
+      return;
+    }
+
+    const idsForQuery = ids.join("|");
+    const limitQuery = ids.length;
+
+    this.gestorDocumentalService
+      .getManyFiles(`?query=Id__in:${idsForQuery}&limit=${limitQuery}`)
+      .subscribe(
+        (docs: any[]) => {
+          if (!Array.isArray(docs)) {
+            return;
+          }
+
+          const archivos = docs
+            .filter(Boolean)
+            .map((doc: any) => ({
+              id: doc.Id,
+              nombre: doc.Nombre,
+              url: doc.Url,
+              type: doc.TipoArchivo || "application/pdf",
+              size: 0,
+            }));
+          this.archivosSoporte = archivos;
+          this.archivo = this.archivosSoporte[0] || null;
+        },
+        () => {
+          this.popUpManager.showAlert(
+            this.translate.instant("GLOBAL.error"),
+            this.translate.instant("GLOBAL.carga_documento")
+          );
+        }
+      );
+  }
+
   habilitarSelectFechas() {
     this.manageByTime = !this.manageByTime;
     const validador = this.manageByTime ? Validators.required : null;
@@ -207,6 +415,14 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       this.observacion = this.Data.resumenes[this.seleccion].observacion
         ? this.Data.resumenes[this.seleccion].observacion
         : "";
+      this.observacionArchivo = this.Data.resumenes[this.seleccion].observacionArchivo
+        ? this.Data.resumenes[this.seleccion].observacionArchivo
+        : "";
+      const archivosResumen = this.Data.resumenes[this.seleccion]?.archivo;
+      this.archivosIdsExistentes = Array.isArray(archivosResumen)
+        ? archivosResumen
+        : [];
+      this.cargarArchivosDesdeResumen(this.archivosIdsExistentes);
       this.calcularHoras();
       this.calcularHoras(this.tipo.actividades);
       this.calcularHoras(this.tipo.carga_lectiva);
@@ -795,6 +1011,24 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       return;
     }
     this.OutLoading.emit(true);
+
+    const erroresArchivos = this.validarArchivos(this.archivosSoporte);
+    if (erroresArchivos.length) {
+      this.OutLoading.emit(false);
+      this.popUpManager.showAlert(
+        this.translate.instant("GLOBAL.error"),
+        erroresArchivos.join("\n")
+      );
+      return;
+    }
+
+    const archivosNuevos = this.archivosSoporte.filter((a) => !a.id);
+    const archivosAEnviar = await this.prepararArchivos(archivosNuevos);
+    const idsArchivosNuevos = await this.cargarArchivos(archivosAEnviar);
+    const idsArchivos = [
+      ...this.archivosIdsExistentes,
+      ...idsArchivosNuevos,
+    ];
     let carga_plan = [];
 
     for (const element of this.listaCargaLectiva) {
@@ -842,6 +1076,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       resumen: JSON.stringify({
         horas_lectivas: this.calcularHoras(this.tipo.carga_lectiva),
         horas_actividades: this.calcularHoras(this.tipo.actividades),
+        archivo: idsArchivos,
+        observacionArchivo: this.observacionArchivo,
         observacion: this.observacion,
       }),
       estado_plan: estado_plan_is,
