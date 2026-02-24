@@ -4,7 +4,6 @@ import { Documento } from '../models/documento';
 import { Subject } from 'rxjs';
 import { DocumentoService } from './documento.service';
 import { AnyService } from './any.service';
-import { mergeMap } from 'rxjs/operators';
 import { DomSanitizer } from '@angular/platform-browser';
 import { HttpEventType } from '@angular/common/http';
 

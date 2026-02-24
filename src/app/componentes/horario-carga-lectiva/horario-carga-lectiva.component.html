@@ -525,8 +525,8 @@
       type="text"
       [value]="
         archivosSoporte.length > 0
-          ? 'Archivo(s) cargado(s)'
-          : 'Archivo(s) NO cargado(s)'
+          ? ('GLOBAL.cargado' | translate)
+          : ('GLOBAL.no_cargado' | translate)
       "
     />
   </mat-form-field>

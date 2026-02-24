@@ -29,6 +29,7 @@ import { DialogoVerDetalleColocacionComponent } from "src/app/dialog-components/
 import { HorarioService } from "src/app/services/horario.service";
 import { EspaciosAcademicosService } from "src/app/services/espacios-academicos.service";
 import { NewNuxeoService } from "src/app/services/new_nuxeo.service";
+import { DocumentoService } from "src/app/services/documento.service";
 
 @Component({
   selector: "horario-carga-lectiva",
@@ -119,6 +120,10 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   puedeEditarPTD: boolean = false;
   private dragEnabled = false;
 
+  // Tipo de documento en documento_crud para soportes de PTD
+  private readonly codigoAbreviacionTipoDocPtd = "SOPPLTRDOC";
+  private tipoDocumentoPtdId: number | null = null;
+
   banderaInfoNoSoltarTarjeta = false;
 
   constructor(
@@ -133,7 +138,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     private builder: FormBuilder,
     private oikosService: OikosService,
     private readonly elementRef: ElementRef,
-    private gestorDocumentalService: NewNuxeoService
+    private gestorDocumentalService: NewNuxeoService,
+    private documentoService: DocumentoService
   ) {
     this.contenedorCargaLectiva = this.elementRef.nativeElement;
     this.ubicacionForm = this.builder.group({});
@@ -160,6 +166,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   async ngOnInit() {
+    await this.cargarTipoDocumentoSoporte();
+
     this.getSedes().then(() => {
       this.OutLoading.emit(false);
     });
@@ -295,7 +303,15 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   async prepararArchivos(archivosFuente?: any[]): Promise<any[]> {
-    const idTipoDocument = 71; // carpeta Nuxeo
+    const idTipoDocument = await this.cargarTipoDocumentoSoporte();
+
+    if (!idTipoDocument) {
+      this.popUpManager.showAlert(
+        this.translate.instant("GLOBAL.error"),
+        this.translate.instant("ptd.guardado_ptd_error")
+      );
+      return [];
+    }
 
     const archivosBase = archivosFuente ?? this.archivosSoporte;
 
@@ -1489,5 +1505,31 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       return [];
     }
     return [...(this.EspaciosProyecto.Salones[edificioId] || [])];
+  }
+
+  // Obtiene el Id del tipo de documento para los soportes del PTD usando su código de abreviación.
+  private cargarTipoDocumentoSoporte(): Promise<number | null> {
+    if (this.tipoDocumentoPtdId) {
+      return Promise.resolve(this.tipoDocumentoPtdId);
+    }
+
+    return new Promise((resolve) => {
+      const endpoint =
+        `tipo_documento?query=CodigoAbreviacion:${this.codigoAbreviacionTipoDocPtd},Activo:true&fields=Id&limit=1`;
+
+      this.documentoService.get(endpoint).subscribe(
+        (resp: any) => {
+          const data = Array.isArray(resp?.Data) ? resp.Data : Array.isArray(resp) ? resp : [];
+          const id = data?.[0]?.Id ?? null;
+
+          this.tipoDocumentoPtdId = id;
+          resolve(id);
+        },
+        (err) => {
+          console.warn("cargarTipoDocumentoSoporte error", err);
+          resolve(null);
+        }
+      );
+    });
   }
 }
