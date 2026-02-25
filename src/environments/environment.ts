@@ -1,12 +1,12 @@
 export const environment = {
   production: false,
   apiUrl: "http://localhost:4216/",
-  NUXEO_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
   PARAMETROS_SERVICE:
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/parametros/v1/",
   PLAN_TRABAJO_DOCENTE_SERVICE:
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/plan_trabajo_docente_crud/v1/",
-  SGA_PLAN_TRABAJO_DOCENTE_MID_SERVICE: "https://autenticacion.portaloas.udistrital.edu.co/apioas/plan_trabajo_docente_mid/v1/",
+  SGA_PLAN_TRABAJO_DOCENTE_MID_SERVICE: 
+    "https://autenticacion.portaloas.udistrital.edu.co/apioas/plan_trabajo_docente_mid/v1/",
   ESPACIOS_ACADEMICOS_SERVICE:
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/espacios_academicos_crud/v1/",
   TERCEROS_SERVICE:
@@ -23,6 +23,8 @@ export const environment = {
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/documento_crud/v2/",
   PROYECTO_ACADEMICO_SERVICE:
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/proyecto_academico_crud/v1/",
-  HORARIO_MID_SERVICE: "https://autenticacion.portaloas.udistrital.edu.co/apioas/horarios_mid/v1/",
-  HORARIO_SERVICE: "https://autenticacion.portaloas.udistrital.edu.co/apioas/horarios_crud/v1/",
+  HORARIO_MID_SERVICE: 
+    "https://autenticacion.portaloas.udistrital.edu.co/apioas/horarios_mid/v1/",
+  HORARIO_SERVICE: 
+    "https://autenticacion.portaloas.udistrital.edu.co/apioas/horarios_crud/v1/",
 };
