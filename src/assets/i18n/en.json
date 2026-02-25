@@ -99,6 +99,13 @@
     "detalle": "Detail",
     "adjuntar": "Attach",
     "observaciones": "Observations",
+    "observaciones_archivo": "Observations about the attached files",
+    "archivo": "Attached documents from the teacher and their observations",
+    "arrastrar_archivos": "Drag files",
+    "o_hacer_click": "or click",
+    "cargado": "File(s) uploaded",
+    "no_cargado": "File(s) NOT uploaded",
+    "carga_documento": "The document could not be uploaded",
     "cargar": "Upload",
     "descargar_archivo": "Download file",
     "cargando": "Loading...",
@@ -639,7 +646,9 @@
     "experiencia_actual": "Current work",
     "paso": "Step",
     "ayuda": "Help",
-    "sin_datos": "No data"
+    "sin_datos": "No data",
+    "sin_planes_docente": "No work plans were found",
+    "creacion_documento": "The document could not be uploaded!"
   },
   "ERROR": {
     "general": "The request could not be satisfied",
