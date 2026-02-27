@@ -24,6 +24,7 @@ import { DialogPreviewFileComponent } from "src/app/dialog-components/dialog-pre
 import { TercerosService } from "src/app/services/terceros.service";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
 import { GestorDocumentalService } from "src/app/services/gestor-documental.service";
+import { DocumentoService } from "src/app/services/documento.service";
 
 @Component({
   selector: "app-consolidado",
@@ -32,6 +33,9 @@ import { GestorDocumentalService } from "src/app/services/gestor-documental.serv
 })
 export class ConsolidadoComponent implements OnInit, AfterViewInit {
   readonly VIEWS = VIEWS;
+  // Código de abreviación para tipo de documento de soportes PTD
+  private readonly codigoAbreviacionTipoDocPtd = "SOPPLTRDOC";
+  private tipoDocumentoPtdId: number | null = null;
   /* readonly MODALS = MODALS;
   readonly ACTIONS = ACTIONS; */
   vista: Symbol;
@@ -68,6 +72,8 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
 
   listaPlanesConsolidado: any = undefined;
 
+  archivoNombre = "";
+
   constructor(
     private userService: UserService,
     private translate: TranslateService,
@@ -78,6 +84,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     private tercerosService: TercerosService,
     private sgaPlanTrabajoDocenteMidService: SgaPlanTrabajoDocenteMidService,
     private gestorDocumentalService: GestorDocumentalService,
+    private documentoService: DocumentoService,
     private builder: FormBuilder,
     private matDialog: MatDialog
   ) {
@@ -125,6 +132,30 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
       Respuesta: ["", Validators.required],
       Observaciones: ["", Validators.required],
     });
+  }
+
+  onArchivoSeleccionado(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files.length > 0 ? input.files[0] : undefined;
+
+    if (file) {
+      this.archivoNombre = file.name;
+      this.formNewEditConsolidado.patchValue({
+        ArchivoSoporte: { file },
+      });
+    } else {
+      this.archivoNombre = "";
+      this.formNewEditConsolidado.patchValue({ ArchivoSoporte: "" });
+    }
+
+    this.formNewEditConsolidado.get("ArchivoSoporte")?.markAsDirty();
+    this.formNewEditConsolidado
+      .get("ArchivoSoporte")
+      ?.updateValueAndValidity();
+
+    if (input) {
+      input.value = "";
+    }
   }
 
   accionRevision(event: any) {
@@ -349,7 +380,9 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     this.newEditConsolidado = true;
     this.formNewEditConsolidado.patchValue({
       Rol: this.isCoordinator,
+      ArchivoSoporte: "",
     });
+    this.archivoNombre = "";
     this.listaPlanesConsolidado = "";
     if (consolidado) {
       this.consolidadoInfo = consolidado;
@@ -417,125 +450,189 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     });
   }
 
+  private cargarTipoDocumentoSoporte(): Promise<number | null> {
+    if (this.tipoDocumentoPtdId) {
+      return Promise.resolve(this.tipoDocumentoPtdId);
+    }
+
+    return new Promise((resolve) => {
+      const endpoint =
+        "tipo_documento?query=CodigoAbreviacion:" +
+        this.codigoAbreviacionTipoDocPtd +
+        ",Activo:true&fields=Id&limit=1";
+
+      this.documentoService.get(endpoint).subscribe(
+        (resp: any) => {
+          const data = Array.isArray(resp?.Data)
+            ? resp.Data
+            : Array.isArray(resp)
+            ? resp
+            : [];
+          const id = data?.[0]?.Id ?? null;
+          this.tipoDocumentoPtdId = id;
+          resolve(id);
+        },
+        (err) => {
+          console.warn("cargarTipoDocumentoSoporte error", err);
+          resolve(null);
+        }
+      );
+    });
+  }
+
+  private async subirArchivoSoporte(archivoControl: any): Promise<number> {
+    const file = (archivoControl as any)?.file as File | undefined;
+    if (!file) {
+      throw new Error("Archivo soporte requerido");
+    }
+
+    const tipoDocId = await this.cargarTipoDocumentoSoporte();
+    if (!tipoDocId) {
+      throw new Error("No se pudo obtener el tipo de documento para soportes PTD");
+    }
+
+    const nombre = file.name?.split(".")[0] || "Consolidado";
+
+    return new Promise((resolve, reject) => {
+      this.gestorDocumentalService
+        .uploadFiles([
+          {
+            IdDocumento: tipoDocId,
+            nombre: nombre,
+            descripcion: "Soporte consolidado PTD",
+            file: file,
+          },
+        ])
+        .subscribe(
+          (resp: any[]) => resolve(resp[0].res.Id),
+          (err) => reject(err)
+        );
+    });
+  }
+
   async validarFormNewEdit() {
     const archivo = this.formNewEditConsolidado.get("ArchivoSoporte")?.value;
-    if (this.periodos.select && this.proyectos.select) {
-      if (this.formNewEditConsolidado.valid) {
-        if (this.consolidadoInfo == undefined) {
-          if (this.listaPlanesConsolidado == "") {
-            this.popUpManager.showPopUpGeneric(
-              this.translate.instant("ptd.diligenciar_consolidado"),
-              this.translate.instant("ptd.please_descargue_consolidado"),
-              MODALS.INFO,
-              false
-            );
-          } else {
-            this.gestorDocumentalService
-              .uploadFiles([
-                /* event.data.Consolidado.ArchivoSoporte */
-              ])
-              .subscribe((resp: any[]) => {
-                const consolidado = {
-                  documento_id: resp[0].res.Id,
-                  responsable_id: this.userService.getPersonaId(),
-                };
-                const prepareData = {
-                  plan_docente_id: JSON.stringify(this.listaPlanesConsolidado),
-                  periodo_id: `${this.periodos.select.Id}`,
-                  proyecto_academico_id: `${this.proyectos.select.Id}`,
-                  estado_consolidado_id: `${
-                    this.estadosConsolidado.opciones.find(
-                      (estado) => estado.codigo_abreviacion == "DEF"
-                    )._id
-                  }`,
-                  respuesta_decanatura: JSON.stringify({ sec: {}, dec: {} }),
-                  consolidado_coordinacion: JSON.stringify(consolidado),
-                  cumple_normativa: false,
-                  aprobado: false,
-                  activo: true,
-                };
-
-                this.planTrabajoDocenteService
-                  .post("consolidado_docente", prepareData)
-                  .subscribe(
-                    (resp) => {
-                      this.popUpManager.showSuccessAlert(
-                        this.translate.instant("ptd.crear_consolidado_ok")
-                      );
-                    },
-                    (err) => {
-                      console.warn(err);
-                      this.popUpManager.showErrorAlert(
-                        this.translate.instant("ptd.fallo_crear_consolidado")
-                      );
-                    }
-                  );
-              });
-          }
-        } else {
-          const verifyNewDoc = new Promise((resolve) => {
-            if (archivo.file != undefined) {
-              this.gestorDocumentalService
-                .uploadFiles([
-                  /* event.data.Consolidado.ArchivoSoporte */
-                ])
-                .subscribe((resp: any[]) => {
-                  resolve(resp[0].res.Id);
-                });
-            } else {
-              resolve(
-                JSON.parse(this.consolidadoInfo.consolidado_coordinacion)
-                  .documento_id
-              );
-            }
-          });
-          const consolidado = {
-            documento_id: await verifyNewDoc,
-            responsable_id: this.userService.getPersonaId(),
-          };
-          if (this.listaPlanesConsolidado != "") {
-            this.consolidadoInfo.plan_docente_id = JSON.stringify(
-              this.listaPlanesConsolidado
-            );
-          }
-          this.consolidadoInfo.periodo_id = `${this.periodos.select.Id}`;
-          this.consolidadoInfo.proyecto_academico_id = `${this.proyectos.select.Id}`;
-          this.consolidadoInfo.estado_consolidado_id = `${
-            this.estadosConsolidado.opciones.find(
-              (estado) => estado.codigo_abreviacion == "DEF"
-            )._id
-          }`;
-          this.consolidadoInfo.consolidado_coordinacion =
-            JSON.stringify(consolidado);
-          this.planTrabajoDocenteService
-            .put(
-              "consolidado_docente/" + this.consolidadoInfo._id,
-              this.consolidadoInfo
-            )
-            .subscribe(
-              (resp) => {
-                this.popUpManager.showSuccessAlert(
-                  this.translate.instant("ptd.actualizar_consolidado_ok")
-                );
-              },
-              (err) => {
-                console.warn(err);
-                this.popUpManager.showErrorAlert(
-                  this.translate.instant("ptd.fallo_actualizar_consolidado")
-                );
-              }
-            );
-        }
-      }
-    } else {
+    const responsableId = await this.userService.getPersonaId();
+    if (!this.periodos.select || !this.proyectos.select) {
       this.popUpManager.showPopUpGeneric(
         this.translate.instant("ptd.diligenciar_consolidado"),
         this.translate.instant("ptd.select_periodo_proyecto"),
         MODALS.INFO,
         false
       );
+      return;
+    }
+    if (!this.formNewEditConsolidado.valid) {
+      return;
+    }
+
+    if (this.consolidadoInfo == undefined) {
+      if (this.listaPlanesConsolidado == "") {
+        this.popUpManager.showPopUpGeneric(
+          this.translate.instant("ptd.diligenciar_consolidado"),
+          this.translate.instant("ptd.please_descargue_consolidado"),
+          MODALS.INFO,
+          false
+        );
+        return;
+      }
+      try {
+        const documentoId = await this.subirArchivoSoporte(archivo);
+        const consolidado = {
+          documento_id: documentoId,
+          responsable_id: responsableId,
+        };
+        const prepareData = {
+          plan_docente_id: JSON.stringify(this.listaPlanesConsolidado),
+          periodo_id: `${this.periodos.select.Id}`,
+          proyecto_academico_id: `${this.proyectos.select.Id}`,
+          estado_consolidado_id: `${
+            this.estadosConsolidado.opciones.find(
+              (estado) => estado.codigo_abreviacion == "DEF"
+            )._id
+          }`,
+          respuesta_decanatura: JSON.stringify({ sec: {}, dec: {} }),
+          consolidado_coordinacion: JSON.stringify(consolidado),
+          cumple_normativa: false,
+          aprobado: false,
+          activo: true,
+        };
+
+        this.planTrabajoDocenteService.post("consolidado_docente", prepareData).subscribe(
+          () => {
+            this.popUpManager.showSuccessAlert(
+              this.translate.instant("ptd.crear_consolidado_ok")
+            );
+            this.listarConsolidados();
+            this.regresar();
+          },
+          (err) => {
+            console.warn(err);
+            this.popUpManager.showErrorAlert(
+              this.translate.instant("ptd.fallo_crear_consolidado")
+            );
+          }
+        );
+      } catch (error) {
+        console.warn(error);
+        this.popUpManager.showErrorAlert(
+          this.translate.instant("GLOBAL.creacion_documento")
+        );
+      }
+    } else {
+      let documentoId = JSON.parse(this.consolidadoInfo.consolidado_coordinacion)
+        .documento_id;
+      if ((archivo as any)?.file != undefined) {
+        try {
+          documentoId = await this.subirArchivoSoporte(archivo);
+        } catch (error) {
+          console.warn(error);
+          this.popUpManager.showErrorAlert(
+            this.translate.instant("GLOBAL.creacion_documento")
+          );
+          return;
+        }
+      }
+      const consolidado = {
+        documento_id: documentoId,
+        responsable_id: responsableId,
+      };
+      if (this.listaPlanesConsolidado != "") {
+        this.consolidadoInfo.plan_docente_id = JSON.stringify(
+          this.listaPlanesConsolidado
+        );
+      }
+      this.consolidadoInfo.periodo_id = `${this.periodos.select.Id}`;
+      this.consolidadoInfo.proyecto_academico_id = `${this.proyectos.select.Id}`;
+      this.consolidadoInfo.estado_consolidado_id = `${
+        this.estadosConsolidado.opciones.find(
+          (estado) => estado.codigo_abreviacion == "DEF"
+        )._id
+      }`;
+      this.consolidadoInfo.consolidado_coordinacion = JSON.stringify(consolidado);
+      this.planTrabajoDocenteService
+        .put(
+          "consolidado_docente/" + this.consolidadoInfo._id,
+          this.consolidadoInfo
+        )
+        .subscribe(
+          () => {
+            this.popUpManager.showSuccessAlert(
+              this.translate.instant("ptd.actualizar_consolidado_ok")
+            );
+            this.listarConsolidados();
+            this.regresar();
+          },
+          (err) => {
+            console.warn(err);
+            this.popUpManager.showErrorAlert(
+              this.translate.instant("ptd.fallo_actualizar_consolidado")
+            );
+          }
+        );
     }
   }
+
   obtenerDocConsolidado() {
     if (this.periodos.select) {
       this.sgaPlanTrabajoDocenteMidService

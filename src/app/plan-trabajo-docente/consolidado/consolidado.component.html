@@ -243,20 +243,33 @@
             (ngSubmit)="validarFormNewEdit()"
           >
             <div class="grid">
+              <input
+                #archivoInput
+                type="file"
+                accept=".xlsx"
+                (change)="onArchivoSeleccionado($event)"
+                hidden
+              />
               <mat-form-field style="width: 100%; cursor: pointer">
                 <mat-label floatLabel="always">{{
                   "GLOBAL.adjuntar_documento" | translate
                 }}</mat-label>
                 <input
                   matInput
-                  type="file"
-                  accept=".xlsx"
-                  formControlName="ArchivoSoporte"
-                  [hidden]="
-                    !formNewEditConsolidado.get('ArchivoSoporte')?.value
-                  "
+                  [value]="archivoNombre"
+                  readonly
+                  placeholder="{{ 'GLOBAL.adjuntar_documento' | translate }}"
+                  (click)="archivoInput.click()"
                 />
-                <mat-icon matPrefix>attach_file</mat-icon>
+                <button
+                  mat-icon-button
+                  matPrefix
+                  type="button"
+                  (click)="archivoInput.click()"
+                  [attr.aria-label]="'GLOBAL.adjuntar_documento' | translate"
+                >
+                  <mat-icon>attach_file</mat-icon>
+                </button>
               </mat-form-field>
               &nbsp;
               <mat-form-field style="width: 40%">
