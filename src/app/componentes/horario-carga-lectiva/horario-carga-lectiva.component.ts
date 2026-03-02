@@ -1290,28 +1290,35 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   }
 
   async setPuedeEditarPTD(): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      if (this.isCoordinador) {
-        this.puedeEditarPTD = true;
-        resolve();
-        return;
-      }
+    return new Promise<void>(async (resolve) => {
+      try {
+        const estado = await this.getEstadoPDT();
+        const codigoAbreviacion = estado?.codigo_abreviacion;
+        const esNoAprobado = codigoAbreviacion === "N_APR";
 
-      if (this.isDocente) {
-        try {
-          const estado = await this.getEstadoPDT();
-          if (estado) {
-            this.puedeEditarPTD = estado.codigo_abreviacion === "ENV_COO";
-          }
-        } catch (error) {
-          this.puedeEditarPTD = false;
-        } finally {
+        if (esNoAprobado) {
+          // Si no fue aprobado, solo el docente puede editar y coordinación solo visualiza
+          this.puedeEditarPTD = this.isDocente;
           resolve();
+          return;
         }
-        return;
-      }
 
-      this.puedeEditarPTD = false;
+        if (this.isCoordinador) {
+          this.puedeEditarPTD = true;
+          resolve();
+          return;
+        }
+
+        if (this.isDocente) {
+          this.puedeEditarPTD = codigoAbreviacion === "ENV_COO";
+          resolve();
+          return;
+        }
+
+        this.puedeEditarPTD = false;
+      } catch (error) {
+        this.puedeEditarPTD = this.isCoordinador;
+      }
       resolve();
     });
   }
