@@ -421,12 +421,12 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
         this.documentoIdActual = documentoId;
         this.cargarArchivoExistente(documentoId);
         // Si hay archivo existente, el campo ArchivoSoporte no es requerido
-        this.formNewEditConsolidado.get('ArchivoSoporte')?.clearValidators();
+        this.formNewEditConsolidado.get("ArchivoSoporte")?.clearValidators();
       } else {
         // Si no hay archivo existente, el campo ArchivoSoporte es requerido
-        this.formNewEditConsolidado.get('ArchivoSoporte')?.setValidators(Validators.required);
+        this.formNewEditConsolidado.get("ArchivoSoporte")?.setValidators(Validators.required);
       }
-      this.formNewEditConsolidado.get('ArchivoSoporte')?.updateValueAndValidity();
+      this.formNewEditConsolidado.get("ArchivoSoporte")?.updateValueAndValidity();
       
       if (terceroId) {
         this.getInfoResponsable(terceroId);
