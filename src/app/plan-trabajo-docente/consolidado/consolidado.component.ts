@@ -73,6 +73,9 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   listaPlanesConsolidado: any = undefined;
 
   archivoNombre = "";
+  archivoExistenteUrl: string | null = null;
+  archivoExistenteNombre: string | null = null;
+  documentoIdActual: number | null = null;
 
   constructor(
     private userService: UserService,
@@ -124,7 +127,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
 
   buildForms() {
     this.formNewEditConsolidado = this.builder.group({
-      ArchivoSoporte: ["", Validators.required],
+      ArchivoSoporte: [""], // Inicialmente sin validación, se agrega dinámicamente
       QuienEnvia: ["", Validators.required],
       Rol: ["", Validators.required],
     });
@@ -383,20 +386,49 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
       ArchivoSoporte: "",
     });
     this.archivoNombre = "";
+    this.archivoExistenteUrl = null;
+    this.archivoExistenteNombre = null;
+    this.documentoIdActual = null;
     this.listaPlanesConsolidado = "";
+    
     if (consolidado) {
       this.consolidadoInfo = consolidado;
+      
+      // Cargar periodo seleccionado
+      const periodoId = this.consolidadoInfo.periodo_id;
+      if (periodoId) {
+        this.periodos.select = this.periodos.opciones.find(
+          (periodo) => periodo.Id == periodoId
+        );
+      }
+      
+      // Cargar proyecto seleccionado
+      const proyectoId = this.consolidadoInfo.proyecto_academico_id;
+      if (proyectoId) {
+        this.proyectos.select = this.proyectos.opciones.find(
+          (proyecto) => proyecto.Id == proyectoId
+        );
+      }
+      
       const consolidado_coordinacion = JSON.parse(
         this.consolidadoInfo.consolidado_coordinacion
       );
       const terceroId = consolidado_coordinacion.responsable_id;
+      const documentoId = consolidado_coordinacion.documento_id;
+      
+      // Cargar archivo existente
+      if (documentoId) {
+        this.documentoIdActual = documentoId;
+        this.cargarArchivoExistente(documentoId);
+        // Si hay archivo existente, el campo ArchivoSoporte no es requerido
+        this.formNewEditConsolidado.get("ArchivoSoporte")?.clearValidators();
+      } else {
+        // Si no hay archivo existente, el campo ArchivoSoporte es requerido
+        this.formNewEditConsolidado.get("ArchivoSoporte")?.setValidators(Validators.required);
+      }
+      this.formNewEditConsolidado.get("ArchivoSoporte")?.updateValueAndValidity();
+      
       if (terceroId) {
-        /* this.GestorDocumental.get([{Id: consolidado_coordinacion.documento_id, ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}]).subscribe(
-          (resp: any[])  => {
-            this.formNewEditConsolidado.campos[this.getIndexFormNewEditConsolidado("ArchivoSoporte")].urlTemp = resp[0].url;
-            this.formNewEditConsolidado.campos[this.getIndexFormNewEditConsolidado("ArchivoSoporte")].valor = resp[0].url;
-          }
-        ); */
         this.getInfoResponsable(terceroId);
       } else {
         this.userService
@@ -415,6 +447,10 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
       }
     } else {
       this.consolidadoInfo = undefined;
+      // Para nuevos consolidados, el campo ArchivoSoporte es requerido
+      this.formNewEditConsolidado.get('ArchivoSoporte')?.setValidators(Validators.required);
+      this.formNewEditConsolidado.get('ArchivoSoporte')?.updateValueAndValidity();
+      
       this.userService
         .getPersonaId()
         .then((terceroId) => {
@@ -448,6 +484,37 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
         );
       },
     });
+  }
+
+  cargarArchivoExistente(documentoId: number) {
+    this.gestorDocumentalService.get([{
+      Id: documentoId,
+      ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }]).subscribe({
+      next: (resp: any[]) => {
+        if (resp && resp.length > 0) {
+          this.archivoExistenteUrl = resp[0].url;
+          this.archivoExistenteNombre = resp[0].Nombre || "Consolidado.xlsx";
+        }
+      },
+      error: (err) => {
+        console.warn("Error al cargar archivo existente:", err);
+        this.popUpManager.showErrorAlert(
+          this.translate.instant("ERROR.error_cargar_documento")
+        );
+      }
+    });
+  }
+
+  descargarArchivoExistente() {
+    if (this.archivoExistenteUrl && this.archivoExistenteNombre) {
+      const link = document.createElement('a');
+      link.href = this.archivoExistenteUrl;
+      link.download = this.archivoExistenteNombre;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   }
 
   private cargarTipoDocumentoSoporte(): Promise<number | null> {
@@ -522,6 +589,18 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
       );
       return;
     }
+
+    // Validación especial: si es nuevo consolidado y no hay archivo, mostrar error
+    if (this.consolidadoInfo == undefined && !archivo?.file) {
+      this.popUpManager.showPopUpGeneric(
+        this.translate.instant("ptd.diligenciar_consolidado"),
+        this.translate.instant("GLOBAL.carga_documento"),
+        MODALS.INFO,
+        false
+      );
+      return;
+    }
+
     if (!this.formNewEditConsolidado.valid) {
       return;
     }

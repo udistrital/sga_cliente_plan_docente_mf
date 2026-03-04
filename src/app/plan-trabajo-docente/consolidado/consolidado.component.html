@@ -243,6 +243,31 @@
             (ngSubmit)="validarFormNewEdit()"
           >
             <div class="grid">
+              <!-- Mostrar archivo existente -->
+              <div *ngIf="archivoExistenteNombre" style="width: 100%; margin-bottom: 1rem;">
+                <mat-card style="background-color: #f5f5f5; padding: 1rem;">
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                      <mat-icon style="margin-right: 0.5rem;">description</mat-icon>
+                      <span><b>{{ "ptd.archivo_actual" | translate }}:</b> {{ archivoExistenteNombre }}</span>
+                    </div>
+                    <button
+                      mat-raised-button
+                      color="primary"
+                      type="button"
+                      (click)="descargarArchivoExistente()"
+                    >
+                      <mat-icon>download</mat-icon>
+                      {{ "GLOBAL.descargar" | translate }}
+                    </button>
+                  </div>
+                  <div *ngIf="!consolidadoSololectura" class="info-alert texto-centro" style="margin-top: 0.5rem;">
+                    {{ "ptd.puede_reemplazar_archivo" | translate }}
+                  </div>
+                </mat-card>
+              </div>
+              
+              <!-- Campo para adjuntar nuevo archivo -->
               <input
                 #archivoInput
                 type="file"
@@ -252,21 +277,29 @@
               />
               <mat-form-field style="width: 100%; cursor: pointer">
                 <mat-label floatLabel="always">{{
-                  "GLOBAL.adjuntar_documento" | translate
+                  archivoExistenteNombre 
+                    ? ("ptd.adjuntar_nuevo_documento" | translate)
+                    : ("GLOBAL.adjuntar_documento" | translate)
                 }}</mat-label>
                 <input
                   matInput
                   [value]="archivoNombre"
                   readonly
-                  placeholder="{{ 'GLOBAL.adjuntar_documento' | translate }}"
-                  (click)="archivoInput.click()"
+                  placeholder="{{
+                    archivoExistenteNombre 
+                      ? ('ptd.placeholder_reemplazar_documento' | translate)
+                      : ('GLOBAL.adjuntar_documento' | translate)
+                  }}"
+                  (click)="consolidadoSololectura ? null : archivoInput.click()"
+                  [disabled]="consolidadoSololectura"
                 />
                 <button
                   mat-icon-button
                   matPrefix
                   type="button"
-                  (click)="archivoInput.click()"
+                  (click)="consolidadoSololectura ? null : archivoInput.click()"
                   [attr.aria-label]="'GLOBAL.adjuntar_documento' | translate"
+                  [disabled]="consolidadoSololectura"
                 >
                   <mat-icon>attach_file</mat-icon>
                 </button>
