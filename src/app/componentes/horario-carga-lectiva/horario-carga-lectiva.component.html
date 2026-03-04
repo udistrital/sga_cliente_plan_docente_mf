@@ -546,7 +546,7 @@
     <textarea
       [(ngModel)]="observacion"
       matInput
-      [disabled]="!isDocente || !puedeEditarPTD"
+      [disabled]="isDocente || !puedeEditarPTD"
     ></textarea>
   </mat-form-field>
   <ng-container *ngIf="Data.aprobacion" class="margin-y">

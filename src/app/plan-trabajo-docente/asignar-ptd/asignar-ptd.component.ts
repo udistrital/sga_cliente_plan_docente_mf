@@ -304,7 +304,20 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         .subscribe({
           next: (resp: RespFormat) => {
             if (checkResponse(resp) && checkContent(resp)) {
-              this.dataSource = new MatTableDataSource(resp.Data);
+              const data = (resp.Data || []).map((row: any) => {
+                const estado = row?.estado
+                  ? row.estado.toString().toLowerCase()
+                  : "";
+                const isNoAprobado = estado.indexOf("no aprobado") > -1;
+
+                if (this.coordinador && isNoAprobado && row.gestion) {
+                  return { ...row, gestion: { ...row.gestion, type: "ver" } };
+                }
+
+                return row;
+              });
+
+              this.dataSource = new MatTableDataSource(data);
             } else {
               this.dataSource = new MatTableDataSource();
               this.popUpManager.showErrorAlert(
@@ -333,7 +346,23 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
             .subscribe({
               next: (resp: RespFormat) => {
                 if (checkResponse(resp) && checkContent(resp)) {
-                  this.dataSource = new MatTableDataSource(resp.Data);
+                  const data = (resp.Data || []).map((row: any) => {
+                    const estado = row?.estado
+                      ? row.estado.toString().toLowerCase()
+                      : "";
+                    const isNoAprobado = estado.indexOf("no aprobado") > -1;
+
+                    if (this.coordinador && isNoAprobado && row.gestion) {
+                      return {
+                        ...row,
+                        gestion: { ...row.gestion, type: "ver" },
+                      };
+                    }
+
+                    return row;
+                  });
+
+                  this.dataSource = new MatTableDataSource(data);
                 } else {
                   this.dataSource = new MatTableDataSource();
                   this.popUpManager.showErrorAlert(
