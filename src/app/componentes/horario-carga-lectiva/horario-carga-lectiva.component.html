@@ -473,6 +473,45 @@
       </tbody>
     </table>
   </div>
+  
+  <!-- Detalle de actividades no lectivas -->
+  <div class="margin-y" *ngIf="calcularHoras(tipo.actividades) > 0">
+    <button
+      mat-stroked-button
+      color="primary"
+      (click)="toggleDetalleActividades()"
+      style="margin-bottom: 1rem"
+    >
+      <mat-icon>{{ mostrarDetalleActividades ? 'expand_less' : 'expand_more' }}</mat-icon>
+      {{ (mostrarDetalleActividades ? 'ptd.ocultar_detalle_actividades' : 'ptd.ver_detalle_actividades') | translate }}
+    </button>
+    
+    <div *ngIf="mostrarDetalleActividades" class="margin-y" style="display: flex; align-items: center">
+      <table class="resumen" style="width: 100%; margin: auto">
+        <thead>
+          <tr>
+            <th>{{ "ptd.nombre_actividad" | translate }}</th>
+            <th>{{ "GLOBAL.tipo_vinculacion" | translate }}</th>
+            <th>{{ "ptd.horas" | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let actividad of obtenerActividadesNoLectivas()">
+            <td>{{ actividad.nombre }}</td>
+            <td class="drag-area">
+              {{ vinculacionSelected ? vinculacionSelected.nombre : "" }}
+            </td>
+            <td class="drag-area">{{ actividad.horas }}</td>
+          </tr>
+          <tr *ngIf="obtenerActividadesNoLectivas().length === 0">
+            <td colspan="3" style="text-align: center; font-style: italic">
+              {{ "ptd.sin_actividades_registradas" | translate }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
   <h4 class="margin-y">
     {{ "GLOBAL.archivo" | translate }}
   </h4>
