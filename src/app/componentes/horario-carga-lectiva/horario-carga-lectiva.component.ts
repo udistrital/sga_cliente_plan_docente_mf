@@ -125,6 +125,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   private tipoDocumentoPtdId: number | null = null;
 
   banderaInfoNoSoltarTarjeta = false;
+  mostrarDetalleActividades = false;
 
   constructor(
     public dialog: MatDialog,
@@ -1015,6 +1016,19 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       }
     });
     return total;
+  }
+
+  toggleDetalleActividades() {
+    this.mostrarDetalleActividades = !this.mostrarDetalleActividades;
+  }
+
+  obtenerActividadesNoLectivas() {
+    return this.listaCargaLectiva.filter(
+      (carga: CardDetalleCarga) =>
+        carga.tipo === this.tipo.actividades &&
+        this.isInsideGrid(carga) &&
+        !carga.modular
+    );
   }
 
   async guardar_ptd() {
