@@ -1341,7 +1341,15 @@
     "colocacion_eliminada": "Placement successfully removed",
     "desea_asignar_docente": "Do you want to assign the teacher to this placement?",
     "restricciones_horario": "Schedule restrictions",
-    "colocaciones_grupo_estudio": "Study Group Placements"
+    "colocaciones_grupo_estudio": "Study Group Placements",
+    "observaciones": "Traffic light",
+    "semaforo_aprobado": "Approved",
+    "semaforo_preaprobado": "Pre-approved",
+    "semaforo_no_aprobado": "Plan rejected - Has observations",
+    "semaforo_pendiente_revision": "Pending review",
+    "semaforo_pendiente_con_observaciones": "Pending review - With observations",
+    "semaforo_pendiente_sin_observaciones": "Pending review - Without observations",
+    "semaforo_sin_estado": "No status assigned"
   },
   "espacios_academicos": {
     "espacios_academicos": "Academic Spaces",
