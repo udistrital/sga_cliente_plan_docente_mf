@@ -1340,7 +1340,15 @@
     "mensaje_si_espacio_tiene_colocacion_en_modulo_horario_2": "Los espacios asignados están resaltados. Puede asignar un docente haciendo clic sobre el nombre del espacio. Si necesita agregar otra colocación para este espacio, también puede hacerlo.",
     "colocacion_eliminada": "Colocación eliminada con éxito",
     "desea_asignar_docente": "¿Desea asignarle el docente a esta colocación?",
-    "colocaciones_grupo_estudio": "Colocaciones del grupo de estudio"
+    "colocaciones_grupo_estudio": "Colocaciones del grupo de estudio",
+    "observaciones": "Semáforo",
+    "semaforo_aprobado": "Aprobado",
+    "semaforo_preaprobado": "Sin observaciones - Preaprobado",
+    "semaforo_no_aprobado": "Plan rechazado - Tiene observaciones",
+    "semaforo_pendiente_revision": "Pendiente de revisión",
+    "semaforo_pendiente_con_observaciones": "Pendiente de revisión - Con observaciones",
+    "semaforo_pendiente_sin_observaciones": "Pendiente de revisión - Sin observaciones",
+    "semaforo_sin_estado": "Sin estado asignado"
   },
   "espacios_academicos": {
     "espacios_academicos": "Espacios Académicos",
