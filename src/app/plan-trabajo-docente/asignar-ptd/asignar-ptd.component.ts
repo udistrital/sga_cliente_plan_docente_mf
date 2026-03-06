@@ -53,6 +53,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     "soporte_documental",
     "gestion",
     "estado",
+    "semaforo",
     "enviar",
   ];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -521,5 +522,61 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     const xd = this.detallesGeneral.carga[0].filter(
       (c: any) => c.docente != event.docente_id
     );
+  }
+
+  /**
+   * Retorna información del semáforo según el estado del PTD y observaciones
+   * Verde: Preaprobado (PAPR) - Sin observaciones
+   * Rojo: No aprobado (N_APR) - Tiene rechazo/observaciones
+   * Amarillo CON observaciones: Pendiente de revisión (DEF, ENV_COO, ENV_DOC) - Con observaciones
+   * Amarillo SIN observaciones: Pendiente de revisión (DEF, ENV_COO, ENV_DOC) - Sin observaciones
+   */
+  getSemaforoEstado(estado: string, tieneObservaciones?: boolean): { color: string; tooltip: string; icon: string } {
+    if (!estado) {
+      return {
+        color: "#757575",
+        tooltip: this.translate.instant("ptd.semaforo_sin_estado"),
+        icon: "help_outline",
+      };
+    }
+
+    const estadoLower = estado.toLowerCase().trim();
+
+    // Rojo: No aprobado (debe validarse antes de "aprobado")
+    if (estadoLower.includes("no aprobado")) {
+      return {
+        color: "#F44336",
+        tooltip: this.translate.instant("ptd.semaforo_no_aprobado"),
+        icon: "cancel",
+      };
+    }
+
+    const esPreaprobado = estadoLower.includes("preaprobado");
+    const esAprobado = esPreaprobado || estadoLower.includes("aprobado");
+
+    // Verde: Aprobado / Preaprobado
+    if (esAprobado) {
+      return {
+        color: "#4CAF50",
+        tooltip: this.translate.instant(
+          esPreaprobado
+            ? "ptd.semaforo_preaprobado"
+            : "ptd.semaforo_aprobado"
+        ),
+        icon: "check_circle",
+      };
+    }
+
+    // Amarillo: Pendiente de revisión (cualquier otro estado)
+    // Diferencia entre con y sin observaciones
+    const tooltip = tieneObservaciones
+      ? this.translate.instant("ptd.semaforo_pendiente_con_observaciones")
+      : this.translate.instant("ptd.semaforo_pendiente_sin_observaciones");
+
+    return {
+      color: "#FFC107",
+      tooltip: tooltip,
+      icon: "autorenew",
+    };
   }
 }
