@@ -199,7 +199,7 @@ export class GestorDocumentalService {
                 representantes: file.representantes ? file.representantes : []
             }];
             this.requestManager.setPath('FIRMA_ELECTRONICA_MID_SERVICE');
-            this.requestManager.post('/firma_electronica', sendFileDataandSigners)
+            this.requestManager.post('firma_electronica', sendFileDataandSigners)
                 .subscribe((dataResponse) => {
                     documentos.push(dataResponse);
                     if (documentos.length === files.length) {
