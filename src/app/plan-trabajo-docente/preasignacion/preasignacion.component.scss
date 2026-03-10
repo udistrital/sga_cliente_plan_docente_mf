@@ -10,3 +10,17 @@
     height: 0.5em;
     border-radius: 100%;
 }
+
+.semaforo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.semaforo-icon {
+  transition: transform 0.2s ease-in-out;
+}
+
+.semaforo-icon:hover {
+  transform: scale(1.1);
+}
