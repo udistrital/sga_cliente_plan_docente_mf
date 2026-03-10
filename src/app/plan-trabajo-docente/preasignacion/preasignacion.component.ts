@@ -38,6 +38,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     "nivel",
     "aprobacion_docente",
     "aprobacion_proyecto",
+    "semaforo_preasignacion",
   ];
   displayedColumns_coord: string[] = [
     "docente",
@@ -48,6 +49,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     "nivel",
     "aprobacion_docente",
     "aprobacion_proyecto",
+    "semaforo_preasignacion",
     "enviar",
     "editar",
     "borrar",
@@ -362,5 +364,56 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     } else {
       this.dataSource = new MatTableDataSource();
     }
+  }
+
+  // Función para determinar el estado del semáforo de preasignación
+  getSemaforoPreasignacion(row: any): {
+    color: string;
+    tooltip: string;
+    icon: string;
+  } {
+    const aprobacionProyecto = this.getAprobacionValue(row?.aprobacion_proyecto);
+    const aprobacionDocente = this.getAprobacionValue(row?.aprobacion_docente);
+
+    // Si la aprobación del proyecto es falsa, se muestra el semáforo rojo
+    if (!aprobacionProyecto) {
+      return {
+        color: "#F44336",
+        tooltip: this.translate.instant(
+          "ptd.semaforo_preasignacion_no_enviado"
+        ),
+        icon: "cancel",
+      };
+    }
+
+    // Si la aprobación del proyecto es verdadera pero la aprobación del docente es falsa, se muestra el semáforo amarillo
+    if (!aprobacionDocente) {
+      return {
+        color: "#FFC107",
+        tooltip: this.translate.instant(
+          "ptd.semaforo_preasignacion_pendiente_docente"
+        ),
+        icon: "autorenew",
+      };
+    }
+
+    // Si ambas aprobaciones son verdaderas, se muestra el semáforo verde
+    return {
+      color: "#4CAF50",
+      tooltip: this.translate.instant("ptd.semaforo_preasignacion_aprobada"),
+      icon: "check_circle",
+    };
+  }
+
+  private getAprobacionValue(approval: any): boolean {
+    if (typeof approval === "boolean") {
+      return approval;
+    }
+
+    if (approval && typeof approval === "object" && "value" in approval) {
+      return !!approval.value;
+    }
+
+    return false;
   }
 }

@@ -114,6 +114,24 @@
             ></action-check>
           </mat-cell>
         </ng-container>
+        <ng-container matColumnDef="semaforo_preasignacion">
+          <mat-header-cell *matHeaderCellDef>
+            <b>{{ "ptd.semaforo_preasignacion" | translate }}</b>
+          </mat-header-cell>
+          <mat-cell *matCellDef="let row">
+            <div
+              class="semaforo-container"
+              [matTooltip]="getSemaforoPreasignacion(row).tooltip"
+            >
+              <mat-icon
+                class="semaforo-icon"
+                [ngStyle]="{ color: getSemaforoPreasignacion(row).color }"
+              >
+                {{ getSemaforoPreasignacion(row).icon }}
+              </mat-icon>
+            </div>
+          </mat-cell>
+        </ng-container>
         <mat-header-row
           *matHeaderRowDef="displayedColumns_docente"
         ></mat-header-row>
@@ -243,6 +261,24 @@
               [rowData]="row"
               [value]="row.aprobacion_proyecto"
             ></action-check>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="semaforo_preasignacion">
+          <mat-header-cell *matHeaderCellDef>
+            <b>{{ "ptd.semaforo_preasignacion" | translate }}</b>
+          </mat-header-cell>
+          <mat-cell *matCellDef="let row">
+            <div
+              class="semaforo-container"
+              [matTooltip]="getSemaforoPreasignacion(row).tooltip"
+            >
+              <mat-icon
+                class="semaforo-icon"
+                [ngStyle]="{ color: getSemaforoPreasignacion(row).color }"
+              >
+                {{ getSemaforoPreasignacion(row).icon }}
+              </mat-icon>
+            </div>
           </mat-cell>
         </ng-container>
         <ng-container matColumnDef="enviar">
