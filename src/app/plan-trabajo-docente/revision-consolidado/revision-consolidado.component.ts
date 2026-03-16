@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -12,7 +12,9 @@ import { RespFormat } from 'src/app/models/response-format';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { PlanTrabajoDocenteService } from 'src/app/services/plan-trabajo-docente.service';
 import { ProyectoAcademicoService } from 'src/app/services/proyecto-academico.service';
+import { TercerosService } from 'src/app/services/terceros.service';
 import { UserService } from 'src/app/services/user.service';
+import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { checkContent, checkResponse } from 'src/app/utils/verify-response';
 import { cloneDeep as _cloneDeep } from 'lodash';
 
@@ -24,8 +26,14 @@ import { cloneDeep as _cloneDeep } from 'lodash';
 export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
 
   readonly VIEWS = VIEWS;
-  /* readonly MODALS = MODALS;
-  readonly ACTIONS = ACTIONS; */
+  readonly ESTADOS = {
+    DEF: '64d1b9ab7344af1caa53ea59',
+    ENV: '64e4c32cd9308025c135db2d',
+    AVA: '64e4c34cd93080396f35db2f',
+    APR: '64e4c382d93080d1e835db31',
+    N_APR: '64e4c3a5d93080299535db34',
+    ENV_AVA: '64e61208a659b2fca5b0bd6a',
+  };
   vista: Symbol;
 
   isSecDecanatura: string|undefined = undefined;
@@ -41,6 +49,11 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   estadosConsolidado: {select: any, opciones: any[]};
 
   formRevConsolidado: FormGroup;
+  revConsolidadoInfo: any = undefined;
+  consolidadoSololectura = false;
+  archivoSoporteUrl: string | null = null;
+  archivoSoporteNombre: string | null = null;
+  opcionesDecision: { id: string; nombre: string }[] = [];
   
   constructor(
     private userService: UserService,
@@ -49,6 +62,8 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
     private parametrosService: ParametrosService,
     private proyectoAcademicoService: ProyectoAcademicoService,
     private planTrabajoDocenteService: PlanTrabajoDocenteService,
+    private tercerosService: TercerosService,
+    private gestorDocumentalService: GestorDocumentalService,
     private builder: FormBuilder,
   ) {
     this.vista = VIEWS.LIST;
@@ -62,7 +77,7 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.userService.getUserRoles().then(roles => {
       this.isSecDecanatura = roles.find(role => (role == ROLES.SEC_DECANATURA));
-        this.isDecano = roles.find(role => (role == ROLES.DECANO));
+      this.isDecano = roles.find(role => (role == ROLES.DECANO));
     });
     this.loadSelects();
     this.buildForm();
@@ -84,21 +99,25 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
 
   buildForm() {
     this.formRevConsolidado = this.builder.group({
-
+      ArchivoSoporte: [{ value: '', disabled: true }],
+      QuienResponde: [{ value: '', disabled: true }, Validators.required],
+      Rol: [{ value: '', disabled: true }, Validators.required],
+      CumpleNorma: [false],
+      Observaciones: ['', Validators.required],
+      Decision: ['', Validators.required],
     });
   }
 
   accionGestion(event: any) {
-    const readonly = event.rowData.gestion.type === 'ver';
+    const readonly = event.rowData.gestion.type !== 'editar';
     this.revisarConsolidado(event.rowData.ConsolidadoJson, readonly);
   }
 
   accionEnviar(event: any) {
     let putPlan = _cloneDeep(event.rowData.ConsolidadoJson);
-    const estado = this.estadosConsolidado.opciones.find(estado => estado.codigo_abreviacion === "ENV_AVA");
-    putPlan.estado_consolidado_id = estado._id;
+    putPlan.estado_consolidado_id = this.ESTADOS.ENV_AVA;
     this.planTrabajoDocenteService.put('consolidado_docente/'+putPlan._id, putPlan).subscribe(
-      resp => {
+      () => {
         this.popUpManager.showSuccessAlert(this.translate.instant('ptd.actualizar_consolidado_ok'))
         this.listarConsolidados();
       }, err => {
@@ -161,21 +180,13 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
 
   async loadSelects() {
     try {
-      let promesas = [];
+      let promesas: Promise<void>[] = [];
       promesas.push(this.loadPeriodo().then(periodos => {this.periodos.opciones = periodos}));
       promesas.push(this.loadProyectos().then(proyectos => {this.proyectos.opciones = proyectos;}));
       promesas.push(this.cargarEstadosConsolidado().then(estadosConsolidado => {
         this.estadosConsolidado.opciones = estadosConsolidado;
-        let estadosCodAbrev: string[] = [];
-        if (this.isSecDecanatura) {
-          estadosCodAbrev = ["AVA","N_APR"];
-        }
-        if (this.isDecano) {
-          estadosCodAbrev = ["APR"];
-        }
-        const ops = this.estadosConsolidado.opciones.filter(estado => estadosCodAbrev.includes(estado.codigo_abreviacion));
-        /* this.formRevConsolidado.campos[this.getIndexFormRevConsolidado('EnviarAprovacionDec')].opciones = ops; */
       }));
+      await Promise.all(promesas);
     } catch (error) {
       console.warn(error);
       this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'),
@@ -205,16 +216,13 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   idEstadosSegunRol(): string[] {
-    let estadosCodAbrev: string[] = [];
     if (this.isSecDecanatura) {
-      estadosCodAbrev = ["ENV","AVA","ENV_AVA","N_APR"];
+      return [this.ESTADOS.ENV, this.ESTADOS.AVA, this.ESTADOS.N_APR, this.ESTADOS.ENV_AVA];
     }
     if (this.isDecano) {
-      estadosCodAbrev = ["ENV_AVA","APR"];
+      return [this.ESTADOS.ENV_AVA, this.ESTADOS.APR, this.ESTADOS.N_APR];
     }
-    return this.estadosConsolidado.opciones
-      .filter(estado => estadosCodAbrev.includes(estado.codigo_abreviacion))
-      .map(estado => estado._id);
+    return [];
   }
 
   estilizarDatosSegunRol(consolidados: any[]): any[] {
@@ -224,10 +232,10 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
       const periodo = this.periodos.opciones.find(periodo => periodo.Id == consolidado.periodo_id);
       const estadoConsolidado = this.estadosConsolidado.opciones.find(estado => estado._id == consolidado.estado_consolidado_id);
       let opcionGestion = "ver";
-      if ((estadoConsolidado && estadoConsolidado.codigo_abreviacion == "ENV") && (this.isSecDecanatura)) {
+      if ((consolidado.estado_consolidado_id === this.ESTADOS.ENV) && (this.isSecDecanatura)) {
         opcionGestion = "editar";
       }
-      if ((estadoConsolidado && estadoConsolidado.codigo_abreviacion == "ENV_AVA") && (this.isDecano)) {
+      if ((consolidado.estado_consolidado_id === this.ESTADOS.ENV_AVA) && (this.isDecano)) {
         opcionGestion = "editar";
       }
       formatedData.push({
@@ -237,7 +245,7 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
         "periodo_academico": periodo ? periodo.Nombre : "",
         "gestion": { value: undefined, type: opcionGestion, disabled: (!this.isSecDecanatura && !this.isDecano) },
         "estado": estadoConsolidado ? estadoConsolidado.nombre : consolidado.estado_consolidado_id,
-        "enviar": { value: undefined, type: 'enviar', disabled: (!this.isSecDecanatura) || (estadoConsolidado.codigo_abreviacion != "AVA") },
+        "enviar": { value: undefined, type: 'enviar', disabled: (!this.isSecDecanatura) || (consolidado.estado_consolidado_id !== this.ESTADOS.AVA) },
         "ConsolidadoJson": consolidado
       })
     })
@@ -249,128 +257,189 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   revisarConsolidado(consolidado: any, readonly?: boolean) {
-    /* this.formRevConsolidado.btn = this.translate.instant('GLOBAL.guardar');
-    this.revConsolidadoInfo = consolidado;
-    this.vista = VIEWS.FORM;
-    this.formRevConsolidado.campos[this.getIndexFormRevConsolidado('Rol')].valor = this.isSecDecanatura || this.isDecano;
-    this.formRevConsolidado.campos[this.getIndexFormRevConsolidado('CumpleNorma')].valor = consolidado.cumple_normativa;
-    this.formRevConsolidado.campos[this.getIndexFormRevConsolidado('CumpleNorma')].deshabilitar = !this.isSecDecanatura;
+    this.revConsolidadoInfo = _cloneDeep(consolidado);
+    this.consolidadoSololectura = !!readonly;
+    this.archivoSoporteUrl = null;
+    this.archivoSoporteNombre = null;
 
-    const estadoApr = this.estadosConsolidado.opciones.find(estado => estado._id == consolidado.estado_consolidado_id);
-    if (estadoApr.codigo_abreviacion === "AVA" || estadoApr.codigo_abreviacion === "N_APR" || estadoApr.codigo_abreviacion === "APR") {
-      this.formRevConsolidado.campos[this.getIndexFormRevConsolidado('EnviarAprovacionDec')].valor = estadoApr;
-    }
-
-    if (this.isSecDecanatura) {
-      const consolidado_coordinacion = JSON.parse(consolidado.consolidado_coordinacion);
-      this.loading = true;
-      this.sgaMidService.post(`reportes/verif_cump_ptd/${consolidado.periodo_id}/${consolidado.proyecto_academico_id}`,{}).subscribe((resp1) =>  {
-        const rawFilePDF = new Uint8Array(atob(resp1.Data.pdf).split('').map(char => char.charCodeAt(0)));
-        const urlFilePDF = window.URL.createObjectURL(new Blob([rawFilePDF], { type: 'application/pdf' }));
-        this.GestorDocumental.get([{Id: consolidado_coordinacion.documento_id, ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}]).subscribe(
-          (resp: any[])  => {
-            this.loading = false;
-            this.formRevConsolidado.campos[this.getIndexFormRevConsolidado("ArchivoSoporteCoordinacion")].urlTemp = urlFilePDF+"|"+resp[0].url;
-            this.formRevConsolidado.campos[this.getIndexFormRevConsolidado("ArchivoSoporteCoordinacion")].valor = urlFilePDF+"|"+resp[0].url;
-          }
-        );
-      }, (err) => {
-        this.loading = false;
-        this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
-        console.warn(err)
-      });
-    }
-    
-    let terceroId = 0;
-    const respuesta_decanatura = JSON.parse(consolidado.respuesta_decanatura);
-    if (Object.keys(respuesta_decanatura.sec).length > 0) {
-      if (respuesta_decanatura.sec.documento_id && respuesta_decanatura.sec.documento_id > 0) {
-        this.loading = true;
-        this.sgaMidService.post(`reportes/verif_cump_ptd/${consolidado.periodo_id}/${consolidado.proyecto_academico_id}`,{}).subscribe((resp1) =>  {
-          const rawFilePDF = new Uint8Array(atob(resp1.Data.pdf).split('').map(char => char.charCodeAt(0)));
-          const urlFilePDF = window.URL.createObjectURL(new Blob([rawFilePDF], { type: 'application/pdf' }));
-          this.GestorDocumental.get([{Id: respuesta_decanatura.sec.documento_id, ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}]).subscribe(
-            (resp: any[])  => {
-              this.loading = false;
-              if (this.isDecano) {
-                this.formRevConsolidado.campos[this.getIndexFormRevConsolidado("ArchivoSoporteCoordinacion")].urlTemp = urlFilePDF+"|"+resp[0].url;
-                this.formRevConsolidado.campos[this.getIndexFormRevConsolidado("ArchivoSoporteCoordinacion")].valor = urlFilePDF+"|"+resp[0].url;
-              } else {
-                this.formRevConsolidado.campos[this.getIndexFormRevConsolidado("ArchivoSoporte")].urlTemp = urlFilePDF+"|"+resp[0].url;
-                this.formRevConsolidado.campos[this.getIndexFormRevConsolidado("ArchivoSoporte")].valor = urlFilePDF+"|"+resp[0].url;
-              }
-            }
-          );
-        }, (err) => {
-          this.loading = false;
-          this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
-          console.warn(err)
-        });
-      }
-      if (this.isSecDecanatura) {
-        terceroId = respuesta_decanatura.sec.responsable_id;
-        this.formRevConsolidado.campos[this.getIndexFormRevConsolidado('Observaciones')].valor = respuesta_decanatura.sec.observacion;
-      }
-    }
-    if ((Object.keys(respuesta_decanatura.dec).length > 0) && this.isDecano) {
-      terceroId = respuesta_decanatura.dec.responsable_id;
-      this.formRevConsolidado.campos[this.getIndexFormRevConsolidado('Observaciones')].valor = respuesta_decanatura.dec.observacion;
-    }
-    if (terceroId == 0) {
-      terceroId = this.userService.getPersonaId();
-    }
-    this.tercerosService.get('tercero/'+terceroId).subscribe(resTerc => {
-      this.formRevConsolidado.campos[this.getIndexFormRevConsolidado("QuienResponde")].valor = resTerc.NombreCompleto;
-    }, err => {
-      console.warn(err);
-      this.popUpManager.showPopUpGeneric(this.translate.instant('ERROR.titulo_generico'), this.translate.instant('ERROR.persiste_error_comunique_OAS'), MODALS.ERROR, false)
+    this.formRevConsolidado.patchValue({
+      ArchivoSoporte: '',
+      QuienResponde: '',
+      Rol: this.isSecDecanatura ? 'Secretaria Decanatura' : 'Decanatura',
+      CumpleNorma: !!consolidado.cumple_normativa,
+      Observaciones: '',
+      Decision: '',
     });
-    if (readonly ? readonly : false) {
-      this.formRevConsolidado.btn = "";
+
+    this.configurarOpcionesPorRol();
+
+    const estadoActualId = consolidado.estado_consolidado_id;
+    if (this.isSecDecanatura) {
+      const decisionSec = estadoActualId === this.ESTADOS.N_APR ? this.ESTADOS.N_APR : this.ESTADOS.AVA;
+      if ([this.ESTADOS.AVA, this.ESTADOS.N_APR, this.ESTADOS.ENV_AVA].includes(estadoActualId)) {
+        this.formRevConsolidado.patchValue({ Decision: decisionSec });
+      }
+    }
+    if (this.isDecano && [this.ESTADOS.APR, this.ESTADOS.N_APR].includes(estadoActualId)) {
+      this.formRevConsolidado.patchValue({ Decision: estadoActualId });
+    }
+
+    const consolidadoCoordinacion = this.parseJson(this.revConsolidadoInfo.consolidado_coordinacion, {});
+    if (consolidadoCoordinacion.documento_id) {
+      this.cargarArchivoSoporte(consolidadoCoordinacion.documento_id);
+    }
+
+    const respuestaDecanatura = this.parseJson(this.revConsolidadoInfo.respuesta_decanatura, { sec: {}, dec: {} });
+    let terceroId = 0;
+    if (this.isSecDecanatura && respuestaDecanatura?.sec) {
+      this.formRevConsolidado.patchValue({ Observaciones: respuestaDecanatura.sec.observacion || '' });
+      terceroId = respuestaDecanatura.sec.responsable_id || 0;
+    }
+    if (this.isDecano && respuestaDecanatura?.dec) {
+      this.formRevConsolidado.patchValue({ Observaciones: respuestaDecanatura.dec.observacion || '' });
+      terceroId = respuestaDecanatura.dec.responsable_id || 0;
+    }
+
+    if (!terceroId) {
+      this.userService.getPersonaId().then((personaId) => {
+        this.cargarResponsable(personaId);
+      });
     } else {
-      this.formRevConsolidado.btn = this.translate.instant('GLOBAL.guardar');
-    } */
+      this.cargarResponsable(terceroId);
+    }
+
+    this.vista = VIEWS.FORM;
+    if (this.consolidadoSololectura) {
+      this.formRevConsolidado.disable();
+    } else {
+      this.formRevConsolidado.enable();
+      this.formRevConsolidado.get('ArchivoSoporte')?.disable();
+      this.formRevConsolidado.get('QuienResponde')?.disable();
+      this.formRevConsolidado.get('Rol')?.disable();
+      if (!this.isSecDecanatura) {
+        this.formRevConsolidado.get('CumpleNorma')?.disable();
+      }
+    }
   }
 
   async validarFormRevConsolidado() {
-    /* if (event.valid) {
-      let respuesta_decanatura = JSON.parse(this.revConsolidadoInfo.respuesta_decanatura);
-      if (this.isSecDecanatura) {
-        const verifyNewDoc = new Promise(resolve => {
-          if (event.data.RevisionConsolidado.ArchivoSoporte.file != undefined) {
-            this.GestorDocumental.uploadFiles([event.data.RevisionConsolidado.ArchivoSoporte]).subscribe(
-              (resp: any[]) => {
-                resolve(resp[0].res.Id)
-              });
-          } else {
-            resolve(respuesta_decanatura.sec.documento_id)
-          }
-        });
-        respuesta_decanatura.sec.documento_id = await verifyNewDoc;
-        respuesta_decanatura.sec.responsable_id = this.userService.getPersonaId();
-        respuesta_decanatura.sec.observacion = event.data.RevisionConsolidado.Observaciones;
-        this.revConsolidadoInfo.cumple_normativa = event.data.RevisionConsolidado.CumpleNorma;
+    if (!this.revConsolidadoInfo || this.formRevConsolidado.invalid) {
+      this.formRevConsolidado.markAllAsTouched();
+      return;
+    }
+
+    const putPlan = _cloneDeep(this.revConsolidadoInfo);
+    const personaId = await this.userService.getPersonaId();
+    const respuestaDecanatura = this.parseJson(putPlan.respuesta_decanatura, { sec: {}, dec: {} });
+
+    if (this.isSecDecanatura) {
+      respuestaDecanatura.sec = {
+        ...respuestaDecanatura.sec,
+        responsable_id: personaId,
+        observacion: this.formRevConsolidado.get('Observaciones')?.value,
+      };
+      putPlan.cumple_normativa = !!this.formRevConsolidado.get('CumpleNorma')?.value;
+    }
+
+    if (this.isDecano) {
+      respuestaDecanatura.dec = {
+        ...respuestaDecanatura.dec,
+        responsable_id: personaId,
+        observacion: this.formRevConsolidado.get('Observaciones')?.value,
+      };
+    }
+
+    putPlan.estado_consolidado_id = this.formRevConsolidado.get('Decision')?.value;
+    putPlan.aprobado = putPlan.estado_consolidado_id === this.ESTADOS.APR;
+    putPlan.respuesta_decanatura = JSON.stringify(respuestaDecanatura);
+
+    this.planTrabajoDocenteService.put('consolidado_docente/' + putPlan._id, putPlan).subscribe(
+      () => {
+        this.popUpManager.showSuccessAlert(this.translate.instant('ptd.actualizar_consolidado_ok'));
+        this.regresar();
+      },
+      (err) => {
+        console.warn(err);
+        this.popUpManager.showErrorAlert(this.translate.instant('ptd.fallo_actualizar_consolidado'));
       }
-      if (this.isDecano) {
-        respuesta_decanatura.dec.responsable_id = this.userService.getPersonaId();
-        respuesta_decanatura.dec.observacion = event.data.RevisionConsolidado.Observaciones;
+    );
+  }
+
+  private configurarOpcionesPorRol() {
+    if (this.isSecDecanatura) {
+      this.opcionesDecision = [
+        { id: this.ESTADOS.AVA, nombre: 'Enviar para aprobacion por decanatura' },
+        { id: this.ESTADOS.N_APR, nombre: 'Enviar a coordinacion para su revision' },
+      ];
+      this.formRevConsolidado.get('CumpleNorma')?.enable();
+      return;
+    }
+
+    this.opcionesDecision = [
+      { id: this.ESTADOS.APR, nombre: 'Aprobar consolidado' },
+      { id: this.ESTADOS.N_APR, nombre: 'No aprobar consolidado' },
+    ];
+    this.formRevConsolidado.get('CumpleNorma')?.disable();
+  }
+
+  private cargarArchivoSoporte(documentoId: number) {
+    this.gestorDocumentalService.get([
+      {
+        Id: documentoId,
+        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+    ]).subscribe({
+      next: (resp: any[]) => {
+        if (resp && resp.length > 0) {
+          this.archivoSoporteUrl = resp[0].url;
+          this.archivoSoporteNombre = resp[0].Nombre || 'Consolidado.xlsx';
+          this.formRevConsolidado.patchValue({ ArchivoSoporte: this.archivoSoporteNombre });
+        }
+      },
+      error: (err) => {
+        console.warn(err);
+        this.popUpManager.showErrorAlert(this.translate.instant('ERROR.error_cargar_documento'));
       }
-      this.revConsolidadoInfo.estado_consolidado_id = event.data.RevisionConsolidado.EnviarAprovacionDec._id;
-      this.revConsolidadoInfo.respuesta_decanatura = JSON.stringify(respuesta_decanatura);
-      this.loading = true;
-          this.planTrabajoDocenteService.put('consolidado_docente/'+this.revConsolidadoInfo._id, this.revConsolidadoInfo).subscribe((resp) => {
-            this.loading = false;
-            this.popUpManager.showSuccessAlert(this.translate.instant('ptd.actualizar_consolidado_ok'));
-          }, (err) => {
-            this.loading = false;
-            console.warn(err);
-            this.popUpManager.showErrorAlert(this.translate.instant('ptd.fallo_actualizar_consolidado'));
-          });
-    } */
+    });
+  }
+
+  descargarArchivoSoporte() {
+    if (this.archivoSoporteUrl && this.archivoSoporteNombre) {
+      const link = document.createElement('a');
+      link.href = this.archivoSoporteUrl;
+      link.download = this.archivoSoporteNombre;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+  private cargarResponsable(terceroId: number) {
+    this.tercerosService.get('tercero/' + terceroId).subscribe({
+      next: (resTerc: any) => {
+        this.formRevConsolidado.patchValue({ QuienResponde: resTerc.NombreCompleto || '' });
+      },
+      error: (err) => {
+        console.warn(err);
+      }
+    });
+  }
+
+  private parseJson(value: any, defaultValue: any) {
+    if (!value) {
+      return defaultValue;
+    }
+    try {
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    } catch {
+      return defaultValue;
+    }
   }
 
   regresar() {
     this.vista = VIEWS.LIST;
+    this.revConsolidadoInfo = undefined;
+    this.consolidadoSololectura = false;
     this.listarConsolidados();
   }
 

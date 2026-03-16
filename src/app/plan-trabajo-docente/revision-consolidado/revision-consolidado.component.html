@@ -27,7 +27,7 @@
                         <mat-label>{{ 'GLOBAL.proyecto_academico' | translate }}:</mat-label>
                         <mat-select [(ngModel)]="proyectos.select" (selectionChange)="listarConsolidados()">
                             <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
-                            <mat-option *ngFor="let item of proyectos?.opciones" [value]="item">
+                            <mat-option *ngFor="let item of proyectos.opciones" [value]="item">
                                 {{item.Nombre}}
                             </mat-option>
                         </mat-select>
@@ -98,29 +98,76 @@
             <!-- formulario nuevo/editar consolidado -->
             <mat-card class="card-fieldset">
                 <div class="fieldset-legend">{{ 'ptd.formato_control_cumplimiento_norma' | translate }}</div>
-                <!-- <form [formGroup]="formRevConsolidado" (ngSubmit)="validarFormRevConsolidado()">
+                <form [formGroup]="formRevConsolidado" (ngSubmit)="validarFormRevConsolidado()">
                     <div class="grid">
+                        <div *ngIf="archivoSoporteNombre" style="width: 100%; margin-bottom: 1rem;">
+                            <mat-card style="background-color: #f5f5f5; padding: 1rem;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center;">
+                                        <mat-icon style="margin-right: 0.5rem;">description</mat-icon>
+                                        <span><b>Documento soporte:</b> {{ archivoSoporteNombre }}</span>
+                                    </div>
+                                    <button
+                                        mat-raised-button
+                                        color="primary"
+                                        type="button"
+                                        (click)="descargarArchivoSoporte()"
+                                    >
+                                        <mat-icon>download</mat-icon>
+                                        {{ 'GLOBAL.descargar' | translate }}
+                                    </button>
+                                </div>
+                            </mat-card>
+                        </div>
+
                         <mat-form-field style="width: 100%;">
-                            <mat-label>{{ 'GLOBAL.adjuntar_documento' | translate }}</mat-label>
-                            <input matInput type="text" formControlName="ArchivoSoporte" placeholder="GLOBAL.adjuntar_documento">
+                            <mat-label>Documento adjunto</mat-label>
+                            <input matInput type="text" formControlName="ArchivoSoporte" placeholder="Documento adjunto" readonly>
                         </mat-form-field>
                         &nbsp;
                         <mat-form-field style="width: 40%;">
                             <mat-label>{{ 'ptd.quien_envia' | translate }}</mat-label>
-                            <input matInput type="text" formControlName="QuienEnvia" placeholder="ptd.placeholder_quien_envia">
+                            <input matInput type="text" formControlName="QuienResponde" placeholder="ptd.placeholder_quien_envia" readonly>
                         </mat-form-field>
                         &nbsp;
                         <mat-form-field>
                             <mat-label>{{ 'GLOBAL.rol' | translate }}</mat-label>
                             <input matInput type="text" formControlName="Rol" placeholder="GLOBAL.rol" readonly>
                         </mat-form-field>
+
+                        <div class="ancho-100">
+                            <mat-checkbox formControlName="CumpleNorma">
+                                Cumple con la normativa
+                            </mat-checkbox>
+                        </div>
+
+                        <mat-form-field style="width: 100%;">
+                            <mat-label>{{ 'GLOBAL.observaciones' | translate }}</mat-label>
+                            <textarea
+                                matInput
+                                formControlName="Observaciones"
+                                placeholder="{{ 'GLOBAL.placeholder_observacion' | translate }}"
+                                matTextareaAutosize
+                                matAutosizeMinRows="3"
+                                matAutosizeMaxRows="6"
+                            ></textarea>
+                        </mat-form-field>
+
+                        <mat-form-field style="width: 100%;">
+                            <mat-label>Decision</mat-label>
+                            <mat-select formControlName="Decision">
+                                <mat-option *ngFor="let opcion of opcionesDecision" [value]="opcion.id">
+                                    {{ opcion.nombre }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
                     </div>
                     <div class="ancho-100 posicion-centro">
-                        <button mat-raised-button color="primary" type="submit" [disabled]="formRevConsolidado.invalid">
+                        <button mat-raised-button color="primary" type="submit" [disabled]="formRevConsolidado.invalid" *ngIf="!consolidadoSololectura">
                             {{ 'GLOBAL.guardar' | translate }}
                         </button>
                     </div>
-                </form> -->
+                </form>
             </mat-card>
         </mat-card-content>
         <mat-card-actions>
