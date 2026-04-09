@@ -79,7 +79,7 @@
           >
             <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
             <mat-option *ngFor="let item of opcionesSedes" [value]="item">
-              {{ item.Nombre }}
+              {{ item.sede }}
             </mat-option>
           </mat-select>
           <!-- <mat-error
@@ -97,7 +97,7 @@
           >
             <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
             <mat-option *ngFor="let item of opcionesEdificios" [value]="item">
-              {{ item.Nombre }}
+              {{ item.nombre }}
             </mat-option>
           </mat-select>
           <!-- <mat-error
@@ -129,7 +129,7 @@
               *ngFor="let option of opcionesSalonesFiltrados"
               [value]="option"
             >
-              {{ option.Nombre }}
+              {{ option.nombre }}
             </mat-option>
           </mat-autocomplete>
         </mat-form-field>

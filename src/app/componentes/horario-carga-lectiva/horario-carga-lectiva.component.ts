@@ -561,7 +561,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   ): Promise<void> {
     const periodoId = this.Data.vigencia;
     // Protección directa
-    const espacioFisicoId = elementMoved?.salon?.Id;
+    const espacioFisicoId = elementMoved?.salon?.id;
 
     if (!espacioFisicoId) {
       console.warn(
@@ -727,15 +727,15 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
               );
             }
             this.EspaciosProyecto = res.Data;
-            this.opcionesSedes = this.normalizarListaEspacios(
+            /*this.opcionesSedes = this.normalizarListaEspacios(
               this.EspaciosProyecto?.Sedes
             );
             this.opcionesEdificios = this.normalizarListaEspacios(
               this.EspaciosProyecto?.Edificios
-            );
-            this.opcionesSalones = this.normalizarListaEspacios(
+            );*/
+            /*this.opcionesSalones = this.normalizarListaEspacios(
               this.EspaciosProyecto?.Salones
-            );
+            );*/
             this.opcionesSalonesFiltrados = this.opcionesSalones;
           },
           (err) => {
@@ -780,7 +780,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   addCarga() {
     const h = Number(this.ubicacionForm.get("horas")?.value);
     const salon = this.opcionesSalonesFiltrados.find(
-      (opcion) => opcion.Nombre == this.ubicacionForm.get("salon")?.value
+      (opcion) => opcion.nombre == this.ubicacionForm.get("salon")?.value
     );
     const x = this.snapGridSize.x * -2.25;
     const y = 0;
@@ -902,16 +902,16 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     }
 
     this.sede = this.opcionesSedes.find(
-      (opcion) => opcion.Id == elementClicked.sede.Id
+      (opcion) => opcion.sede_id == elementClicked.sede.sede_id
     );
     this.ubicacionForm.get("sede")?.setValue(this.sede);
     this.cambioSede().then(() => {
       this.edificio = this.opcionesEdificios.find(
-        (opcion) => opcion.Id == elementClicked.edificio.Id
+        (opcion) => opcion.codigo == elementClicked.edificio.codigo
       );
       this.ubicacionForm.get("edificio")?.setValue(this.edificio);
       this.cambioEdificio();
-      this.ubicacionForm.get("salon")?.setValue(elementClicked.salon.Nombre);
+      this.ubicacionForm.get("salon")?.setValue(elementClicked.salon.nombre);
     });
     this.ubicacionForm.get("horas")?.setValue(elementClicked.horas);
     this.editandoAsignacion = elementClicked;
@@ -1071,9 +1071,9 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           colocacion_id: element.idColocacionEspacioAcademico,
           periodo_id: periodoId,
           plan_docente_id: this.Data.plan_docente[this.seleccion],
-          sede_id: element.sede.Id,
-          edificio_id: element.edificio?.Id ? element.edificio.Id : "",
-          salon_id: element.salon?.Id ? element.salon.Id : "",
+          sede_id: element.sede?.sede_id? element.sede.sede_id : "",
+          edificio_id: element.edificio?.codigo ? element.edificio.codigo : "",
+          salon_id: element.salon?.id ? element.salon.id : "",
           horario: {
             horas: element.horas,
             horaFormato: element.horaFormato,
@@ -1162,11 +1162,11 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     return new Promise((resolve, reject) => {
       this.oikosService
         .get(
-          "espacio_fisico?query=TipoEspacioFisicoId.Id:38,Activo:true&limit=0&fields=Id,Nombre,Descripcion,CodigoAbreviacion&sortby=Id&order=asc"
+          "sedes"
         )
         .subscribe(
           (res) => {
-            this.opcionesSedes = res;
+            this.opcionesSedes = res.sedes.sede;
             resolve(res);
           },
           (err) => {
@@ -1180,25 +1180,26 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     this.opcionesEdificios = [];
     this.opcionesSalones = [];
     this.opcionesSalonesFiltrados = [];
+    const sedeSeleccionada = this.ubicacionForm.get("sede")?.value;
     this.ubicacionForm.get("edificio")?.disable();
     this.ubicacionForm.get("salon")?.disable();
     this.ubicacionForm.get("edificio")?.setValue(undefined);
     this.ubicacionForm.get("salon")?.setValue(undefined);
     return new Promise((resolve, reject) => {
-      if (this.asignaturaSelected) {
+      /*if (this.asignaturaSelected) {
         this.opcionesEdificios = this.obtenerEdificiosDesdeProyecto();
         if (this.opcionesEdificios.length > 0) {
           this.ubicacionForm.get("edificio")?.enable();
         }
         resolve(this.opcionesEdificios);
-      } else {
+      } else {*/
         this.oikosService
           .get(
-            "espacio_fisico?query=TipoEspacioFisicoId.Id:39,Activo:true&limit=0&fields=Id,Nombre,Descripcion,CodigoAbreviacion&sortby=Id&order=asc"
+            "edificios/"+sedeSeleccionada.sede_id
           )
           .subscribe(
             (res) => {
-              this.opcionesEdificios = res;
+              this.opcionesEdificios = res.edificios.edificio;
               this.ubicacionForm.get("edificio")?.enable();
               resolve(res);
             },
@@ -1208,7 +1209,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
             }
           );
       }
-    });
+    /*}*/);
   }
 
   cambioEdificio() {
@@ -1216,31 +1217,31 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     this.opcionesSalonesFiltrados = [];
     this.ubicacionForm.get("salon")?.disable();
     this.ubicacionForm.get("salon")?.setValue(undefined);
-    if (this.asignaturaSelected) {
+    /*if (this.asignaturaSelected) {
       this.opcionesSalones = this.obtenerSalonesDesdeProyecto();
       this.opcionesSalonesFiltrados = this.opcionesSalones;
       if (this.opcionesSalones.length > 0) {
         this.ubicacionForm.get("salon")?.enable();
       }
-    } else {
+    } else {*/
       this.oikosService
         .get(
-          "espacio_fisico?query=TipoEspacioFisicoId.Id:2,Activo:true&limit=0&fields=Id,Nombre,Descripcion,CodigoAbreviacion&sortby=Id&order=asc"
+          "salones/"+this.ubicacionForm.get("edificio")?.value.codigo
         )
         .subscribe(
           (res) => {
-            this.opcionesSalones = res;
+            this.opcionesSalones = res.salones.salon;
             this.opcionesSalonesFiltrados = this.opcionesSalones;
             this.ubicacionForm.get("salon")?.enable();
           },
           (err) => console.warn("cambioEdificio error", err)
         );
-    }
+    /*}*/
   }
 
   cambioSalon(element: any) {
     this.salon = element.option.value;
-    this.ubicacionForm.get("salon")?.setValue(this.salon.Nombre);
+    this.ubicacionForm.get("salon")?.setValue(this.salon.nombre);
   }
 
   getActividades() {
