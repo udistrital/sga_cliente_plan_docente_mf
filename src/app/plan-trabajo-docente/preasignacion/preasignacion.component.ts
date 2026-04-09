@@ -15,6 +15,10 @@ import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-traba
 import { MatDialog, MatDialogConfig } from "@angular/material/dialog";
 import { DialogoPreAsignacionPtdComponent } from "src/app/dialog-components/dialogo-preasignacion/dialogo-preasignacion.component";
 import { PlanTrabajoDocenteService } from "src/app/services/plan-trabajo-docente.service";
+import { PermisosUtils } from "src/app/utils/role-permissions";
+import { Observable } from "rxjs/internal/Observable";
+import { firstValueFrom } from "rxjs/internal/firstValueFrom";
+import { forkJoin } from "rxjs/internal/observable/forkJoin";
 
 @Component({
   selector: "app-preasignacion",
@@ -22,10 +26,17 @@ import { PlanTrabajoDocenteService } from "src/app/services/plan-trabajo-docente
   styleUrls: ["./preasignacion.component.scss"],
 })
 export class PreasignacionComponent implements OnInit, AfterViewInit {
-  rolesCoord: string[] = [ROLES.COORDINADOR, ROLES.ADMIN_DOCENCIA];
-  rolesDocente: string[] = [ROLES.DOCENTE];
+  roles: string[] = [];
   coodrinador: boolean = false;
 
+  opcionesPermisos: string[] = [
+    'aprobacion_docente',
+    'nueva_preasignacion',
+    'tabla_coordinador',
+    'aprobacion_docente',
+    'tabla_docente',
+  ];
+  permisos: { [key: string]: boolean } = {};
   periodos: Periodo[] = [];
   periodo: Periodo = new Periodo({});
 
@@ -66,18 +77,25 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     private parametrosService: ParametrosService,
     private planDocenteMid: SgaPlanTrabajoDocenteMidService,
     private planTrabajoDocenteService: PlanTrabajoDocenteService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private permisosUtils: PermisosUtils
   ) {
     this.dataSource = new MatTableDataSource();
     this.dialogConfig = new MatDialogConfig();
   }
 
   ngOnInit() {
-    this.userService.getUserRoles().then((roles) => {
-      const intersection = _intersection(roles, this.rolesCoord);
-      if (intersection.length > 0) {
-        this.coodrinador = true;
-      }
+    this.userService.getUserRoles().then(async (roles) => {
+      this.roles = roles;
+      this.coodrinador=this.roles.includes(ROLES.COORDINADOR);
+      const observables: { [key: string]: Observable<boolean> } = {};
+      this.opcionesPermisos.forEach(opcion => {
+        observables[opcion] =
+          this.permisosUtils.tienePermiso(this.roles, opcion);
+      });
+      const resultados = await firstValueFrom(forkJoin(observables));
+      this.permisos = resultados;
+      console.log('Permisos:', this.permisos);
     });
     this.cargarPeriodo()
       .then((resp) => (this.periodos = resp))

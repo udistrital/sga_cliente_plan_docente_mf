@@ -27,4 +27,6 @@ export const environment = {
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/horarios_mid/v1/",
   HORARIO_SERVICE: 
     "https://autenticacion.portaloas.udistrital.edu.co/apioas/horarios_crud/v1/",
+  CONFIGURACION_SERVICE:
+    "https://autenticacion.portaloas.udistrital.edu.co/apioas/configuracion_crud_api/v1/"
 };
