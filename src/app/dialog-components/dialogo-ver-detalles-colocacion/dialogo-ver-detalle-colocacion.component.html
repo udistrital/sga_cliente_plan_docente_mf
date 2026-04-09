@@ -28,19 +28,19 @@
         <div class="info-item">
           <p class="ml-3 mb-0">
             <strong>{{ "ptd.sede" | translate }}</strong
-            ><br />{{ infoEspacio.sede.Nombre }}
+            ><br />{{ infoEspacio.sede.Nombre? infoEspacio.sede.Nombre : infoEspacio.sede.sede }}
           </p>
         </div>
         <div class="info-item">
           <p class="ml-3 mb-0">
             <strong>{{ "ptd.edificio" | translate }}</strong
-            ><br />{{ infoEspacio.edificio.Nombre }}
+            ><br />{{ infoEspacio.edificio.Nombre || infoEspacio.edificio.nombre }}
           </p>
         </div>
         <div class="info-item">
           <p class="ml-3 mb-0">
             <strong>{{ "ptd.salon" | translate }}</strong
-            ><br />{{ infoEspacio.salon.Nombre }}
+            ><br />{{ infoEspacio.salon.Nombre || infoEspacio.salon.nombre}}
           </p>
         </div>
         <div class="info-item" *ngIf="infoEspacio.horaFormato">
