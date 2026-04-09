@@ -283,18 +283,21 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         esp_acad_padre.espacio_modular ? esp_acad_padre.espacio_modular : false
       ) {
         this.savePreasign(request);
-      } else if (this.modificando) {
-        // ? si es editing salta verificacion de no preasignado
-        this.savePreasign(request);
       } else {
-        // ? no modular -> solo se registra una vez la preasignacion -> verificar previa preasignacion
+        // ? no modular -> verificar que no exista preasignacion con mismo espacio y periodo
         this.planTrabajoDocenteService
           .get(
             `pre_asignacion?query=activo:true,espacio_academico_id:${this.grupo.Id},periodo_id:${this.periodo.Id}`
           )
           .subscribe({
             next: (resp) => {
-              if (resp.Data.length == 0) {
+              const dataResp = Array.isArray(resp?.Data) ? resp.Data : [];
+              // En edición se excluye el registro actual para permitir actualizar sin falso duplicado.
+              const duplicados = this.modificando
+                ? dataResp.filter((item: any) => item?._id !== this.data.id)
+                : dataResp;
+
+              if (duplicados.length == 0) {
                 // ? continue presasignacion si cero para el grupo en particular
                 this.savePreasign(request);
               } else {
@@ -786,13 +789,35 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                 );
 
               this.loadProyectos().then((res: any) => {
-                this.preasignacionForm
-                  .get("grupo")
-                  ?.setValue(
-                    this.opcionesGrupos.find(
-                      (grupo) => grupo.Id == this.data.espacio_academico_id
-                    )
-                  );
+                // Encontrar el grupo a cargar
+                const grupoACargar = this.opcionesGruposTodas.find(
+                  (grupo) => grupo.Id == this.data.espacio_academico_id
+                );
+                
+                if (grupoACargar) {
+                  // Establecer el proyecto del grupo
+                  this.preasignacionForm
+                    .get("proyecto")
+                    ?.setValue(grupoACargar.ProyectoAcademico);
+                  
+                  // Filtrar los grupos al proyecto del grupo cargado
+                  this.changeProyecto();
+                  
+                  // Ahora asignar el grupo del filtered list
+                  this.preasignacionForm
+                    .get("grupo")
+                    ?.setValue(grupoACargar);
+                } else {
+                  // Fallback: asignar del todos si no encuentra filtrado
+                  this.preasignacionForm
+                    .get("grupo")
+                    ?.setValue(
+                      this.opcionesGruposTodas.find(
+                        (grupo) => grupo.Id == this.data.espacio_academico_id
+                      )
+                    );
+                }
+                
                 this.changeGrupo();
               });
             })
