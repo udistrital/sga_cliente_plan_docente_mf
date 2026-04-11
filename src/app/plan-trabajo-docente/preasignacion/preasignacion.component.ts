@@ -9,8 +9,7 @@ import { RespFormat } from "src/app/models/response-format";
 import { ParametrosService } from "src/app/services/parametros.service";
 import { UserService } from "src/app/services/user.service";
 import { checkContent, checkResponse } from "src/app/utils/verify-response";
-import { intersection as _intersection } from "lodash";
-import { MODALS, ROLES } from "src/app/models/diccionario";
+import { MODALS } from "src/app/models/diccionario";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
 import { MatDialog, MatDialogConfig } from "@angular/material/dialog";
 import { DialogoPreAsignacionPtdComponent } from "src/app/dialog-components/dialogo-preasignacion/dialogo-preasignacion.component";
@@ -27,13 +26,11 @@ import { forkJoin } from "rxjs/internal/observable/forkJoin";
 })
 export class PreasignacionComponent implements OnInit, AfterViewInit {
   roles: string[] = [];
-  coodrinador: boolean = false;
 
   opcionesPermisos: string[] = [
     'aprobacion_docente',
     'nueva_preasignacion',
     'tabla_coordinador',
-    'aprobacion_docente',
     'tabla_docente',
   ];
   permisos: { [key: string]: boolean } = {};
@@ -87,7 +84,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.userService.getUserRoles().then(async (roles) => {
       this.roles = roles;
-      this.coodrinador=this.roles.includes(ROLES.COORDINADOR);
       const observables: { [key: string]: Observable<boolean> } = {};
       this.opcionesPermisos.forEach(opcion => {
         observables[opcion] =
@@ -128,6 +124,12 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   }
 
   accionEnviar(event: any) {
+    if (!this.permisos['tabla_coordinador']) {
+      return this.popUpManager.showErrorToast(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+    }
+
     this.popUpManager
       .showPopUpGeneric(
         this.translate.instant("ptd.enviar_a_docente"),
@@ -167,6 +169,12 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   }
 
   accionEditar(event: any) {
+    if (!this.permisos['tabla_coordinador']) {
+      return this.popUpManager.showErrorToast(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+    }
+
     this.popUpManager
       .showPopUpGeneric(
         this.translate.instant("ptd.preasignacion"),
@@ -189,6 +197,12 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   }
 
   preguntarBorradoPreAsignacion(event: any) {
+    if (!this.permisos['tabla_coordinador']) {
+      return this.popUpManager.showErrorToast(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+    }
+
     this.popUpManager
       .showConfirmAlert(this.translate.instant("ptd.pregunta_eliminar"))
       .then((action) => {
@@ -236,6 +250,12 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   }
 
   agregacionPreasignacion() {
+    if (!this.permisos['nueva_preasignacion']) {
+      return this.popUpManager.showErrorToast(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+    }
+
     this.dialogConfig.data = {};
     const preasignacionDialog = this.dialog.open(
       DialogoPreAsignacionPtdComponent,
@@ -247,6 +267,12 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   }
 
   enviarAprobacion() {
+    if (!this.permisos['aprobacion_docente']) {
+      return this.popUpManager.showErrorToast(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+    }
+
     this.popUpManager
       .showPopUpGeneric(
         this.translate.instant("GLOBAL.enviar_aprobacion"),
@@ -296,7 +322,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   }
 
   loadPreasignaciones() {
-    if (this.coodrinador) {
+    if (this.permisos['tabla_coordinador']) {
       this.planDocenteMid
         .get("preasignacion?vigencia=" + this.periodo.Id)
         .subscribe({
@@ -317,7 +343,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
             );
           },
         });
-    } else {
+    } else if (this.permisos['tabla_docente']) {
       this.userService
         .getPersonaId()
         .then((id_tercero) => {
@@ -353,6 +379,11 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
             this.translate.instant("GLOBAL.error_no_found_tercero_id")
           );
         });
+    } else {
+      this.dataSource = new MatTableDataSource();
+      this.popUpManager.showErrorToast(
+        this.translate.instant("GLOBAL.acceso_denegado")
+      );
     }
   }
 
