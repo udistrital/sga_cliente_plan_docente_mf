@@ -44,7 +44,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   vista: Symbol;
 
   opcionesPermisos: string[] = [
-    'ver_gestion_cosolidado',
+    'ver_gestion_consolidado',
     'editar_gestion_consolidado',
     'nuevo_consolidado',
     'enviar_coordinador_consolidado',
@@ -184,7 +184,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
 
   accionGestion(event: any) {
     const canViewGestion =
-      this.permisos['ver_gestion_cosolidado'] ||
+      this.permisos['ver_gestion_consolidado'] ||
       this.permisos['editar_gestion_consolidado'];
 
     if (!canViewGestion) {
@@ -373,7 +373,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
                 (periodo) => periodo.Id == consolidado.periodo_id
               );
               const canViewGestion =
-                this.permisos['ver_gestion_cosolidado'] ||
+                this.permisos['ver_gestion_consolidado'] ||
                 this.permisos['editar_gestion_consolidado'];
               let opcionGestion = "ver";
               if (
