@@ -5,7 +5,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { TranslateService } from '@ngx-translate/core';
 import { PopUpManager } from 'src/app/managers/popUpManager';
-import { MODALS, ROLES, VIEWS } from 'src/app/models/diccionario';
+import { MODALS, VIEWS } from 'src/app/models/diccionario';
 import { Periodo } from 'src/app/models/parametros/periodo';
 import { EstadoConsolidado } from 'src/app/models/plan-trabajo-docente/estado-consolidado';
 import { RespFormat } from 'src/app/models/response-format';
@@ -17,6 +17,10 @@ import { UserService } from 'src/app/services/user.service';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { checkContent, checkResponse } from 'src/app/utils/verify-response';
 import { cloneDeep as _cloneDeep } from 'lodash';
+import { PermisosUtils } from 'src/app/utils/role-permissions';
+import { forkJoin } from 'rxjs/internal/observable/forkJoin';
+import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
+import { Observable } from 'rxjs/internal/Observable';
 
 @Component({
   selector: 'app-revision-consolidado',
@@ -36,8 +40,17 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   };
   vista: Symbol;
 
-  isSecDecanatura: string|undefined = undefined;
-  isDecano: string|undefined = undefined;
+  isSecDecanatura = false;
+  isDecano = false;
+
+  opcionesPermisos: string[] = [
+    'ver_gestion_consolidado',
+    'editar_gestion_consolidado',
+    'enviar_secDecanatura',
+    'aprobar_decanatura',
+    'ver_consolidados_decanatura',
+  ];
+  permisos: { [key: string]: boolean } = {};
 
   dataSource: MatTableDataSource<any>;
   displayedColumns: string[] = ["proyecto_curricular", "codigo", "fecha_radicado", "periodo_academico", "gestion", "estado", "enviar"];
@@ -65,6 +78,7 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
     private tercerosService: TercerosService,
     private gestorDocumentalService: GestorDocumentalService,
     private builder: FormBuilder,
+    private permisosUtils:PermisosUtils,
   ) {
     this.vista = VIEWS.LIST;
     this.dataSource = new MatTableDataSource();
@@ -75,9 +89,17 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.userService.getUserRoles().then(roles => {
-      this.isSecDecanatura = roles.find(role => (role == ROLES.SEC_DECANATURA));
-      this.isDecano = roles.find(role => (role == ROLES.DECANO));
+    this.userService.getUserRoles().then(async roles => {
+      const observables: { [key: string]: Observable<boolean> } = {};
+      this.opcionesPermisos.forEach(opcion => {
+        observables[opcion] =
+          this.permisosUtils.tienePermiso(roles, opcion);
+      });
+      const resultados = await firstValueFrom(forkJoin(observables));
+      this.permisos = resultados;
+      this.isSecDecanatura = !!this.permisos['enviar_secDecanatura'];
+      this.isDecano = !!this.permisos['aprobar_decanatura'];
+      console.log("Permisos cargados:", this.permisos);
     });
     this.loadSelects();
     this.buildForm();
@@ -109,11 +131,29 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   accionGestion(event: any) {
+    if (!this.permisos['ver_gestion_consolidado']) {
+      this.popUpManager.showErrorAlert(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+      return;
+    }
+    if (event.rowData.gestion.type === 'editar' && !this.permisos['editar_gestion_consolidado']) {
+      this.popUpManager.showErrorAlert(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+      return;
+    }
     const readonly = event.rowData.gestion.type !== 'editar';
     this.revisarConsolidado(event.rowData.ConsolidadoJson, readonly);
   }
 
   accionEnviar(event: any) {
+    if (!this.permisos['aprobar_decanatura']) {
+      this.popUpManager.showErrorAlert(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+      return;
+    }
     let putPlan = _cloneDeep(event.rowData.ConsolidadoJson);
     putPlan.estado_consolidado_id = this.ESTADOS.ENV_AVA;
     this.planTrabajoDocenteService.put('consolidado_docente/'+putPlan._id, putPlan).subscribe(
@@ -197,16 +237,22 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   listarConsolidados() {
+    if (!this.permisos['ver_consolidados_decanatura']) {
+      this.popUpManager.showErrorAlert(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+      return;
+    }
     if (this.periodos.select) {
       let proyecto = ""
       if (this.proyectos.select) {
         proyecto = ",proyecto_academico_id:"+this.proyectos.select.Id;
       }
       this.planTrabajoDocenteService.get(`consolidado_docente?query=activo:true,periodo_id:${this.periodos.select.Id}${proyecto}&limit=0`).subscribe((resp) => {
-        const idEstadosFiltro = this.idEstadosSegunRol();
+        const idEstadosFiltro = this.idEstadosSegunPermisos();
         let rawlistarConsolidados = <any[]>resp.Data;
         rawlistarConsolidados = rawlistarConsolidados.filter(consolidado => idEstadosFiltro.includes(consolidado.estado_consolidado_id));
-        const formatedData = this.estilizarDatosSegunRol(rawlistarConsolidados);
+        const formatedData = this.estilizarDatosSegunPermisos(rawlistarConsolidados);
         this.dataSource = new MatTableDataSource(formatedData);
       }, (err) => {
         this.dataSource = new MatTableDataSource();
@@ -215,27 +261,27 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  idEstadosSegunRol(): string[] {
-    if (this.isSecDecanatura) {
+  idEstadosSegunPermisos(): string[] {
+    if (this.permisos['enviar_secDecanatura']) {
       return [this.ESTADOS.ENV, this.ESTADOS.AVA, this.ESTADOS.N_APR, this.ESTADOS.ENV_AVA];
     }
-    if (this.isDecano) {
+    if (this.permisos['aprobar_decanatura']) {
       return [this.ESTADOS.ENV_AVA, this.ESTADOS.APR, this.ESTADOS.N_APR];
     }
     return [];
   }
 
-  estilizarDatosSegunRol(consolidados: any[]): any[] {
+  estilizarDatosSegunPermisos(consolidados: any[]): any[] {
     let formatedData: any[] = [];
     consolidados.forEach(consolidado => {
       const proyecto = this.proyectos.opciones.find(proyecto => proyecto.Id == consolidado.proyecto_academico_id);
       const periodo = this.periodos.opciones.find(periodo => periodo.Id == consolidado.periodo_id);
       const estadoConsolidado = this.estadosConsolidado.opciones.find(estado => estado._id == consolidado.estado_consolidado_id);
       let opcionGestion = "ver";
-      if ((consolidado.estado_consolidado_id === this.ESTADOS.ENV) && (this.isSecDecanatura)) {
+      if ((consolidado.estado_consolidado_id === this.ESTADOS.ENV) && this.permisos['enviar_secDecanatura']) {
         opcionGestion = "editar";
       }
-      if ((consolidado.estado_consolidado_id === this.ESTADOS.ENV_AVA) && (this.isDecano)) {
+      if ((consolidado.estado_consolidado_id === this.ESTADOS.ENV_AVA) && this.permisos['aprobar_decanatura']) {
         opcionGestion = "editar";
       }
       formatedData.push({
@@ -243,9 +289,9 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
         "codigo": proyecto ? proyecto.Codigo : "",
         "fecha_radicado": this.formatoFecha(consolidado.fecha_creacion),
         "periodo_academico": periodo ? periodo.Nombre : "",
-        "gestion": { value: undefined, type: opcionGestion, disabled: (!this.isSecDecanatura && !this.isDecano) },
+        "gestion": { value: undefined, type: opcionGestion, disabled: !this.permisos['ver_gestion_consolidado'] },
         "estado": estadoConsolidado ? estadoConsolidado.nombre : consolidado.estado_consolidado_id,
-        "enviar": { value: undefined, type: 'enviar', disabled: (!this.isSecDecanatura) || (consolidado.estado_consolidado_id !== this.ESTADOS.AVA) },
+        "enviar": { value: undefined, type: 'enviar', disabled: !this.permisos['enviar_secDecanatura'] || (consolidado.estado_consolidado_id !== this.ESTADOS.AVA) },
         "ConsolidadoJson": consolidado
       })
     })
@@ -265,13 +311,17 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
     this.formRevConsolidado.patchValue({
       ArchivoSoporte: '',
       QuienResponde: '',
-      Rol: this.isSecDecanatura ? 'Secretaria Decanatura' : 'Decanatura',
+      Rol: this.permisos['enviar_secDecanatura']
+        ? 'Secretaria Decanatura'
+        : this.permisos['aprobar_decanatura']
+          ? 'Decanatura'
+          : '',
       CumpleNorma: !!consolidado.cumple_normativa,
       Observaciones: '',
       Decision: '',
     });
 
-    this.configurarOpcionesPorRol();
+    this.configurarOpcionesPorPermisos();
 
     const estadoActualId = consolidado.estado_consolidado_id;
     if (this.isSecDecanatura) {
@@ -332,7 +382,7 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
     const personaId = await this.userService.getPersonaId();
     const respuestaDecanatura = this.parseJson(putPlan.respuesta_decanatura, { sec: {}, dec: {} });
 
-    if (this.isSecDecanatura) {
+    if (this.permisos['enviar_secDecanatura']) {
       respuestaDecanatura.sec = {
         ...respuestaDecanatura.sec,
         responsable_id: personaId,
@@ -341,7 +391,7 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
       putPlan.cumple_normativa = !!this.formRevConsolidado.get('CumpleNorma')?.value;
     }
 
-    if (this.isDecano) {
+    if (this.permisos['aprobar_decanatura']) {
       respuestaDecanatura.dec = {
         ...respuestaDecanatura.dec,
         responsable_id: personaId,
@@ -365,8 +415,8 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
     );
   }
 
-  private configurarOpcionesPorRol() {
-    if (this.isSecDecanatura) {
+  private configurarOpcionesPorPermisos() {
+    if (this.permisos['enviar_secDecanatura']) {
       this.opcionesDecision = [
         { id: this.ESTADOS.AVA, nombre: 'Enviar para aprobacion por decanatura' },
         { id: this.ESTADOS.N_APR, nombre: 'Enviar a coordinacion para su revision' },
