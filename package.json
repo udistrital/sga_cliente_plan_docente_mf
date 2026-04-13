@@ -34,7 +34,7 @@
     "single-spa": ">=4.0.0",
     "single-spa-angular": "^9.0.1",
     "spinner-util": "^0.0.2",
-    "sweetalert2": "^11.10.7",
+    "sweetalert2": "^11.26.24",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.4"
   },
