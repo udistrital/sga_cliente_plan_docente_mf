@@ -5,7 +5,6 @@ import { MatTableDataSource } from "@angular/material/table";
 import { MODALS, ROLES, VIEWS } from "src/app/models/diccionario";
 import { UserService } from "src/app/services/user.service";
 import {
-  intersection as _intersection,
   head as _head,
   cloneDeep as _cloneDeep,
 } from "lodash";
@@ -25,6 +24,10 @@ import { TercerosService } from "src/app/services/terceros.service";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
 import { GestorDocumentalService } from "src/app/services/gestor-documental.service";
 import { DocumentoService } from "src/app/services/documento.service";
+import { Observable } from "rxjs/internal/Observable";
+import { forkJoin } from "rxjs/internal/observable/forkJoin";
+import { firstValueFrom } from "rxjs/internal/firstValueFrom";
+import { PermisosUtils } from "src/app/utils/role-permissions";
 
 @Component({
   selector: "app-consolidado",
@@ -40,8 +43,14 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   readonly ACTIONS = ACTIONS; */
   vista: Symbol;
 
-  rolesCoord: string[] = [ROLES.COORDINADOR, ROLES.ADMIN_DOCENCIA];
-  isCoordinator: string | undefined = undefined;
+  opcionesPermisos: string[] = [
+    'ver_gestion_cosolidado',
+    'editar_gestion_consolidado',
+    'nuevo_consolidado',
+    'enviar_coordinador_consolidado',
+    'ver_consolidados_coordinacion',
+  ];
+  permisos: { [key: string]: boolean } = {};
 
   dataSource: MatTableDataSource<any>;
   displayedColumns: string[] = [
@@ -89,7 +98,8 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     private gestorDocumentalService: GestorDocumentalService,
     private documentoService: DocumentoService,
     private builder: FormBuilder,
-    private matDialog: MatDialog
+    private matDialog: MatDialog,
+    private permisosUtils:PermisosUtils
   ) {
     this.vista = VIEWS.LIST;
     this.dataSource = new MatTableDataSource();
@@ -104,8 +114,15 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.userService.getUserRoles().then((roles) => {
-      this.isCoordinator = _head(_intersection(roles, this.rolesCoord));
+    this.userService.getUserRoles().then(async (roles) => {
+      const observables: { [key: string]: Observable<boolean> } = {};
+      this.opcionesPermisos.forEach(opcion => {
+        observables[opcion] =
+          this.permisosUtils.tienePermiso(roles, opcion);
+      });
+      const resultados = await firstValueFrom(forkJoin(observables));
+      this.permisos = resultados;
+      console.log("Permisos cargados:", this.permisos);
     });
     this.loadSelects();
     this.buildForms();
@@ -166,11 +183,39 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   accionGestion(event: any) {
-    this.consolidadoSololectura = event.rowData.gestion.type === "ver";
+    const canViewGestion =
+      this.permisos['ver_gestion_cosolidado'] ||
+      this.permisos['editar_gestion_consolidado'];
+
+    if (!canViewGestion) {
+      this.popUpManager.showErrorAlert(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+      return;
+    }
+
+    if (
+      event.rowData.gestion.type === 'editar' &&
+      !this.permisos['editar_gestion_consolidado']
+    ) {
+      this.popUpManager.showErrorAlert(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+      return;
+    }
+
+    this.consolidadoSololectura = event.rowData.gestion.type === 'ver';
     this.nuevoEditarConsolidado(event.rowData.ConsolidadoJson);
   }
 
   accionEnviar(event: any) {
+    if (!this.permisos['enviar_coordinador_consolidado']) {
+      this.popUpManager.showErrorAlert(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+      return;
+    }
+
     let putPlan = _cloneDeep(event.rowData.ConsolidadoJson);
     const estado = this.estadosConsolidado.opciones.find(
       (estado) => estado.codigo_abreviacion === "ENV"
@@ -276,10 +321,10 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
       this.popUpManager.showPopUpGeneric(
         this.translate.instant("ERROR.titulo_generico"),
         this.translate.instant("ERROR.sin_informacion_en") +
-          ": <b>" +
-          error +
-          "</b>.<br><br>" +
-          this.translate.instant("ERROR.persiste_error_comunique_OAS"),
+        ": <b>" +
+        error +
+        "</b>.<br><br>" +
+        this.translate.instant("ERROR.persiste_error_comunique_OAS"),
         MODALS.ERROR,
         false
       );
@@ -287,6 +332,12 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   }
 
   listarConsolidados() {
+    if(!this.permisos['ver_consolidados_coordinacion']){
+      this.popUpManager.showErrorAlert(
+        this.translate.instant('GLOBAL.acceso_denegado')
+      );
+      return;
+    }
     if (this.periodos.select) {
       let proyecto = "";
       if (this.proyectos.select) {
@@ -321,12 +372,15 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
               const periodo = this.periodos.opciones.find(
                 (periodo) => periodo.Id == consolidado.periodo_id
               );
+              const canViewGestion =
+                this.permisos['ver_gestion_cosolidado'] ||
+                this.permisos['editar_gestion_consolidado'];
               let opcionGestion = "ver";
               if (
                 estadoConsolidado &&
                 (estadoConsolidado.codigo_abreviacion == "DEF" ||
                   estadoConsolidado.codigo_abreviacion == "N_APR") &&
-                this.isCoordinator
+                this.permisos['editar_gestion_consolidado']
               ) {
                 opcionGestion = "editar";
               }
@@ -343,7 +397,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
                 gestion: {
                   value: undefined,
                   type: opcionGestion,
-                  disabled: !this.isCoordinator,
+                  disabled: !canViewGestion,
                 },
                 estado: estadoConsolidado
                   ? estadoConsolidado.nombre
@@ -352,7 +406,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
                   value: undefined,
                   type: "enviar",
                   disabled:
-                    !this.isCoordinator ||
+                    !this.permisos['enviar_coordinador_consolidado'] ||
                     estadoConsolidado.codigo_abreviacion != "DEF",
                 },
                 ConsolidadoJson: consolidado,
@@ -382,7 +436,10 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     this.vista = VIEWS.FORM;
     this.newEditConsolidado = true;
     this.formNewEditConsolidado.patchValue({
-      Rol: this.isCoordinator,
+      Rol:
+        this.permisos['ver_consolidados_coordinacion']
+          ? ROLES.COORDINADOR
+          : "",
       ArchivoSoporte: "",
     });
     this.archivoNombre = "";
@@ -390,10 +447,10 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     this.archivoExistenteNombre = null;
     this.documentoIdActual = null;
     this.listaPlanesConsolidado = "";
-    
+
     if (consolidado) {
       this.consolidadoInfo = consolidado;
-      
+
       // Cargar periodo seleccionado
       const periodoId = this.consolidadoInfo.periodo_id;
       if (periodoId) {
@@ -401,7 +458,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
           (periodo) => periodo.Id == periodoId
         );
       }
-      
+
       // Cargar proyecto seleccionado
       const proyectoId = this.consolidadoInfo.proyecto_academico_id;
       if (proyectoId) {
@@ -409,13 +466,13 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
           (proyecto) => proyecto.Id == proyectoId
         );
       }
-      
+
       const consolidado_coordinacion = JSON.parse(
         this.consolidadoInfo.consolidado_coordinacion
       );
       const terceroId = consolidado_coordinacion.responsable_id;
       const documentoId = consolidado_coordinacion.documento_id;
-      
+
       // Cargar archivo existente
       if (documentoId) {
         this.documentoIdActual = documentoId;
@@ -427,7 +484,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
         this.formNewEditConsolidado.get("ArchivoSoporte")?.setValidators(Validators.required);
       }
       this.formNewEditConsolidado.get("ArchivoSoporte")?.updateValueAndValidity();
-      
+
       if (terceroId) {
         this.getInfoResponsable(terceroId);
       } else {
@@ -450,7 +507,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
       // Para nuevos consolidados, el campo ArchivoSoporte es requerido
       this.formNewEditConsolidado.get('ArchivoSoporte')?.setValidators(Validators.required);
       this.formNewEditConsolidado.get('ArchivoSoporte')?.updateValueAndValidity();
-      
+
       this.userService
         .getPersonaId()
         .then((terceroId) => {
@@ -533,8 +590,8 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
           const data = Array.isArray(resp?.Data)
             ? resp.Data
             : Array.isArray(resp)
-            ? resp
-            : [];
+              ? resp
+              : [];
           const id = data?.[0]?.Id ?? null;
           this.tipoDocumentoPtdId = id;
           resolve(id);
@@ -625,11 +682,10 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
           plan_docente_id: JSON.stringify(this.listaPlanesConsolidado),
           periodo_id: `${this.periodos.select.Id}`,
           proyecto_academico_id: `${this.proyectos.select.Id}`,
-          estado_consolidado_id: `${
-            this.estadosConsolidado.opciones.find(
-              (estado) => estado.codigo_abreviacion == "DEF"
-            )._id
-          }`,
+          estado_consolidado_id: `${this.estadosConsolidado.opciones.find(
+            (estado) => estado.codigo_abreviacion == "DEF"
+          )._id
+            }`,
           respuesta_decanatura: JSON.stringify({ sec: {}, dec: {} }),
           consolidado_coordinacion: JSON.stringify(consolidado),
           cumple_normativa: false,
@@ -683,11 +739,10 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
       }
       this.consolidadoInfo.periodo_id = `${this.periodos.select.Id}`;
       this.consolidadoInfo.proyecto_academico_id = `${this.proyectos.select.Id}`;
-      this.consolidadoInfo.estado_consolidado_id = `${
-        this.estadosConsolidado.opciones.find(
-          (estado) => estado.codigo_abreviacion == "DEF"
-        )._id
-      }`;
+      this.consolidadoInfo.estado_consolidado_id = `${this.estadosConsolidado.opciones.find(
+        (estado) => estado.codigo_abreviacion == "DEF"
+      )._id
+        }`;
       this.consolidadoInfo.consolidado_coordinacion = JSON.stringify(consolidado);
       this.planTrabajoDocenteService
         .put(
@@ -716,8 +771,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     if (this.periodos.select) {
       this.sgaPlanTrabajoDocenteMidService
         .get(
-          `reporte/verificacion-cumplimiento-ptd?vigencia=${
-            this.periodos.select.Id
+          `reporte/verificacion-cumplimiento-ptd?vigencia=${this.periodos.select.Id
           }&proyecto=${this.proyectos.select ? this.proyectos.select.Id : 0}`
         )
         .subscribe(
