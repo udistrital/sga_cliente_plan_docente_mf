@@ -154,7 +154,7 @@
           mat-stroked-button
           color="primary"
           (click)="nuevoEditarConsolidado(undefined)"
-          [disabled]="!isCoordinator"
+          [disabled]="!permisos['nuevo_consolidado']"
         >
           {{ "ptd.new_consolidado" | translate }}
         </button>

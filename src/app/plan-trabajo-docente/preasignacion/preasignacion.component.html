@@ -5,7 +5,7 @@
     </mat-card-title>
   </mat-card-header>
   <!-- Vista de tabla lista docentes -->
-  <mat-card-content *ngIsGranted="rolesDocente">
+  <mat-card-content *ngIf="permisos['tabla_docente']">
     <h3 class="margin-y">{{ "ptd.preasignacion" | translate }}</h3>
 
     <mat-form-field class="form-field">
@@ -44,7 +44,7 @@
         {{ "GLOBAL.actualizar" | translate }}
       </button>
       <button
-        *ngIsGranted="rolesDocente"
+        *ngIf="permisos['aprobacion_docente']"
         mat-flat-button
         color="accent"
         (click)="enviarAprobacion()"
@@ -146,7 +146,7 @@
     </div>
   </mat-card-content>
   <!-- Vista de tabla lista Coordinador -->
-  <mat-card-content *ngIsGranted="rolesCoord">
+  <mat-card-content *ngIf="permisos['tabla_coordinador']">
     <h3 class="margin-y">{{ "ptd.preasignacion" | translate }}</h3>
 
     <mat-form-field class="form-field">
@@ -174,7 +174,7 @@
 
     <mat-toolbar style="display: flex; gap: 0.5em; flex-wrap: wrap">
       <button
-        *ngIsGranted="rolesCoord"
+        *ngIf="permisos['nueva_preasignacion']"
         mat-flat-button
         extended
         color="accent"
