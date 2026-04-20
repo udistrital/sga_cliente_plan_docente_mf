@@ -557,24 +557,72 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   async cargarRestricionesEspaciosFisicos(
     elementMoved: CardDetalleCarga
   ): Promise<void> {
-    const periodoId = this.Data.vigencia;
-    // Protección directa
+
+    const periodoAcademico = (this.Data?.periodo_academico || "").trim();
+    const [anio, periodo] = periodoAcademico.split("-");
+
+    const periodoId = periodoAcademico.replace("-", "/");
     const espacioFisicoId = elementMoved?.salon?.id;
 
-    if (!espacioFisicoId) {
-      console.warn(
-        'cargarRestricionesEspaciosFisicos: espacioFisicoId undefined',
-        elementMoved
-      );
+    if (!espacioFisicoId || !anio || !periodo) {
+      console.warn("Datos insuficientes para cargar restricciones físicas");
       return;
     }
-    const res: any = await this.horarioMid
-      .get(
-        `espacio-fisico/ocupados?espacio-fisico-id=${espacioFisicoId}&periodo-id=${periodoId}`
-      )
-      .toPromise();
-    if (res?.Data?.length) {
-      this.agregarRestriccionesAlHorario(res.Data, { espacioFisico: true });
+
+    try {
+      const res: any = await this.oikosService
+        .get(`cursos_salon/${periodoId}/${espacioFisicoId}`)
+        .toPromise();
+
+      const cursos = res?.cursos?.curso;
+
+      if (!Array.isArray(cursos) || cursos.length === 0) {
+        return;
+      }
+
+      const requests: Promise<any>[] = [];
+
+      for (const curso of cursos) {
+
+        if (!curso.codigo_curso || !curso.grupos) continue;
+
+        const grupos = curso.grupos
+          .split(",")
+          .map((g: string) => g.trim())
+          .filter((g: string) => g.length > 0);
+
+        for (const grupo of grupos) {
+
+          const request = this.planDocenteMid
+            .get(
+              `espacio-academico/informacion-horarios/${anio}/${periodo}/${curso.codigo_curso}/${grupo}`
+            )
+            .toPromise()
+            .catch(() => null); // evita que falle todo el Promise.all
+
+          requests.push(request);
+        }
+      }
+
+      if (requests.length === 0) return;
+
+      const responses = await Promise.all(requests);
+
+      const colocacionesFiltradas = responses
+        .filter(res => res?.Success && Array.isArray(res?.Data))
+        .flatMap(res => res.Data)
+        .filter(colocacion =>
+          colocacion?.EspacioFisicoId === espacioFisicoId
+        );
+      if (colocacionesFiltradas.length > 0) {
+        this.agregarRestriccionesAlHorario(
+          colocacionesFiltradas,
+          { espacioFisico: true }
+        );
+      }
+
+    } catch (error) {
+      console.error("Error cargando restricciones por espacio físico", error);
     }
   }
 
@@ -617,11 +665,11 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     colocaciones.forEach((element: any) => {
       const ocupado: any = {
         id: element._id,
-        horas: element.horas,
+        horas: element.ColocacionEspacioAcademico.horas,
         estado: this.estado.ubicado,
-        dragPosition: element.finalPosition,
-        prevPosition: element.finalPosition,
-        finalPosition: element.finalPosition,
+        dragPosition: element.ColocacionEspacioAcademico.finalPosition,
+        prevPosition: element.ColocacionEspacioAcademico.finalPosition,
+        finalPosition: element.ColocacionEspacioAcademico.finalPosition,
         //se pone true dependiendo del tipo de restriccion
         grupoEstudio: options.grupoEstudio || false,
         espacioFisico: options.espacioFisico || false,
@@ -676,9 +724,9 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       .showPopUpGeneric(
         this.translate.instant("ptd.asignar"),
         this.translate.instant("ptd.ask_mover") +
-          "<br>" +
-          elementMoved.horaFormato +
-          "?",
+        "<br>" +
+        elementMoved.horaFormato +
+        "?",
         MODALS.QUESTION,
         true
       )
@@ -712,7 +760,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       this.planDocenteMid
         .get(
           "espacio-fisico/dependencia?dependencia=" +
-            this.asignaturaSelected.proyecto_id
+          this.asignaturaSelected.proyecto_id
         )
         .subscribe(
           (res) => {
@@ -1069,7 +1117,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           colocacion_id: element.idColocacionEspacioAcademico,
           periodo_id: periodoId,
           plan_docente_id: this.Data.plan_docente[this.seleccion],
-          sede_id: element.sede?.sede_id? element.sede.sede_id : "",
+          sede_id: element.sede?.sede_id ? element.sede.sede_id : "",
           edificio_id: element.edificio?.codigo ? element.edificio.codigo : "",
           salon_id: element.salon?.id ? element.salon.id : "",
           horario: {
@@ -1122,8 +1170,8 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         if (response.Status == 200) {
           this.popUpManager.showSuccessAlert(
             this.translate.instant("ptd.guardado_ptd_exito") +
-              " " +
-              this.vinculacionSelected.nombre
+            " " +
+            this.vinculacionSelected.nombre
           );
           this.DataChanged.emit(this.listaCargaLectiva);
         }
@@ -1191,22 +1239,22 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         }
         resolve(this.opcionesEdificios);
       } else {*/
-        this.oikosService
-          .get(
-            "edificios/"+sedeSeleccionada.sede_id
-          )
-          .subscribe(
-            (res) => {
-              this.opcionesEdificios = res.edificios.edificio;
-              this.ubicacionForm.get("edificio")?.enable();
-              resolve(res);
-            },
-            (err) => {
-              console.warn("cambioSede error", err);
-              resolve([]);
-            }
-          );
-      }
+      this.oikosService
+        .get(
+          "edificios/" + sedeSeleccionada.sede_id
+        )
+        .subscribe(
+          (res) => {
+            this.opcionesEdificios = res.edificios.edificio;
+            this.ubicacionForm.get("edificio")?.enable();
+            resolve(res);
+          },
+          (err) => {
+            console.warn("cambioSede error", err);
+            resolve([]);
+          }
+        );
+    }
     /*}*/);
   }
 
@@ -1222,18 +1270,18 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         this.ubicacionForm.get("salon")?.enable();
       }
     } else {*/
-      this.oikosService
-        .get(
-          "salones/"+this.ubicacionForm.get("edificio")?.value.codigo
-        )
-        .subscribe(
-          (res) => {
-            this.opcionesSalones = res.salones.salon;
-            this.opcionesSalonesFiltrados = this.opcionesSalones;
-            this.ubicacionForm.get("salon")?.enable();
-          },
-          (err) => console.warn("cambioEdificio error", err)
-        );
+    this.oikosService
+      .get(
+        "salones/" + this.ubicacionForm.get("edificio")?.value.codigo
+      )
+      .subscribe(
+        (res) => {
+          this.opcionesSalones = res.salones.salon;
+          this.opcionesSalonesFiltrados = this.opcionesSalones;
+          this.ubicacionForm.get("salon")?.enable();
+        },
+        (err) => console.warn("cambioEdificio error", err)
+      );
     /*}*/
   }
 
@@ -1403,7 +1451,6 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
           const colocacionesDeModuloHorario = res.Data.filter(
             (item: any) => !this.existeColocacionEnCargaActual(item)
           );
-
           if (colocacionesDeModuloHorario.length > 0) {
             this.manejarSiEspacioTieneColocacionEnModuloHorario(
               colocacionesDeModuloHorario
@@ -1502,9 +1549,9 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         item.idEspacioAcademico == colocacion?.EspacioAcademico?._id &&
         Number(item.horas) === Number(horarioColocacion?.horas) &&
         Number(item.finalPosition?.x) ===
-          Number(horarioColocacion?.finalPosition?.x) &&
+        Number(horarioColocacion?.finalPosition?.x) &&
         Number(item.finalPosition?.y) ===
-          Number(horarioColocacion?.finalPosition?.y)
+        Number(horarioColocacion?.finalPosition?.y)
       );
     });
   }
