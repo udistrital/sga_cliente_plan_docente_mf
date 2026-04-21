@@ -28,7 +28,7 @@
                         <mat-select [(ngModel)]="proyectos.select" (selectionChange)="listarConsolidados()">
                             <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
                             <mat-option *ngFor="let item of proyectos.opciones" [value]="item">
-                                {{item.Nombre}}
+                                {{ item.Codigo }} - {{item.Nombre}}
                             </mat-option>
                         </mat-select>
                     </mat-form-field>
