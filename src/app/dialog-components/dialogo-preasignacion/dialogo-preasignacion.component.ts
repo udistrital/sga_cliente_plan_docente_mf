@@ -50,6 +50,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   filteredDocentes: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
   docente: any;
 
+  espaciosRaw: any[] = [];
   opcionesEspaciosAcademicos: EspaciosAcademicos[] = [];
   opcionesProyectos: any[] = [];
   opcionesGrupos: any[] = [];
@@ -562,6 +563,8 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
               ? resp
               : [];
 
+            this.espaciosRaw = dataResp;
+
             const espacios = dataResp
               .map((espacio: any) => this.normalizarEspacioAcademico(espacio))
               .filter((espacio: EspaciosAcademicos) => espacio._id);
@@ -702,10 +705,15 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                 resp.Data.forEach((element: any) => {
                   if (
                     !this.opcionesProyectos.some(
-                      (opcion) => opcion === element.ProyectoAcademico
+                      (opcion) => opcion.nombre === element.ProyectoAcademico
                     )
                   ) {
-                    this.opcionesProyectos.push(element.ProyectoAcademico);
+                    let label = element.ProyectoAcademico;
+                    const raw = this.espaciosRaw.find((e: any) => e.nombre_carrera === element.ProyectoAcademico);
+                    if (raw && raw.codigo_carrera) {
+                      label = `${raw.codigo_carrera} - ${element.ProyectoAcademico}`;
+                    }
+                    this.opcionesProyectos.push({ nombre: element.ProyectoAcademico, label: label });
                   }
                 });
                 resolve(this.opcionesGrupos);

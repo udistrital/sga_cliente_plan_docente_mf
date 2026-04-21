@@ -1,4 +1,4 @@
-@import "sweetalert2/src/variables";
+
 @import "./animations";
 
 // Colores personalizados basados en tu paleta
@@ -9,7 +9,7 @@ $custom-yellow: #d9c53a;
 
 $swal2-dark-theme-black: #f0f4f8;
 $swal2-dark-theme-white: #282828;
-$swal2-outline-color: lighten($swal2-outline-color, 10%);
+$swal2-outline-color: lighten(rgba(100, 150, 200, 0.5), 10%);
 
 $swal2-background: $swal2-dark-theme-black;
 
@@ -79,7 +79,7 @@ $swal2-validation-message-padding: 4px 13px;
 $swal2-validation-message-background: transparent;
 $swal2-validation-message-color: $swal2-dark-theme-white;
 $swal2-validation-message-icon-background: $custom-red;
-$swal2-validation-message-icon-color: $swal2-white !default;
+$swal2-validation-message-icon-color: #fff !default;
 $swal2-validation-message-icon-zoom: 1; // Aumentar el tamaño del icono de validación
 
 // VARIABLES COMUNES PARA LOS BOTONES DE CONFIRMAR Y CANCELAR

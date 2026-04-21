@@ -84,7 +84,7 @@
           <mat-header-cell *matHeaderCellDef mat-sort-header>
             <b>{{ "GLOBAL.proyecto_academico" | translate }}</b>
           </mat-header-cell>
-          <mat-cell *matCellDef="let row"> {{ row.proyecto }} </mat-cell>
+          <mat-cell *matCellDef="let row"> {{ row.codigo_proyecto_academico }} - {{ row.proyecto }} </mat-cell>
         </ng-container>
         <ng-container matColumnDef="nivel">
           <mat-header-cell *matHeaderCellDef mat-sort-header>
@@ -233,7 +233,7 @@
           <mat-header-cell *matHeaderCellDef mat-sort-header>
             <b>{{ "GLOBAL.proyecto_academico" | translate }}</b>
           </mat-header-cell>
-          <mat-cell *matCellDef="let row"> {{ row.proyecto }} </mat-cell>
+          <mat-cell *matCellDef="let row"> {{ row.codigo_proyecto_academico }} - {{ row.proyecto }} </mat-cell>
         </ng-container>
         <ng-container matColumnDef="nivel">
           <mat-header-cell *matHeaderCellDef mat-sort-header>
