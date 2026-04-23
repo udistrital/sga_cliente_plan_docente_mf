@@ -10,11 +10,7 @@ import { RevisionConsolidadoComponent } from "./plan-trabajo-docente/revision-co
 import { ConsolidadoComponent } from "./plan-trabajo-docente/consolidado/consolidado.component";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { MATERIAL_MODULES } from "./imports/material";
-import {
-  HttpClientModule,
-  HTTP_INTERCEPTORS,
-  HttpClient,
-} from "@angular/common/http";
+import { HTTP_INTERCEPTORS, HttpClient, provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
 import { SpinnerUtilInterceptor, SpinnerUtilModule } from "spinner-util";
 import { TranslateHttpLoader } from "@ngx-translate/http-loader";
 import { environment } from "src/environments/environment";
@@ -43,59 +39,53 @@ export function createTranslateLoader(http: HttpClient) {
   );
 }
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    // ? mis componentes
-    PreasignacionComponent,
-    AsignarPtdComponent,
-    VerificarPtdComponent,
-    RevisionConsolidadoComponent,
-    ConsolidadoComponent,
-    // ? directivas
-    DIRECTIVES,
-    // ? componentes micro
-    ActionButtonComponent,
-    ActionCheckComponent,
-    // ? componentes de dialogo
-    DialogoPreAsignacionPtdComponent,
-    DialogoAsignarPeriodoComponent,
-    DialogoFirmaPtdComponent,
-    DialogPreviewFileComponent,
-    DialogoCrearEspacioGrupoComponent,
-    DialogoVerDetalleColocacionComponent,
-    // ? componentes transversales
-    HorarioCargaLectivaComponent,
-    AsignarPtdMultipleComponent,
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    CommonModule,
-    BrowserAnimationsModule,
-    MATERIAL_MODULES,
-    HttpClientModule,
-    SpinnerUtilModule,
-    TranslateModule.forRoot({
-      loader: {
-        provide: TranslateLoader,
-        useFactory: createTranslateLoader,
-        deps: [HttpClient],
-      },
-    }),
-    FormsModule,
-    MatCardModule,
-    ReactiveFormsModule,
-  ],
-  providers: [
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: SpinnerUtilInterceptor,
-      multi: true,
-    },
-    SERVICES_HTTP,
-    UserService,
-  ],
-  bootstrap: [AppComponent],
-})
+@NgModule({ declarations: [
+        AppComponent,
+        // ? mis componentes
+        PreasignacionComponent,
+        AsignarPtdComponent,
+        VerificarPtdComponent,
+        RevisionConsolidadoComponent,
+        ConsolidadoComponent,
+        // ? directivas
+        DIRECTIVES,
+        // ? componentes micro
+        ActionButtonComponent,
+        ActionCheckComponent,
+        // ? componentes de dialogo
+        DialogoPreAsignacionPtdComponent,
+        DialogoAsignarPeriodoComponent,
+        DialogoFirmaPtdComponent,
+        DialogPreviewFileComponent,
+        DialogoCrearEspacioGrupoComponent,
+        DialogoVerDetalleColocacionComponent,
+        // ? componentes transversales
+        HorarioCargaLectivaComponent,
+        AsignarPtdMultipleComponent,
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        CommonModule,
+        BrowserAnimationsModule,
+        MATERIAL_MODULES,
+        SpinnerUtilModule,
+        TranslateModule.forRoot({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: createTranslateLoader,
+                deps: [HttpClient],
+            },
+        }),
+        FormsModule,
+        MatCardModule,
+        ReactiveFormsModule], providers: [
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: SpinnerUtilInterceptor,
+            multi: true,
+        },
+        SERVICES_HTTP,
+        UserService,
+        provideHttpClient(withInterceptorsFromDi()),
+    ] })
 export class AppModule {}
