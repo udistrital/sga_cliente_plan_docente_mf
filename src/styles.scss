@@ -1,6 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
-@import "./assets/styles/sga-sweetalert2/sga-sweetalert2.scss";
-@import "./assets/styles/estilos-generales.scss";
+@use "./assets/styles/sga-sweetalert2/sga-sweetalert2";
+@use "./assets/styles/estilos-generales";
+@use "sass:math";
 
 //para notificaciones tipo toast
 .mat-mdc-snack-bar-container {
@@ -41,8 +42,8 @@
   // tamaño de 0.25 a 2 paso de 0.25
   @for $i from 1 through 8 {
     $size: $i * 0.25;
-    $decimal_part: $size - floor($size); // Extraer la parte decimal del número
-    $class: #{floor($size)}_#{$decimal_part *
+    $decimal_part: $size - math.floor($size); // Extraer la parte decimal del número
+    $class: #{math.floor($size)}_#{$decimal_part *
       100}; // Concatenar la parte entera y decimal como cadena de texto
     &-#{$class} {
       font-size: $i * 0.25rem;
@@ -115,8 +116,8 @@
 // escala de 0.25 a 4 paso de 0.25
 @for $i from 1 through 16 {
   $size: $i * 0.25;
-  $decimal_part: $size - floor($size); // Extraer la parte decimal del número
-  $class: #{floor($size)}_#{$decimal_part *
+  $decimal_part: $size - math.floor($size); // Extraer la parte decimal del número
+  $class: #{math.floor($size)}_#{$decimal_part *
     100}; // Concatenar la parte entera y decimal como cadena de texto
   .escala-#{$class} {
     transform: scale($i * 0.25);

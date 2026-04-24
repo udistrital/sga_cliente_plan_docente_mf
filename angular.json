@@ -90,13 +90,13 @@
           "builder": "@angular-builders/custom-webpack:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "sga-cliente-plan-docente-mf:build:production"
+              "buildTarget": "sga-cliente-plan-docente-mf:build:production"
             },
             "development": {
-              "browserTarget": "sga-cliente-plan-docente-mf:build:development"
+              "buildTarget": "sga-cliente-plan-docente-mf:build:development"
             },
             "local": {
-              "browserTarget": "sga-cliente-plan-docente-mf:build:local"
+              "buildTarget": "sga-cliente-plan-docente-mf:build:local"
             }
           },
           "defaultConfiguration": "local"
