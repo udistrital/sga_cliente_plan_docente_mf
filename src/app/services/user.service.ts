@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { uniq as _uniq } from "lodash";
+import { uniq as _uniq } from "lodash-es";
 import { decrypt } from "../utils/util-encrypt";
 
 @Injectable()

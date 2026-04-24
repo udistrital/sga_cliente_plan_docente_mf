@@ -3,7 +3,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { MODALS, ROLES, VIEWS } from 'src/app/models/diccionario';
-import { intersection as _intersection, head as _head, cloneDeep as _cloneDeep } from 'lodash';
+import { intersection as _intersection, head as _head, cloneDeep as _cloneDeep } from 'lodash-es';
 import { TranslateService } from '@ngx-translate/core';
 import { PopUpManager } from 'src/app/managers/popUpManager';
 import { UserService } from 'src/app/services/user.service';
@@ -23,9 +23,10 @@ import { DialogoFirmaPtdComponent } from 'src/app/dialog-components/dialogo-firm
 import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';
 
 @Component({
-  selector: 'app-verificar-ptd',
-  templateUrl: './verificar-ptd.component.html',
-  styleUrls: ['./verificar-ptd.component.scss']
+    selector: 'app-verificar-ptd',
+    templateUrl: './verificar-ptd.component.html',
+    styleUrls: ['./verificar-ptd.component.scss'],
+    standalone: false
 })
 export class VerificarPtdComponent implements OnInit, AfterViewInit {
 

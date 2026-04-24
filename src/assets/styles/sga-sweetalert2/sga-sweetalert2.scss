@@ -1,21 +1,23 @@
+@use "./animations";
+@use "sass:color";
 
-@import "./animations";
-
-// Colores personalizados basados en tu paleta
+// Colores personalizados
 $custom-blue: #145a95;
 $custom-red: #c86885;
 $custom-green: #86ab2e;
 $custom-yellow: #d9c53a;
 
+// Base
 $swal2-dark-theme-black: #f0f4f8;
 $swal2-dark-theme-white: #282828;
-$swal2-outline-color: lighten(rgba(100, 150, 200, 0.5), 10%);
+
+// ⚠️ corregido
+$swal2-outline-color: rgba(100, 150, 200, 0.6);
 
 $swal2-background: $swal2-dark-theme-black;
-
 $swal2-container-padding: 16px;
 
-$swal2-color: #000000; // Oscurecer el texto del contenedor
+$swal2-color: #000000;
 $swal2-title-margin: 0;
 $swal2-title-text-align: initial;
 $swal2-title-font-size: 30px;
@@ -27,39 +29,36 @@ $swal2-backdrop: rgba(0, 0, 0, 0.5);
 $swal2-show-animation: fadeInUpTiny 0.5s;
 $swal2-hide-animation: fadeOut 0.25s;
 
-// HTML CONTAINER
-$swal2-html-container-color: #000000; // Oscurecer el texto del contenedor
+// HTML
+$swal2-html-container-color: #000000;
 $swal2-html-container-justify-content: flex-start;
 $swal2-html-container-text-align: left;
 $swal2-html-container-font-weight: 200;
 
-// ACCIONES
+// Acciones
 $swal2-actions-justify-content: flex-end;
 $swal2-actions-padding: 0 20px;
 
-// PROGRESS STEPS
+// Steps
 $swal2-progress-step-background: white;
 $swal2-progress-step-color: #333;
 $swal2-active-step-background: $custom-blue;
 
-// ICONOS
+// Iconos
 $swal2-icon-animations: false;
-$swal2-icon-zoom: 1; // Aumentar el tamaño de los iconos
+$swal2-icon-zoom: 1;
 $swal2-success: $custom-green;
 $swal2-error: $custom-red;
 $swal2-warning: $custom-yellow;
 $swal2-info: $custom-blue;
 $swal2-question: $custom-blue;
 
-// FOOTER
+// Footer
 $swal2-footer-border-color: rgba(159, 175, 190, 0.168);
-$swal2-footer-color: lighten(
-  $swal2-html-container-color,
-  40%
-); // Aclarar el texto del footer
-$swal2-footer-font-weight: 100; // Hacer el texto del footer más delgado
+$swal2-footer-color: color.adjust($swal2-html-container-color, $lightness: 40%);
+$swal2-footer-font-weight: 100;
 
-// INPUT
+// Inputs
 $swal2-input-height: 30px;
 $swal2-input-padding: 0 8px;
 $swal2-input-border: 1px solid #7e8993;
@@ -69,25 +68,28 @@ $swal2-input-focus-border: 1px solid $custom-blue;
 $swal2-input-focus-outline: 2px solid transparent;
 $swal2-input-focus-box-shadow: 0 0 0 1px $custom-blue;
 $swal2-input-font-size: 14px;
-$swal2-input-background: lighten($swal2-dark-theme-black, 5%);
+$swal2-input-background: color.adjust($swal2-dark-theme-black, $lightness: 5%);
 $swal2-input-color: $swal2-dark-theme-white;
 $swal2-input-transition: none;
 
-// MENSAJE DE VALIDACIÓN
+// Validación
 $swal2-validation-message-justify-content: flex-start;
 $swal2-validation-message-padding: 4px 13px;
 $swal2-validation-message-background: transparent;
 $swal2-validation-message-color: $swal2-dark-theme-white;
 $swal2-validation-message-icon-background: $custom-red;
-$swal2-validation-message-icon-color: #fff !default;
-$swal2-validation-message-icon-zoom: 1; // Aumentar el tamaño del icono de validación
 
-// VARIABLES COMUNES PARA LOS BOTONES DE CONFIRMAR Y CANCELAR
+// ⚠️ corregido
+$swal2-validation-message-icon-color: #ffffff;
+
+$swal2-validation-message-icon-zoom: 1;
+
+// Botones
 $swal2-button-darken-hover: transparent;
 $swal2-button-darken-active: transparent;
 $swal2-button-focus-box-shadow: 0 0 1px 1px;
 
-// BOTÓN DE CONFIRMACIÓN
+// Confirmar
 $swal2-confirm-button-background-color: $custom-blue;
 $swal2-confirm-button-border: 0;
 $swal2-confirm-button-border-radius: 3px;
@@ -96,13 +98,11 @@ $swal2-confirm-button-font-size: 13px;
 $swal2-confirm-button-focus-box-shadow: 0 0 0 3px
   rgba($swal2-confirm-button-background-color, 0.5);
 
-// BOTÓN DE DENEGACIÓN
+// Denegar / cancelar
 $swal2-deny-button-font-size: 13px;
-
-// BOTÓN DE CANCELACIÓN
 $swal2-cancel-button-font-size: 13px;
 
-// TOAST
+// Toast
 $swal2-toast-show-animation: fadeInUpBig 0.65s;
 $swal2-toast-hide-animation: fadeOut 0.5s;
 $swal2-toast-background: $swal2-dark-theme-black;
@@ -118,7 +118,7 @@ $swal2-toast-validation-font-size: 13px;
 $swal2-toast-buttons-font-size: 13px;
 $swal2-toast-footer-font-size: 13px;
 
-// BARRA DE PROGRESO DEL TEMPORIZADOR
+// Timer
 $swal2-timer-progress-bar-height: 0.25em;
 $swal2-timer-progress-bar-background: $custom-blue;
 
@@ -149,17 +149,9 @@ $swal2-timer-progress-bar-background: $custom-blue;
 }
 
 .swal2-icon {
-  height: 64px; // Aumentar el tamaño de los iconos
+  height: 64px;
   transform: scale(1) translateY(0px);
   border: 0;
-}
-
-.swal2-icon.swal2-success {
-  transform: scale(1) translateY(0px);
-}
-
-.swal2-icon.swal2-error {
-  transform: scale(1) translateY(0px);
 }
 
 .swal2-success-circular-line-left {
@@ -171,9 +163,5 @@ $swal2-timer-progress-bar-background: $custom-blue;
 }
 
 .swal2-toast .swal2-icon {
-  transform: scale(1) translateY(0px);
-}
-
-.swal2-toast .swal2-icon.swal2-success {
   transform: scale(1) translateY(0px);
 }

@@ -7,7 +7,7 @@ import { UserService } from "src/app/services/user.service";
 import {
   head as _head,
   cloneDeep as _cloneDeep,
-} from "lodash";
+} from "lodash-es";
 import { Periodo } from "src/app/models/parametros/periodo";
 import { TranslateService } from "@ngx-translate/core";
 import { PopUpManager } from "src/app/managers/popUpManager";
@@ -30,9 +30,10 @@ import { firstValueFrom } from "rxjs/internal/firstValueFrom";
 import { PermisosUtils } from "src/app/utils/role-permissions";
 
 @Component({
-  selector: "app-consolidado",
-  templateUrl: "./consolidado.component.html",
-  styleUrls: ["./consolidado.component.scss"],
+    selector: "app-consolidado",
+    templateUrl: "./consolidado.component.html",
+    styleUrls: ["./consolidado.component.scss"],
+    standalone: false
 })
 export class ConsolidadoComponent implements OnInit, AfterViewInit {
   readonly VIEWS = VIEWS;

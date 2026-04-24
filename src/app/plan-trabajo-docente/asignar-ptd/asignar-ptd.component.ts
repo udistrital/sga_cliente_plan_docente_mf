@@ -10,13 +10,13 @@ import { PlanTrabajoDocenteService } from "src/app/services/plan-trabajo-docente
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
 import { UserService } from "src/app/services/user.service";
 import { checkContent, checkResponse } from "src/app/utils/verify-response";
-import { intersection as _intersection, head as _head } from "lodash";
+import { intersection as _intersection, head as _head } from "lodash-es";
 import { MatTableDataSource } from "@angular/material/table";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
 import { MatSelectChange } from "@angular/material/select";
 import { EstadoPlan } from "src/app/models/plan-trabajo-docente/estado-plan";
-import { cloneDeep as _cloneDeep } from "lodash";
+import { cloneDeep as _cloneDeep } from "lodash-es";
 import { MatDialog, MatDialogConfig } from "@angular/material/dialog";
 import { DialogPreviewFileComponent } from "src/app/dialog-components/dialog-preview-file/dialog-preview-file.component";
 import { forkJoin } from "rxjs/internal/observable/forkJoin";
@@ -26,9 +26,10 @@ import { PermisosUtils } from "src/app/utils/role-permissions";
 import { RouterEvent } from "@angular/router";
 
 @Component({
-  selector: "app-asignar-ptd",
-  templateUrl: "./asignar-ptd.component.html",
-  styleUrls: ["./asignar-ptd.component.scss"],
+    selector: "app-asignar-ptd",
+    templateUrl: "./asignar-ptd.component.html",
+    styleUrls: ["./asignar-ptd.component.scss"],
+    standalone: false
 })
 export class AsignarPtdComponent implements OnInit, AfterViewInit {
   readonly VIEWS = VIEWS;

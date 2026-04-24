@@ -36,9 +36,10 @@ import { MODALS } from "src/app/models/diccionario";
 import { DialogoCrearEspacioGrupoComponent } from "../dialogo-crear-espacio-grupo/dialogo-crear-espacio-grupo.component";
 
 @Component({
-  selector: "dialogo-preasignacion",
-  templateUrl: "./dialogo-preasignacion.component.html",
-  styleUrls: ["./dialogo-preasignacion.component.scss"],
+    selector: "dialogo-preasignacion",
+    templateUrl: "./dialogo-preasignacion.component.html",
+    styleUrls: ["./dialogo-preasignacion.component.scss"],
+    standalone: false
 })
 export class DialogoPreAsignacionPtdComponent implements OnInit {
   modificando: boolean = true;

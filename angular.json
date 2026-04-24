@@ -90,25 +90,25 @@
           "builder": "@angular-builders/custom-webpack:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "sga-cliente-plan-docente-mf:build:production"
+              "buildTarget": "sga-cliente-plan-docente-mf:build:production"
             },
             "development": {
-              "browserTarget": "sga-cliente-plan-docente-mf:build:development"
+              "buildTarget": "sga-cliente-plan-docente-mf:build:development"
             },
             "local": {
-              "browserTarget": "sga-cliente-plan-docente-mf:build:local"
+              "buildTarget": "sga-cliente-plan-docente-mf:build:local"
             }
           },
           "defaultConfiguration": "local"
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "builder": "@angular/build:extract-i18n",
           "options": {
             "buildTarget": "sga-cliente-plan-docente-mf:build"
           }
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
+          "builder": "@angular/build:karma",
           "options": {
             "polyfills": [
               "zone.js",
@@ -131,5 +131,31 @@
   },
   "cli": {
     "analytics": false
+  },
+  "schematics": {
+    "@schematics/angular:component": {
+      "type": "component"
+    },
+    "@schematics/angular:directive": {
+      "type": "directive"
+    },
+    "@schematics/angular:service": {
+      "type": "service"
+    },
+    "@schematics/angular:guard": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:interceptor": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:module": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:pipe": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:resolver": {
+      "typeSeparator": "."
+    }
   }
 }

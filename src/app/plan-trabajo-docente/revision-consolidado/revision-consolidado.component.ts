@@ -16,16 +16,17 @@ import { TercerosService } from 'src/app/services/terceros.service';
 import { UserService } from 'src/app/services/user.service';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { checkContent, checkResponse } from 'src/app/utils/verify-response';
-import { cloneDeep as _cloneDeep } from 'lodash';
+import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { PermisosUtils } from 'src/app/utils/role-permissions';
 import { forkJoin } from 'rxjs/internal/observable/forkJoin';
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
 import { Observable } from 'rxjs/internal/Observable';
 
 @Component({
-  selector: 'app-revision-consolidado',
-  templateUrl: './revision-consolidado.component.html',
-  styleUrls: ['./revision-consolidado.component.scss']
+    selector: 'app-revision-consolidado',
+    templateUrl: './revision-consolidado.component.html',
+    styleUrls: ['./revision-consolidado.component.scss'],
+    standalone: false
 })
 export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
 

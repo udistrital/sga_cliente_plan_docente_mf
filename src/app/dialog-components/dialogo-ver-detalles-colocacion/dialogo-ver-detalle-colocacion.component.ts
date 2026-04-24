@@ -4,9 +4,10 @@ import { TranslateService } from "@ngx-translate/core";
 import { PopUpManager } from "src/app/managers/popUpManager";
 
 @Component({
-  selector: "app-dialogo-ver-detalles-colocacion",
-  templateUrl: "./dialogo-ver-detalle-colocacion.component.html",
-  styleUrl: "./dialogo-ver-detalle-colocacion.component.scss",
+    selector: "app-dialogo-ver-detalles-colocacion",
+    templateUrl: "./dialogo-ver-detalle-colocacion.component.html",
+    styleUrl: "./dialogo-ver-detalle-colocacion.component.scss",
+    standalone: false
 })
 export class DialogoVerDetalleColocacionComponent implements OnInit {
   banderaEsColocacionModuloHorario = false;

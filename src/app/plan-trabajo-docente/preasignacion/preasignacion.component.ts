@@ -20,9 +20,10 @@ import { firstValueFrom } from "rxjs/internal/firstValueFrom";
 import { forkJoin } from "rxjs/internal/observable/forkJoin";
 
 @Component({
-  selector: "app-preasignacion",
-  templateUrl: "./preasignacion.component.html",
-  styleUrls: ["./preasignacion.component.scss"],
+    selector: "app-preasignacion",
+    templateUrl: "./preasignacion.component.html",
+    styleUrls: ["./preasignacion.component.scss"],
+    standalone: false
 })
 export class PreasignacionComponent implements OnInit, AfterViewInit {
   roles: string[] = [];
