@@ -6,22 +6,22 @@
 //para notificaciones tipo toast
 .mat-mdc-snack-bar-container {
   &.info-snackbar {
-    --mdc-snackbar-container-color: #f6f2cf;
+    --mat-snackbar-container-color: #f6f2cf;
     --mat-mdc-snack-bar-button-color: #3c220c;
-    --mdc-snackbar-supporting-text-color: #3c220c;
+    --mat-snackbar-supporting-text-color: #3c220c;
     border: 1px solid #ddc342;
     border-radius: 5px;
   }
   &.error-snackbar {
-    --mdc-snackbar-container-color: #e15a52;
+    --mat-snackbar-container-color: #e15a52;
     --mat-mdc-snack-bar-button-color: #fdf4f3;
-    --mdc-snackbar-supporting-text-color: #fdf4f3;
+    --mat-snackbar-supporting-text-color: #fdf4f3;
     border-radius: 5px;
   }
   &.success-snackbar {
-    --mdc-snackbar-container-color: #72b771;
+    --mat-snackbar-container-color: #72b771;
     --mat-mdc-snack-bar-button-color: #fff;
-    --mdc-snackbar-supporting-text-color: #fff;
+    --mat-snackbar-supporting-text-color: #fff;
     border-radius: 5px;
   }
 }
