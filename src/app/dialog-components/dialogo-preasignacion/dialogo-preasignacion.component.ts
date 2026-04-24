@@ -34,6 +34,7 @@ import { checkContent, checkResponse } from "src/app/utils/verify-response";
 import { EspaciosAcademicos } from "src/app/models/espacios-academicos/espacios-academicos";
 import { MODALS } from "src/app/models/diccionario";
 import { DialogoCrearEspacioGrupoComponent } from "../dialogo-crear-espacio-grupo/dialogo-crear-espacio-grupo.component";
+import { OikosService } from "src/app/services/oikos.service";
 
 @Component({
     selector: "dialogo-preasignacion",
@@ -50,6 +51,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   opcionesDocente: any[] = [];
   filteredDocentes: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
   docente: any;
+  proyectosCoordinador: any[] = [];
 
   espaciosRaw: any[] = [];
   opcionesEspaciosAcademicos: EspaciosAcademicos[] = [];
@@ -82,6 +84,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     private sgaPlanTrabajoDocenteMidService: SgaPlanTrabajoDocenteMidService,
     private parametrosService: ParametrosService,
     private tercerosService: TercerosService,
+    private OikosService: OikosService,
     private builder: FormBuilder,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
@@ -91,6 +94,13 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.obtenerProyectosCoordinador()
+      .then((proyectos) => {
+        this.proyectosCoordinador = proyectos;
+      })
+      .catch(() => {
+        this.proyectosCoordinador = [];
+      });
     if (this.data.docente == undefined) {
       this.modificando = false;
       this.data = {
@@ -277,6 +287,8 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         periodo_id: String(this.preasignacionForm.get("periodo")?.value.Id),
         aprobacion_docente: false,
         aprobacion_proyecto: false,
+        proyecto_academico_id: String(this.preasignacionForm.get("espacio_academico")?.value.proyecto_academico_id),
+        proyecto_academico_nombre: String(this.preasignacionForm.get("proyecto")?.value),
         activo: true,
       };
       const esp_acad_padre =
@@ -315,8 +327,8 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
               this.popUpManager.showPopUpGeneric(
                 this.translate.instant("ERROR.titulo_generico"),
                 this.translate.instant("ERROR.fallo_informacion_en") +
-                  ": <b>pre_asignacion</b>.<br><br>" +
-                  this.translate.instant("ERROR.persiste_error_comunique_OAS"),
+                ": <b>pre_asignacion</b>.<br><br>" +
+                this.translate.instant("ERROR.persiste_error_comunique_OAS"),
                 MODALS.ERROR,
                 false
               );
@@ -514,16 +526,16 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         ),
         nombre: String(
           espacio?.nombre ??
-            espacio?.nombre_espacio ??
-            espacio?.espacio_academico ??
-            ""
+          espacio?.nombre_espacio ??
+          espacio?.espacio_academico ??
+          ""
         ),
         proyecto_academico_id: Number(
           espacio?.proyecto_academico_id ??
-            espacio?.codigo_carrera ??
-            espacio?.proyecto_id ??
-            this.proyectoCurricularId ??
-            0
+          espacio?.codigo_carrera ??
+          espacio?.proyecto_id ??
+          this.proyectoCurricularId ??
+          0
         ),
         activo: true,
       }),
@@ -561,8 +573,8 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
             const dataResp = Array.isArray(resp?.Data)
               ? resp.Data
               : Array.isArray(resp)
-              ? resp
-              : [];
+                ? resp
+                : [];
 
             this.espaciosRaw = dataResp;
 
@@ -596,8 +608,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     if (this.preasignacionForm.get("doc_docente")?.value != null) {
       this.sgaPlanTrabajoDocenteMidService
         .get(
-          `docente/documento?documento=${
-            this.preasignacionForm.get("doc_docente")?.value
+          `docente/documento?documento=${this.preasignacionForm.get("doc_docente")?.value
           }`
         )
         .subscribe({
@@ -671,6 +682,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   loadProyectos() {
+    this.preasignacionForm.get("proyecto")?.setValue(null);
     this.opcionesGrupos = [];
     this.opcionesProyectos = [];
     return new Promise((resolve, reject) => {
@@ -696,25 +708,34 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         this.sgaPlanTrabajoDocenteMidService
           .get(
             `espacio-academico/grupos-periodo?anio=${partesPeriodo.anio}` +
-              `&periodo=${partesPeriodo.periodo}&espacio=${this.espacio_academico._id}`
+            `&periodo=${partesPeriodo.periodo}&espacio=${this.espacio_academico._id}`
           )
           .subscribe({
             next: (resp: any) => {
               if (resp.Success == true && resp.Data != null) {
-                this.opcionesGrupos = resp.Data;
+                /*this.opcionesGrupos = resp.Data;*/
                 this.opcionesGruposTodas = resp.Data;
+                this.opcionesProyectos = [];
                 resp.Data.forEach((element: any) => {
-                  if (
-                    !this.opcionesProyectos.some(
-                      (opcion) => opcion.nombre === element.ProyectoAcademico
-                    )
-                  ) {
-                    let label = element.ProyectoAcademico;
-                    const raw = this.espaciosRaw.find((e: any) => e.nombre_carrera === element.ProyectoAcademico);
-                    if (raw && raw.codigo_carrera) {
-                      label = `${raw.codigo_carrera} - ${element.ProyectoAcademico}`;
+                  const nombreGrupo = String(element.ProyectoAcademico)
+                    .trim()
+                    .toUpperCase();
+                  // 🔥 Validar directamente contra la MISMA lista proyectosCoordinador
+                  const perteneceAlCoordinador = this.proyectosCoordinador.some(
+                    (proyecto) =>
+                      String(proyecto.nombre_carrera)
+                        .trim()
+                        .toUpperCase() === nombreGrupo
+                  );
+                  if (perteneceAlCoordinador) {
+                    // Evitar duplicados en opciones
+                    const yaExiste = this.opcionesProyectos.some(
+                      (opcion) =>
+                        String(opcion).trim().toUpperCase() === nombreGrupo
+                    );
+                    if (!yaExiste) {
+                      this.opcionesProyectos.push(element.ProyectoAcademico);
                     }
-                    this.opcionesProyectos.push({ nombre: element.ProyectoAcademico, label: label });
                   }
                 });
                 resolve(this.opcionesGrupos);
@@ -737,20 +758,29 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   changeProyecto() {
-    if (this.preasignacionForm.get("proyecto")?.value != null) {
-      let proyecto = this.preasignacionForm.get("proyecto")?.value;
-      let auxGrupos: any[] = [];
-      this.opcionesGruposTodas.forEach((element) => {
-        if (element.ProyectoAcademico === proyecto) {
-          auxGrupos.push(element);
-        }
-      });
-      this.opcionesGrupos = auxGrupos;
-      this.preasignacionForm.get("nivel")?.setValue(auxGrupos[0].Nivel);
-    } else {
+    const proyectoSeleccionado = this.preasignacionForm.get("proyecto")?.value;
+    if (!proyectoSeleccionado) {
       this.opcionesGrupos = this.opcionesGruposTodas;
-      this.preasignacionForm.get("nivel")?.setValue(null);
       this.preasignacionForm.get("grupo")?.setValue(null);
+      this.preasignacionForm.get("nivel")?.setValue(null);
+      return;
+    }
+    const nombreProyecto = String(proyectoSeleccionado)
+      .trim()
+      .toUpperCase();
+    this.opcionesGrupos = this.opcionesGruposTodas.filter(
+      (grupo) =>
+        String(grupo.ProyectoAcademico)
+          .trim()
+          .toUpperCase() === nombreProyecto
+    );
+    this.preasignacionForm.get("grupo")?.setValue(null);
+    if (this.opcionesGrupos.length > 0) {
+      this.preasignacionForm
+        .get("nivel")
+        ?.setValue(this.opcionesGrupos[0].Nivel);
+    } else {
+      this.preasignacionForm.get("nivel")?.setValue(null);
     }
   }
 
@@ -802,16 +832,16 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                 const grupoACargar = this.opcionesGruposTodas.find(
                   (grupo) => grupo.Id == this.data.espacio_academico_id
                 );
-                
+
                 if (grupoACargar) {
                   // Establecer el proyecto del grupo
                   this.preasignacionForm
                     .get("proyecto")
                     ?.setValue(grupoACargar.ProyectoAcademico);
-                  
+
                   // Filtrar los grupos al proyecto del grupo cargado
                   this.changeProyecto();
-                  
+
                   // Ahora asignar el grupo del filtered list
                   this.preasignacionForm
                     .get("grupo")
@@ -826,7 +856,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                       )
                     );
                 }
-                
+
                 this.changeGrupo();
               });
             })
@@ -863,6 +893,28 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
       if (grupoEspacio && grupoEspacio.creado) {
         this.loadProyectos();
       }
+    });
+  }
+  
+  obtenerProyectosCoordinador(): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const documentoCoordinador = this.obtenerDocumentoCoordinador();
+      if (!documentoCoordinador) {
+        reject(new Error("No fue posible obtener el documento del coordinador"));
+        return;
+      }
+      this.OikosService.get(`/coordinador_usuario/${documentoCoordinador}`).subscribe({
+        next: (resp: any) => {
+          if (Array.isArray(resp.coordinadores.coordinador)) {
+            resolve(resp.coordinadores.coordinador);
+          } else {
+            reject(new Error("No se encontraron proyectos para el coordinador"));
+          }
+        },
+        error: (err) => {
+          reject(err);
+        },
+      });
     });
   }
 }
