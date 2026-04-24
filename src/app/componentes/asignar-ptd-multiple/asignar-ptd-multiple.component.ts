@@ -5,7 +5,7 @@ import { ACTIONS, MODALS, ROLES, VIEWS } from 'src/app/models/diccionario';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { SgaPlanTrabajoDocenteMidService } from 'src/app/services/sga-plan-trabajo-docente-mid.service';
 import { UserService } from 'src/app/services/user.service';
-import { intersection as _intersection, head as _head, cloneDeep as _cloneDeep } from 'lodash';
+import { intersection as _intersection, head as _head, cloneDeep as _cloneDeep } from 'lodash-es';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';

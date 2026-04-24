@@ -1,7 +1,6 @@
 import { Directive, Input, OnDestroy, TemplateRef, ViewContainerRef } from "@angular/core";
 import { BehaviorSubject, Observable, Subject, takeUntil } from "rxjs";
 import { UserService } from "../services/user.service";
-import { intersection as _intersection } from 'lodash';
 
 @Directive({ selector: '[ngIsGranted]' })
 export class NgIsGrantedDirective implements OnDestroy {
@@ -18,12 +17,8 @@ export class NgIsGrantedDirective implements OnDestroy {
         const accessChecker = new BehaviorSubject(false);
         const accessChecker$ = accessChecker.asObservable();
         this.userService.getUserRoles().then((roleSystem) => {
-            const intersection = _intersection(role, roleSystem);
-            if (intersection.length > 0) {
-                accessChecker.next(true);
-            } else {
-                accessChecker.next(false);
-            }
+            const hasIntersection = role.some((r) => roleSystem.includes(r));
+            accessChecker.next(hasIntersection);
         }).catch(() => {
             accessChecker.next(false);
         });
