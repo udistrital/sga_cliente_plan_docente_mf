@@ -45,7 +45,7 @@
                 *ngFor="let item of proyectos?.opciones"
                 [value]="item"
               >
-                {{ item.Nombre }}
+                {{ item.Codigo }} - {{ item.Nombre }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -217,7 +217,7 @@
                   *ngFor="let item of proyectos?.opciones"
                   [value]="item"
                 >
-                  {{ item.Nombre }}
+                  {{ item.Codigo }} - {{ item.Nombre }}
                 </mat-option>
               </mat-select>
             </mat-form-field>

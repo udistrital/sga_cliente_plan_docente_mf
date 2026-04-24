@@ -79,7 +79,7 @@
           >
             <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
             <mat-option *ngFor="let item of opcionesSedes" [value]="item">
-              {{ item.Nombre }}
+              {{ item.sede }}
             </mat-option>
           </mat-select>
           <!-- <mat-error
@@ -97,7 +97,7 @@
           >
             <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
             <mat-option *ngFor="let item of opcionesEdificios" [value]="item">
-              {{ item.Nombre }}
+              {{ item.nombre }}
             </mat-option>
           </mat-select>
           <!-- <mat-error
@@ -129,7 +129,7 @@
               *ngFor="let option of opcionesSalonesFiltrados"
               [value]="option"
             >
-              {{ option.Nombre }}
+              {{ option.nombre }}
             </mat-option>
           </mat-autocomplete>
         </mat-form-field>
@@ -141,10 +141,11 @@
             id="horas"
             formControlName="horas"
             type="number"
-            step="0.25"
-            min="0.5"
+            step="1"
+            min="1"
             max="17"
-            pattern="[0-9]+(\.[0-9]+)?"
+            pattern="^[0-9]+$"
+            (keypress)="($event.charCode >= 48 && $event.charCode <= 57)"
           />
         </mat-form-field>
       </div>
