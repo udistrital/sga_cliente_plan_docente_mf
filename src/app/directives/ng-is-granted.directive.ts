@@ -2,7 +2,10 @@ import { Directive, Input, OnDestroy, TemplateRef, ViewContainerRef } from "@ang
 import { BehaviorSubject, Observable, Subject, takeUntil } from "rxjs";
 import { UserService } from "../services/user.service";
 
-@Directive({ selector: '[ngIsGranted]' })
+@Directive({
+    selector: '[ngIsGranted]',
+    standalone: false
+})
 export class NgIsGrantedDirective implements OnDestroy {
     private destroy$ = new Subject<void>();
     private hasView = false;

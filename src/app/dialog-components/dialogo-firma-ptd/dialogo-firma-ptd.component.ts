@@ -5,9 +5,10 @@ import { SgaPlanTrabajoDocenteMidService } from 'src/app/services/sga-plan-traba
 import { TercerosService } from 'src/app/services/terceros.service';
 
 @Component({
-  selector: 'dialogo-firma-ptd',
-  templateUrl: './dialogo-firma-ptd.component.html',
-  styleUrls: ['./dialogo-firma-ptd.component.scss']
+    selector: 'dialogo-firma-ptd',
+    templateUrl: './dialogo-firma-ptd.component.html',
+    styleUrls: ['./dialogo-firma-ptd.component.scss'],
+    standalone: false
 })
 export class DialogoFirmaPtdComponent implements OnInit {
 

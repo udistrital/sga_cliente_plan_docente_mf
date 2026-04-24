@@ -32,9 +32,10 @@ import { NewNuxeoService } from "src/app/services/new_nuxeo.service";
 import { DocumentoService } from "src/app/services/documento.service";
 
 @Component({
-  selector: "horario-carga-lectiva",
-  templateUrl: "./horario-carga-lectiva.component.html",
-  styleUrls: ["./horario-carga-lectiva.component.scss"],
+    selector: "horario-carga-lectiva",
+    templateUrl: "./horario-carga-lectiva.component.html",
+    styleUrls: ["./horario-carga-lectiva.component.scss"],
+    standalone: false
 })
 export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   /** Definitions for horario */

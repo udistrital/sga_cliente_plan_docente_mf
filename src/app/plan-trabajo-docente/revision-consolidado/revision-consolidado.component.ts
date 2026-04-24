@@ -23,9 +23,10 @@ import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
 import { Observable } from 'rxjs/internal/Observable';
 
 @Component({
-  selector: 'app-revision-consolidado',
-  templateUrl: './revision-consolidado.component.html',
-  styleUrls: ['./revision-consolidado.component.scss']
+    selector: 'app-revision-consolidado',
+    templateUrl: './revision-consolidado.component.html',
+    styleUrls: ['./revision-consolidado.component.scss'],
+    standalone: false
 })
 export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
 

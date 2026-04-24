@@ -7,9 +7,10 @@ import { EspaciosAcademicosService } from "src/app/services/espacios-academicos.
 import { inputsCrearGrupo } from "./utilidades";
 
 @Component({
-  selector: "app-dialogo-crear-espacio-grupo",
-  templateUrl: "./dialogo-crear-espacio-grupo.component.html",
-  styleUrl: "./dialogo-crear-espacio-grupo.component.scss",
+    selector: "app-dialogo-crear-espacio-grupo",
+    templateUrl: "./dialogo-crear-espacio-grupo.component.html",
+    styleUrl: "./dialogo-crear-espacio-grupo.component.scss",
+    standalone: false
 })
 export class DialogoCrearEspacioGrupoComponent implements OnInit {
   inputsCrearGrupo: any;

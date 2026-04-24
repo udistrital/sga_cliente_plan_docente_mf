@@ -3,16 +3,17 @@ import { FormControl, FormGroup } from '@angular/forms';
 
 
 @Component({
-  selector: 'action-check',
-  template: `
+    selector: 'action-check',
+    template: `
     <div [formGroup]="miniForm" class="checkbox">
       <mat-checkbox color="primary" formControlName="value"></mat-checkbox>
     </div>
   `,
-  styles: [
-    'div { display: flex; justify-content:center; align-items:center; }',
-    '.checkbox {display: flex; justify-content:center; align-items: center;}'
-  ]
+    styles: [
+        'div { display: flex; justify-content:center; align-items:center; }',
+        '.checkbox {display: flex; justify-content:center; align-items: center;}'
+    ],
+    standalone: false
 })
 export class ActionCheckComponent implements OnInit {
 

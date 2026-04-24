@@ -9,9 +9,10 @@ import { checkContent, checkResponse } from 'src/app/utils/verify-response';
 import { SgaEspaciosAcademicosMidService } from 'src/app/services/sga-espacios-academicos-mid.service';
 
 @Component({
-  selector: 'dialogo-asignar-periodo',
-  templateUrl: './dialogo-asignar-periodo.component.html',
-  styleUrls: ['./dialogo-asignar-periodo.component.scss']
+    selector: 'dialogo-asignar-periodo',
+    templateUrl: './dialogo-asignar-periodo.component.html',
+    styleUrls: ['./dialogo-asignar-periodo.component.scss'],
+    standalone: false
 })
 export class DialogoAsignarPeriodoComponent implements OnInit {
 

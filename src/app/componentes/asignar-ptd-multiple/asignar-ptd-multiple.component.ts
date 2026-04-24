@@ -11,9 +11,10 @@ import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';
 
 @Component({
-  selector: 'asignar-ptd-multiple',
-  templateUrl: './asignar-ptd-multiple.component.html',
-  styleUrls: ['./asignar-ptd-multiple.component.scss']
+    selector: 'asignar-ptd-multiple',
+    templateUrl: './asignar-ptd-multiple.component.html',
+    styleUrls: ['./asignar-ptd-multiple.component.scss'],
+    standalone: false
 })
 export class AsignarPtdMultipleComponent implements OnInit {
 

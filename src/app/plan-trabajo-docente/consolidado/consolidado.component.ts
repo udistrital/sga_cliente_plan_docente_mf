@@ -30,9 +30,10 @@ import { firstValueFrom } from "rxjs/internal/firstValueFrom";
 import { PermisosUtils } from "src/app/utils/role-permissions";
 
 @Component({
-  selector: "app-consolidado",
-  templateUrl: "./consolidado.component.html",
-  styleUrls: ["./consolidado.component.scss"],
+    selector: "app-consolidado",
+    templateUrl: "./consolidado.component.html",
+    styleUrls: ["./consolidado.component.scss"],
+    standalone: false
 })
 export class ConsolidadoComponent implements OnInit, AfterViewInit {
   readonly VIEWS = VIEWS;

@@ -26,9 +26,10 @@ import { PermisosUtils } from "src/app/utils/role-permissions";
 import { RouterEvent } from "@angular/router";
 
 @Component({
-  selector: "app-asignar-ptd",
-  templateUrl: "./asignar-ptd.component.html",
-  styleUrls: ["./asignar-ptd.component.scss"],
+    selector: "app-asignar-ptd",
+    templateUrl: "./asignar-ptd.component.html",
+    styleUrls: ["./asignar-ptd.component.scss"],
+    standalone: false
 })
 export class AsignarPtdComponent implements OnInit, AfterViewInit {
   readonly VIEWS = VIEWS;

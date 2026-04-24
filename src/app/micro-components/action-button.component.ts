@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
-  selector: 'action-button',
-  template: `
+    selector: 'action-button',
+    template: `
     <div [ngSwitch]="value.type">
       <button *ngSwitchCase="'ver'" title="{{ 'GLOBAL.tooltip_ver_registro' | translate }}"
         [disabled]="value.disabled" (click)="action()" mat-icon-button color="accent" >
@@ -26,9 +26,10 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       </button>
     </div>
   `,
-  styles: [
-    'div { display: flex; justify-content:center; align-items:center; }',
-  ]
+    styles: [
+        'div { display: flex; justify-content:center; align-items:center; }',
+    ],
+    standalone: false
 })
 export class ActionButtonComponent {
 

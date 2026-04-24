@@ -23,9 +23,10 @@ import { DialogoFirmaPtdComponent } from 'src/app/dialog-components/dialogo-firm
 import { DialogPreviewFileComponent } from 'src/app/dialog-components/dialog-preview-file/dialog-preview-file.component';
 
 @Component({
-  selector: 'app-verificar-ptd',
-  templateUrl: './verificar-ptd.component.html',
-  styleUrls: ['./verificar-ptd.component.scss']
+    selector: 'app-verificar-ptd',
+    templateUrl: './verificar-ptd.component.html',
+    styleUrls: ['./verificar-ptd.component.scss'],
+    standalone: false
 })
 export class VerificarPtdComponent implements OnInit, AfterViewInit {
 
