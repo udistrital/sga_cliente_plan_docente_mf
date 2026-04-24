@@ -1,4 +1,4 @@
-# sga_cliente_plan_docente_mf
+# plan_docente_mf
 
 Cliente para la gestión de plan trabajo docente, parte del Sistema de Gestión Académica. Este proyecto está desarrollado con Angular.
 
@@ -95,7 +95,7 @@ El Core contiene componentes generales que construyen el layout y administran as
     npm start
     ```
 
-### Ejecución de sga_cliente_plan_docente_mf
+### Ejecución de plan_docente_mf
 
 Una vez que el Root y el Core estén en ejecución, se procede a clonar y ejecutar este proyecto.
 
@@ -104,17 +104,17 @@ Una vez que el Root y el Core estén en ejecución, se procede a clonar y ejecut
 1. Clonar este repositorio
 
     ```bash
-    git clone git@github.com:udistrital/sga_cliente_plan_docente_mf.git
+    git clone git@github.com:udistrital/plan_docente_mf.git
 
     ||
 
-    git clone https://github.com/udistrital/sga_cliente_plan_docente_mf
+    git clone https://github.com/udistrital/plan_docente_mf
     ```
 
 2. Acceder al directorio del repositorio clonado:
 
     ```bash
-    cd sga_cliente_plan_docente_mf
+    cd plan_docente_mf
     ```
 
 3. Instalar las dependencias:
@@ -155,14 +155,14 @@ npm run test:ui
 
 | Develop | Relese 0.0.1 | Master |
 | -- | -- | -- |
-| [![Build Status](https://hubci.portaloas.udistrital.edu.co/api/badges/udistrital/sga_cliente_plan_docente_mf/status.svg?ref=refs/heads/develop)](https://hubci.portaloas.udistrital.edu.co/udistrital/sga_cliente_plan_docente_mf) | [![Build Status](https://hubci.portaloas.udistrital.edu.co/api/badges/udistrital/sga_cliente_plan_docente_mf/status.svg?ref=refs/heads/release/0.0.1)](https://hubci.portaloas.udistrital.edu.co/udistrital/sga_cliente_plan_docente_mf) | [![Build Status](https://hubci.portaloas.udistrital.edu.co/api/badges/udistrital/sga_cliente_plan_docente_mf/status.svg)](https://hubci.portaloas.udistrital.edu.co/udistrital/sga_cliente_plan_docente_mf) |
+| [![Build Status](https://hubci.portaloas.udistrital.edu.co/api/badges/udistrital/plan_docente_mf/status.svg?ref=refs/heads/develop)](https://hubci.portaloas.udistrital.edu.co/udistrital/plan_docente_mf) | [![Build Status](https://hubci.portaloas.udistrital.edu.co/api/badges/udistrital/plan_docente_mf/status.svg?ref=refs/heads/release/0.0.1)](https://hubci.portaloas.udistrital.edu.co/udistrital/plan_docente_mf) | [![Build Status](https://hubci.portaloas.udistrital.edu.co/api/badges/udistrital/plan_docente_mf/status.svg)](https://hubci.portaloas.udistrital.edu.co/udistrital/plan_docente_mf) |
 
 ## Licencia
 
-[This file is part of sga_cliente_plan_docente_mf.](LICENSE)
+[This file is part of plan_docente_mf.](LICENSE)
 
-sga_cliente_plan_docente_mf is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (atSara Sampaio your option) any later version.
+plan_docente_mf is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (atSara Sampaio your option) any later version.
 
-sga_cliente_plan_docente_mf is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+plan_docente_mf is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with sga_cliente_plan_docente_mf. If not, see https://www.gnu.org/licenses/.
+You should have received a copy of the GNU General Public License along with plan_docente_mf. If not, see https://www.gnu.org/licenses/.

@@ -1,5 +1,5 @@
 {
-  "name": "sga-cliente-plan-docente-mf",
+  "name": "plan-docente-mf",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -8,8 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "prepare": "husky",
-    "build:single-spa:sga-cliente-plan-docente-mf": "ng build sga-cliente-plan-docente-mf --configuration production",
-    "serve:single-spa:sga-cliente-plan-docente-mf": "ng s --project sga-cliente-plan-docente-mf --disable-host-check --port 4216 --live-reload false",
+    "build:single-spa:plan-docente-mf": "ng build plan-docente-mf --configuration production",
+    "serve:single-spa:plan-docente-mf": "ng s --project plan-docente-mf --disable-host-check --port 4216 --live-reload false",
     "build:prod": "ng build --progress --configuration=production",
     "build:test": "ng build --progress --configuration=development"
   },

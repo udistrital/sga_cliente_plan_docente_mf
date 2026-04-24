@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "sga-cliente-plan-docente-mf": {
+    "plan-docente-mf": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -36,7 +36,7 @@
             "scripts": [],
             "customWebpackConfig": {
               "path": "extra-webpack.config.js",
-              "libraryName": "sga-cliente-plan-docente-mf",
+              "libraryName": "plan-docente-mf",
               "libraryTarget": "umd"
             }
           },
@@ -90,13 +90,13 @@
           "builder": "@angular-builders/custom-webpack:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "sga-cliente-plan-docente-mf:build:production"
+              "buildTarget": "plan-docente-mf:build:production"
             },
             "development": {
-              "buildTarget": "sga-cliente-plan-docente-mf:build:development"
+              "buildTarget": "plan-docente-mf:build:development"
             },
             "local": {
-              "buildTarget": "sga-cliente-plan-docente-mf:build:local"
+              "buildTarget": "plan-docente-mf:build:local"
             }
           },
           "defaultConfiguration": "local"
@@ -104,7 +104,7 @@
         "extract-i18n": {
           "builder": "@angular/build:extract-i18n",
           "options": {
-            "buildTarget": "sga-cliente-plan-docente-mf:build"
+            "buildTarget": "plan-docente-mf:build"
           }
         },
         "test": {
