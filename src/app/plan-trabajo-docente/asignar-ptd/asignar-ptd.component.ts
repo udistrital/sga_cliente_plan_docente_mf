@@ -228,7 +228,11 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       )
       .then((action) => {
         if (action.value) {
-          this.enviarSegunRol(canSendCoordinator, event.rowData.plan_docente_id);
+          this.enviarSegunRol(
+            canSendCoordinator,
+            event.rowData.plan_docente_id,
+            event.rowData
+          );
         }
       });
   }
@@ -413,6 +417,10 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     }
   }
 
+  get esCoordinadorAsignacion(): boolean {
+    return !!this.permisos['enviar_coordinador'];
+  }
+
   cargarPeriodo(): Promise<Periodo[]> {
     return new Promise((resolve, reject) => {
       this.parametrosService
@@ -475,14 +483,28 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     });
   }
 
-  enviarSegunRol(coordinador: boolean, id_plan: string) {
+  enviarSegunRol(coordinador: boolean, id_plan: string, rowData?: any) {
     const cod_abrev = coordinador ? "ENV_COO" : "ENV_DOC";
     const estado = this.estadosPlan.find(
       (estado) => estado.codigo_abreviacion === cod_abrev
     );
     if (estado) {
       this.planTrabajoDocenteService.get("plan_docente/" + id_plan).subscribe({
-        next: (res_g) => {
+        next: async (res_g) => {
+          if (coordinador) {
+            const cargaAutomaticaOk = await this.persistirCargaAutomaticaDesdePreasignacion(
+              rowData,
+              id_plan,
+              res_g?.Data
+            );
+            if (!cargaAutomaticaOk) {
+              this.popUpManager.showErrorAlert(
+                this.translate.instant("ptd.error_enviar_plan")
+              );
+              return;
+            }
+          }
+
           if (!coordinador) {
             let respuestaJson = res_g.Data.respuesta
               ? JSON.parse(res_g.Data.respuesta)
@@ -519,6 +541,196 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         },
       });
     }
+  }
+
+  private async persistirCargaAutomaticaDesdePreasignacion(
+    rowData: any,
+    planId: string,
+    planDocenteActual: any
+  ): Promise<boolean> {
+    if (!rowData?.docente_id || !rowData?.periodo_id || !rowData?.tipo_vinculacion_id) {
+      return true;
+    }
+
+    try {
+      const planResp: any = await firstValueFrom(
+        this.sgaPlanTrabajoDocenteMidService.get(
+          `plan?docente=${rowData.docente_id}&vigencia=${rowData.periodo_id}&vinculacion=${rowData.tipo_vinculacion_id}`
+        )
+      );
+
+      const dataPlan = planResp?.Data;
+      const seleccion = Number(dataPlan?.seleccion || 0);
+      const espacios = Array.isArray(dataPlan?.espacios_academicos?.[seleccion])
+        ? dataPlan.espacios_academicos[seleccion]
+        : [];
+      const cargaActual = Array.isArray(dataPlan?.carga?.[seleccion])
+        ? dataPlan.carga[seleccion]
+        : [];
+
+      if (!espacios.length) {
+        return true;
+      }
+
+      const espaciosConCarga = new Set(
+        cargaActual
+          .map((c: any) => String(c?.espacio_academico_id || "").trim())
+          .filter((id: string) => !!id && id !== "NA")
+      );
+
+      const periodoAcademico = String(
+        dataPlan?.periodo_academico || rowData?.periodo_academico || ""
+      ).trim();
+      const partesPeriodo = periodoAcademico.split("-");
+      const anio = (partesPeriodo[0] || "").trim();
+      const periodo = (partesPeriodo[1] || "").trim();
+
+      if (!anio || !periodo) {
+        return true;
+      }
+
+      const cargasNuevas: any[] = [];
+
+      for (const espacio of espacios) {
+        const espacioAcademicoId = String(espacio?.id || espacio?._id || "").trim();
+        const codigo = String(
+          espacio?.codigo || espacio?.CodigoEspacioAcademico || ""
+        ).trim();
+        const grupo = String(espacio?.grupo || espacio?.Grupo || "").trim();
+
+        if (!espacioAcademicoId || !codigo || !grupo) {
+          continue;
+        }
+
+        if (espaciosConCarga.has(espacioAcademicoId)) {
+          continue;
+        }
+
+        const horariosResp: any = await firstValueFrom(
+          this.sgaPlanTrabajoDocenteMidService.get(
+            `espacio-academico/informacion-horarios/${anio}/${periodo}/${codigo}/${grupo}`
+          )
+        );
+
+        const colocaciones = (Array.isArray(horariosResp?.Data)
+          ? horariosResp.Data
+          : []).filter((item: any) => !item?.Docente);
+
+        if (!colocaciones.length) {
+          continue;
+        }
+        colocaciones.forEach((colocacion: any) => {
+          const horario =
+            colocacion?.ResumenColocacionEspacioFisico?.colocacion || {};
+          const espacioFisico =
+            colocacion?.ResumenColocacionEspacioFisico?.espacio_fisico || {};
+
+          const sedeId = this.obtenerIdNumericoEspacioFisico(
+            espacioFisico,
+            "sede"
+          );
+          const edificioId = this.obtenerIdNumericoEspacioFisico(
+            espacioFisico,
+            "edificio"
+          );
+          const salonId = this.obtenerIdNumericoEspacioFisico(
+            espacioFisico,
+            "salon"
+          );
+
+          const horaInicio = parseInt(
+            String(horario?.horaFormato || "0").split(":")[0],
+            10
+          );
+
+          cargasNuevas.push({
+            id: "colocacionModuloHorario",
+            espacio_academico_id: espacioAcademicoId,
+            espacio_academico_nombre: String(
+              espacio?.espacio_academico || espacio?.nombre || ""
+            ),
+            actividad_id: "NA",
+            plan_docente_id: planId,
+            colocacion_id: "",
+            hora_inicio: Number.isNaN(horaInicio) ? 0 : horaInicio,
+            duracion: Number(horario?.horas || 0),
+            salon_id: salonId,
+            edificio_id: edificioId,
+            sede_id: sedeId,
+            horario: {
+              horas: Number(horario?.horas || 0),
+              horaFormato: String(horario?.horaFormato || ""),
+              tipo: Number(horario?.tipo || 1),
+              estado: Number(horario?.estado || 2),
+              dragPosition: horario?.dragPosition || { x: 0, y: 0 },
+              prevPosition: horario?.prevPosition || { x: 0, y: 0 },
+              finalPosition: horario?.finalPosition || { x: 0, y: 0 },
+            },
+            periodo_id: String(rowData.periodo_id),
+            activo: true,
+          });
+        });
+      }
+
+      if (!cargasNuevas.length) {
+        return true;
+      }
+
+      const resumenActual = planDocenteActual?.resumen
+        ? planDocenteActual.resumen
+        : JSON.stringify({});
+
+      const estadoActual =
+        planDocenteActual?.estado_plan_id || dataPlan?.estado_plan?.[seleccion] || "Sin definir";
+
+      await firstValueFrom(
+        this.sgaPlanTrabajoDocenteMidService.put("plan/", {
+          carga_plan: cargasNuevas,
+          plan_docente: {
+            id: planId,
+            resumen: resumenActual,
+            estado_plan: estadoActual,
+          },
+          descartar: [],
+        })
+      );
+
+      return true;
+    } catch (error) {
+      console.warn("No fue posible persistir carga automática desde preasignación", error);
+      return false;
+    }
+  }
+
+  private obtenerIdNumericoEspacioFisico(
+    espacioFisico: any,
+    tipo: "sede" | "edificio" | "salon"
+  ): string {
+    const entidad = espacioFisico?.[tipo] || {};
+    const idEntidad =
+      entidad?.Id ?? entidad?.id ?? entidad?._id ?? entidad?.ID ?? null;
+    const idDirecto =
+      espacioFisico?.[`${tipo}_id`] || espacioFisico?.[`${tipo}Id`] || null;
+
+    const normalizar = (valor: any): string => {
+      const texto = String(valor ?? "").trim();
+      if (!texto) {
+        return "NA";
+      }
+      return /^\d+$/.test(texto) ? texto : "NA";
+    };
+
+    const idNormalizadoEntidad = normalizar(idEntidad);
+    if (idNormalizadoEntidad !== "NA") {
+      return idNormalizadoEntidad;
+    }
+
+    const idNormalizadoDirecto = normalizar(idDirecto);
+    if (idNormalizadoDirecto !== "NA") {
+      return idNormalizadoDirecto;
+    }
+
+    return "NA";
   }
 
   verPTDFirmado(idDoc: any) {
