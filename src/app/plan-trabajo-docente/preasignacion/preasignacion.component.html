@@ -281,18 +281,6 @@
             </div>
           </mat-cell>
         </ng-container>
-        <ng-container matColumnDef="enviar">
-          <mat-header-cell *matHeaderCellDef>
-            <b>{{ "ptd.enviar_a_docente" | translate }}</b>
-          </mat-header-cell>
-          <mat-cell *matCellDef="let row">
-            <action-button
-              [rowData]="row"
-              [value]="row.enviar"
-              (valueChanged)="accionEnviar($event)"
-            ></action-button>
-          </mat-cell>
-        </ng-container>
         <ng-container matColumnDef="editar">
           <mat-header-cell *matHeaderCellDef>
             <b>{{ "GLOBAL.editar" | translate }}</b>
