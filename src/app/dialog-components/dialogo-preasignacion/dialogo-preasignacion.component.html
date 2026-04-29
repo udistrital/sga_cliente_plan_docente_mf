@@ -230,8 +230,8 @@
               <mat-option disabled
                 >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
               >
-              <mat-option *ngFor="let item of opcionesProyectos" [value]="item.nombre">
-                {{ item.label }}
+              <mat-option *ngFor="let item of opcionesProyectos" [value]="item">
+                {{ item }}
               </mat-option>
             </mat-select>
             <mat-error
