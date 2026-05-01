@@ -720,7 +720,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                   const nombreGrupo = String(element.ProyectoAcademico)
                     .trim()
                     .toUpperCase();
-                  // 🔥 Validar directamente contra la MISMA lista proyectosCoordinador
                   const perteneceAlCoordinador = this.proyectosCoordinador.some(
                     (proyecto) =>
                       String(proyecto.nombre_carrera)
@@ -903,7 +902,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         reject(new Error("No fue posible obtener el documento del coordinador"));
         return;
       }
-      this.OikosService.get(`/coordinador_usuario/${documentoCoordinador}`).subscribe({
+      this.OikosService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
         next: (resp: any) => {
           if (Array.isArray(resp.coordinadores.coordinador)) {
             resolve(resp.coordinadores.coordinador);
