@@ -128,7 +128,7 @@
           <ng-container matColumnDef="enviar">
             <mat-header-cell *matHeaderCellDef>
               <b>{{
-                permisos['enviar_coordinador']
+                esCoordinadorAsignacion
                   ? ("ptd.enviar_a_docente" | translate)
                   : permisos['enviar_docente']
                     ? ("ptd.enviar_a_coordinacion" | translate)
