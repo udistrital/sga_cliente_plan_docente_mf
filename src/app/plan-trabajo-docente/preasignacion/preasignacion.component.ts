@@ -59,7 +59,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     "aprobacion_docente",
     "aprobacion_proyecto",
     "semaforo_preasignacion",
-    "enviar",
     "editar",
     "borrar",
   ];

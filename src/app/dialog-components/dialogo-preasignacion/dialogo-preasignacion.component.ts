@@ -720,7 +720,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                   const nombreGrupo = String(element.ProyectoAcademico)
                     .trim()
                     .toUpperCase();
-                  // 🔥 Validar directamente contra la MISMA lista proyectosCoordinador
                   const perteneceAlCoordinador = this.proyectosCoordinador.some(
                     (proyecto) =>
                       String(proyecto.nombre_carrera)
