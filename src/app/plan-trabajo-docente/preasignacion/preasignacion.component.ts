@@ -422,22 +422,18 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     tooltip: string;
     icon: string;
   } {
-    const aprobacionProyecto = this.getAprobacionValue(row?.aprobacion_proyecto);
     const aprobacionDocente = this.getAprobacionValue(row?.aprobacion_docente);
+    const aprobacionProyecto = this.getAprobacionValue(row?.aprobacion_proyecto);
 
-    // Si la aprobación del proyecto es falsa, se muestra el semáforo rojo
-    if (!aprobacionProyecto) {
+    if (aprobacionProyecto) {
       return {
-        color: "#F44336",
-        tooltip: this.translate.instant(
-          "ptd.semaforo_preasignacion_no_enviado"
-        ),
-        icon: "cancel",
+        color: "#4CAF50",
+        tooltip: this.translate.instant("ptd.semaforo_preasignacion_aprobada"),
+        icon: "check_circle",
       };
     }
 
-    // Si la aprobación del proyecto es verdadera pero la aprobación del docente es falsa, se muestra el semáforo amarillo
-    if (!aprobacionDocente) {
+    if (aprobacionDocente) {
       return {
         color: "#FFC107",
         tooltip: this.translate.instant(
@@ -447,11 +443,10 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
       };
     }
 
-    // Si ambas aprobaciones son verdaderas, se muestra el semáforo verde
     return {
-      color: "#4CAF50",
-      tooltip: this.translate.instant("ptd.semaforo_preasignacion_aprobada"),
-      icon: "check_circle",
+      color: "#F44336",
+      tooltip: this.translate.instant("ptd.semaforo_preasignacion_no_enviado"),
+      icon: "cancel",
     };
   }
 
