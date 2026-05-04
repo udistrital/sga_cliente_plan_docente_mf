@@ -117,7 +117,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       this.estadosPlan = estados;
       this.estadosAprobar = this.estadosPlan.filter(
         (estado) =>
-          estado.codigo_abreviacion === "PAPR" ||
+          estado.codigo_abreviacion === "APR" ||
           estado.codigo_abreviacion === "N_APR"
       );
     });
@@ -519,7 +519,20 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
           this.planTrabajoDocenteService
             .put("plan_docente/" + id_plan, res_g.Data)
             .subscribe({
-              next: (res_p) => {
+              next: async (res_p) => {
+                if (coordinador) {
+                  const preasignacionesActualizadas = await this.marcarPreasignacionesComoAprobadasPorCoordinacion(
+                    rowData
+                  );
+
+                  if (!preasignacionesActualizadas) {
+                    this.popUpManager.showErrorAlert(
+                      this.translate.instant("ptd.error_enviar_plan")
+                    );
+                    return;
+                  }
+                }
+
                 this.popUpManager.showSuccessAlert(
                   this.translate.instant("ptd.plan_enviado_ok")
                 );
@@ -695,9 +708,63 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         })
       );
 
+      const preasignacionesActualizadas = await this.marcarPreasignacionesComoAprobadasPorCoordinacion(
+        rowData
+      );
+
+      if (!preasignacionesActualizadas) {
+        return false;
+      }
+
       return true;
     } catch (error) {
       console.warn("No fue posible persistir carga automática desde preasignación", error);
+      return false;
+    }
+  }
+
+  private async marcarPreasignacionesComoAprobadasPorCoordinacion(rowData: any): Promise<boolean> {
+    if (!rowData?.docente_id || !rowData?.periodo_id || !rowData?.tipo_vinculacion_id) {
+      return true;
+    }
+
+    try {
+      const preasignacionesResp: any = await firstValueFrom(
+        this.sgaPlanTrabajoDocenteMidService.get(`preasignacion?vigencia=${rowData.periodo_id}`)
+      );
+
+      const preasignaciones = Array.isArray(preasignacionesResp?.Data)
+        ? preasignacionesResp.Data
+        : [];
+
+      const idsPreasignaciones = preasignaciones
+        .filter((preasignacion: any) =>
+          String(preasignacion?.docente_id || "").trim() === String(rowData.docente_id || "").trim() &&
+          String(preasignacion?.periodo_id || "").trim() === String(rowData.periodo_id || "").trim() &&
+          String(preasignacion?.tipo_vinculacion_id || "").trim() === String(rowData.tipo_vinculacion_id || "").trim() &&
+          this.getValorAprobacion(preasignacion?.aprobacion_docente) &&
+          !this.getValorAprobacion(preasignacion?.aprobacion_proyecto)
+        )
+        .map((preasignacion: any) => ({
+          Id: preasignacion?.id || preasignacion?._id,
+        }))
+        .filter((preasignacion: any) => !!String(preasignacion.Id || "").trim());
+
+      if (!idsPreasignaciones.length) {
+        return true;
+      }
+
+      const respAprobacion: RespFormat = await firstValueFrom(
+        this.sgaPlanTrabajoDocenteMidService.put("preasignacion/aprobar", {
+          preasignaciones: idsPreasignaciones,
+          "no-preasignaciones": [],
+          docente: false,
+        })
+      );
+
+      return checkResponse(respAprobacion);
+    } catch (error) {
+      console.warn("No fue posible actualizar la preasignación desde la asignación", error);
       return false;
     }
   }
@@ -733,6 +800,18 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     return "NA";
   }
 
+  private getValorAprobacion(approval: any): boolean {
+    if (typeof approval === "boolean") {
+      return approval;
+    }
+
+    if (approval && typeof approval === "object" && "value" in approval) {
+      return !!approval.value;
+    }
+
+    return false;
+  }
+
   verPTDFirmado(idDoc: any) {
     this.gestorDocumental.get([{ Id: idDoc }]).subscribe((resp: any[]) => {
       this.previewFile(resp[0].url);
@@ -762,11 +841,10 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Retorna información del semáforo según el estado del PTD y observaciones
-   * Verde: Preaprobado (PAPR) - Sin observaciones
-   * Rojo: No aprobado (N_APR) - Tiene rechazo/observaciones
-   * Amarillo CON observaciones: Pendiente de revisión (DEF, ENV_COO, ENV_DOC) - Con observaciones
-   * Amarillo SIN observaciones: Pendiente de revisión (DEF, ENV_COO, ENV_DOC) - Sin observaciones
+   * Retorna información del semáforo según el estado del PTD.
+   * Rojo: Enviado a docente / No aprobado.
+   * Amarillo: Enviado a coordinación / pendiente de revisión.
+   * Verde: Aprobado.
    */
   getSemaforoEstado(estado: string, tieneObservaciones?: boolean): { color: string; tooltip: string; icon: string } {
     if (!estado) {
@@ -779,7 +857,6 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
 
     const estadoLower = estado.toLowerCase().trim();
 
-    // Rojo: No aprobado (debe validarse antes de "aprobado")
     if (estadoLower.includes("no aprobado")) {
       return {
         color: "#F44336",
@@ -788,24 +865,30 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       };
     }
 
-    const esPreaprobado = estadoLower.includes("preaprobado");
-    const esAprobado = esPreaprobado || estadoLower.includes("aprobado");
+    if (estadoLower.includes("enviado a docente")) {
+      return {
+        color: this.esCoordinadorAsignacion ? "#4CAF50" : "#F44336",
+        tooltip: estado,
+        icon: this.esCoordinadorAsignacion ? "check_circle" : "cancel",
+      };
+    }
 
-    // Verde: Aprobado / Preaprobado
-    if (esAprobado) {
+    if (estadoLower.includes("enviado a coordinación") || estadoLower.includes("enviado a coordinacion")) {
+      return {
+        color: "#FFC107",
+        tooltip: estado,
+        icon: "autorenew",
+      };
+    }
+
+    if (estadoLower.includes("aprobado")) {
       return {
         color: "#4CAF50",
-        tooltip: this.translate.instant(
-          esPreaprobado
-            ? "ptd.semaforo_preaprobado"
-            : "ptd.semaforo_aprobado"
-        ),
+        tooltip: this.translate.instant("ptd.semaforo_aprobado"),
         icon: "check_circle",
       };
     }
 
-    // Amarillo: Pendiente de revisión (cualquier otro estado)
-    // Diferencia entre con y sin observaciones
     const tooltip = tieneObservaciones
       ? this.translate.instant("ptd.semaforo_pendiente_con_observaciones")
       : this.translate.instant("ptd.semaforo_pendiente_sin_observaciones");
