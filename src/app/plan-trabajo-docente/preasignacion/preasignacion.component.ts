@@ -15,6 +15,7 @@ import { MatDialog, MatDialogConfig } from "@angular/material/dialog";
 import { DialogoPreAsignacionPtdComponent } from "src/app/dialog-components/dialogo-preasignacion/dialogo-preasignacion.component";
 import { PlanTrabajoDocenteService } from "src/app/services/plan-trabajo-docente.service";
 import { PermisosUtils } from "src/app/utils/role-permissions";
+import { OikosService } from "src/app/services/oikos.service";
 import { Observable } from "rxjs/internal/Observable";
 import { firstValueFrom } from "rxjs/internal/firstValueFrom";
 import { forkJoin } from "rxjs/internal/observable/forkJoin";
@@ -75,7 +76,8 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     private planDocenteMid: SgaPlanTrabajoDocenteMidService,
     private planTrabajoDocenteService: PlanTrabajoDocenteService,
     private dialog: MatDialog,
-    private permisosUtils: PermisosUtils
+    private permisosUtils: PermisosUtils,
+    private OikosService: OikosService
   ) {
     this.dataSource = new MatTableDataSource();
     this.dialogConfig = new MatDialogConfig();
@@ -112,6 +114,56 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+  }
+
+  private obtenerDocumentoCoordinador(): string | null {
+    try {
+      const userEncoded = window.localStorage.getItem("user");
+      if (!userEncoded) {
+        return null;
+      }
+
+      const decoded = JSON.parse(atob(userEncoded));
+      const posiblesDocumentos: any[] = [
+        decoded?.user?.documento,
+        decoded?.userService?.documento,
+        decoded?.user?.documento_compuesto,
+        decoded?.userService?.documento_compuesto,
+      ];
+
+      for (const valor of posiblesDocumentos) {
+        const documento = String(valor ?? "").trim();
+        if (documento) {
+          return documento;
+        }
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
+  private obtenerProyectosCoordinador(): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const documentoCoordinador = this.obtenerDocumentoCoordinador();
+      if (!documentoCoordinador) {
+        reject(new Error("No fue posible obtener el documento del coordinador"));
+        return;
+      }
+      this.OikosService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
+        next: (resp: any) => {
+          if (Array.isArray(resp.coordinadores.coordinador)) {
+            resolve(resp.coordinadores.coordinador);
+          } else {
+            reject(new Error("No se encontraron proyectos para el coordinador"));
+          }
+        },
+        error: (err) => {
+          reject(err);
+        },
+      });
+    });
   }
 
   applyFilter(event: Event) {
@@ -323,25 +375,45 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
 
   loadPreasignaciones() {
     if (this.permisos['tabla_coordinador']) {
-      this.planDocenteMid
-        .get("preasignacion?vigencia=" + this.periodo.Id)
-        .subscribe({
-          next: (resp: RespFormat) => {
-            if (checkResponse(resp)) {
-              this.dataSource = new MatTableDataSource(resp.Data);
-            } else {
-              this.dataSource = new MatTableDataSource();
-              this.popUpManager.showErrorAlert(
-                this.translate.instant("ptd.error_no_found_preasignaciones")
-              );
-            }
-          },
-          error: (err) => {
-            this.dataSource = new MatTableDataSource();
-            this.popUpManager.showErrorToast(
-              this.translate.instant("ptd.error_no_found_preasignaciones")
-            );
-          },
+      this.obtenerProyectosCoordinador()
+        .then((proyectos) => {
+          const proyectosIds = proyectos.map((p: any) => p.codigo_carrera);
+          this.planDocenteMid
+            .get("preasignacion?vigencia=" + this.periodo.Id)
+            .subscribe({
+              next: (resp: RespFormat) => {
+                if (checkResponse(resp)) {
+                  const filteredData = (resp.Data || []).filter((item: any) => {
+                    const proyectoId =
+                      item.codigo_proyecto_academico;
+                    return proyectosIds.includes(proyectoId);
+                  });
+                  this.dataSource = new MatTableDataSource(filteredData);
+                  if (filteredData.length === 0) {
+                    this.popUpManager.showErrorToast(
+                      this.translate.instant("ptd.error_no_found_preasignaciones")
+                    );
+                  }
+                } else {
+                  this.dataSource = new MatTableDataSource();
+                  this.popUpManager.showErrorAlert(
+                    this.translate.instant("ptd.error_no_found_preasignaciones")
+                  );
+                }
+              },
+              error: (err) => {
+                this.dataSource = new MatTableDataSource();
+                this.popUpManager.showErrorToast(
+                  this.translate.instant("ptd.error_no_found_preasignaciones")
+                );
+              },
+            });
+        })
+        .catch((err) => {
+          this.dataSource = new MatTableDataSource();
+          this.popUpManager.showErrorToast(
+            this.translate.instant("ptd.error_no_found_preasignaciones")
+          );
         });
     } else if (this.permisos['tabla_docente']) {
       this.userService
