@@ -63,6 +63,10 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   documento_docente: any;
   espacio_academico: any;
   grupo: any;
+  codigoEventoPTD: string = '';
+  calendarEventosPTD: any[] = [];
+  calendarEventoSeleccionado: any = null;
+  enRangoCalendario: boolean = false;
 
   // TODO: vinculación quemada aquí ???
   tipoVinculacion = [
@@ -93,14 +97,95 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     this.preasignacionForm = this.builder.group({});
   }
 
-  ngOnInit() {
-    this.obtenerProyectosCoordinador()
-      .then((proyectos) => {
-        this.proyectosCoordinador = proyectos;
-      })
-      .catch(() => {
-        this.proyectosCoordinador = [];
+  cargarEventoPTD(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.sgaPlanTrabajoDocenteMidService.get("calendario/eventos").subscribe({
+        next: (resp: any) => {
+          if (checkContent(resp)) {
+            const eventos = Array.isArray(resp.Data) ? resp.Data : [];
+            const evento = eventos.find((e: any) => e.Descripcion === "PLANES DE TRABAJO DOCENTES");
+            if (evento) {
+              this.codigoEventoPTD = evento.CodigoEvento;
+              this.cargarCalendarioEventos().then(eventos => {
+                this.calendarEventosPTD = eventos;
+                this.verificarRangoFechas();
+                resolve();
+              }).catch(err => {
+                console.warn(err);
+                reject(err);
+              });
+            } else {
+              resolve();
+            }
+          } else {
+            resolve();
+          }
+        },
+        error: (err: any) => {
+          console.warn("Error obteniendo calendario/eventos:", err);
+          reject(err);
+        }
       });
+    });
+  }
+
+  cargarCalendarioEventos(): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const documento = this.obtenerDocumentoCoordinador();
+      if (!documento || !this.codigoEventoPTD) {
+        reject(new Error('No se pudo obtener documento o código de evento'));
+        return;
+      }
+      this.sgaPlanTrabajoDocenteMidService.get(
+        `calendario/calendario_eventos?documento=${documento}&codigo_evento=${this.codigoEventoPTD}`
+      ).subscribe({
+        next: (calResp: any) => {
+          const data = calResp?.Data ?? calResp ?? [];
+          resolve(Array.isArray(data) ? data : [data]);
+        },
+        error: (err: any) => {
+          console.warn("Error obteniendo calendario/calendario_eventos:", err);
+          reject(err);
+        }
+      });
+    });
+  }
+
+  verificarRangoFechas() {
+    this.enRangoCalendario = false;
+    this.calendarEventoSeleccionado = null;
+    if (!this.periodo || !this.calendarEventosPTD || this.calendarEventosPTD.length === 0) {
+      return;
+    }
+    const eventoMatch = this.calendarEventosPTD.find((evento: any) =>
+      String(evento.Year) === String(this.periodo.Year) &&
+      String(evento.Ciclo) === String(this.periodo.Ciclo)
+    );
+    if (eventoMatch) {
+      this.calendarEventoSeleccionado = eventoMatch;
+      const ahora = new Date();
+      const fechaInicio = new Date(eventoMatch.FechaInicio);
+      const fechaFin = new Date(eventoMatch.FechaFin);
+      this.enRangoCalendario = ahora >= fechaInicio && ahora <= fechaFin;
+      console.log('--- Dialogo Preasignacion: Verificar Rango Fechas ---');
+      console.log('Fecha actual:', ahora);
+      console.log('Fecha Inicio Evento:', fechaInicio);
+      console.log('Fecha Fin Evento:', fechaFin);
+      console.log('¿Está en rango?:', this.enRangoCalendario);
+    }
+  }
+
+  ngOnInit() {
+    this.cargarEventoPTD().then(() => {
+      if (this.calendarEventosPTD && this.calendarEventosPTD.length > 0) {
+        this.proyectosCoordinador = this.calendarEventosPTD.map((e: any) => ({
+          nombre_carrera: e.NombreProyecto,
+          codigo_carrera: e.CodigoProyecto
+        }));
+      } else {
+        this.proyectosCoordinador = [];
+      }
+    });
     if (this.data.docente == undefined) {
       this.modificando = false;
       this.data = {
@@ -170,6 +255,11 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
           if (periodo) {
             if (periodo.Activo) {
               this.periodo = periodo;
+              this.verificarRangoFechas();
+              if (!this.enRangoCalendario) {
+                this.popUpManager.showErrorToast("El periodo seleccionado no se encuentra en el rango de fechas.");
+                return;
+              }
               this.preasignacionForm.get("espacio_academico")?.setValue(null);
               this.preasignacionForm.get("codigo")?.setValue(null);
               this.opcionesEspaciosAcademicos = [];
@@ -896,25 +986,5 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     });
   }
   
-  obtenerProyectosCoordinador(): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-      const documentoCoordinador = this.obtenerDocumentoCoordinador();
-      if (!documentoCoordinador) {
-        reject(new Error("No fue posible obtener el documento del coordinador"));
-        return;
-      }
-      this.OikosService.get(`/coordinador_usuario/${documentoCoordinador}`).subscribe({
-        next: (resp: any) => {
-          if (Array.isArray(resp.coordinadores.coordinador)) {
-            resolve(resp.coordinadores.coordinador);
-          } else {
-            reject(new Error("No se encontraron proyectos para el coordinador"));
-          }
-        },
-        error: (err) => {
-          reject(err);
-        },
-      });
-    });
-  }
+
 }

@@ -12,27 +12,34 @@
             <mat-card class="card-fieldset">
                 <div class="fieldset-legend">{{ 'ptd.list_consolidados' | translate }}</div>
                 
-                <div class="ancho-50">
-                    <mat-form-field style="width: 20%;">
-                        <mat-label>{{ 'GLOBAL.periodo' | translate }}:</mat-label>
-                        <mat-select [(ngModel)]="periodos.select" (selectionChange)="listarConsolidados()">
-                            <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
-                            <mat-option *ngFor="let item of periodos.opciones" [value]="item">
-                                {{item.Nombre}}
-                            </mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                    &nbsp;
-                    <mat-form-field style="width: 50%;">
+                <div class="row">
+                    <div class="col-6">
+                        <mat-form-field style="width: 100%;">
                         <mat-label>{{ 'GLOBAL.proyecto_academico' | translate }}:</mat-label>
-                        <mat-select [(ngModel)]="proyectos.select" (selectionChange)="listarConsolidados()">
+                        <mat-select [(ngModel)]="proyectos.select" (selectionChange)="onProyectoChange()">
                             <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
                             <mat-option *ngFor="let item of proyectos.opciones" [value]="item">
                                 {{ item.Codigo }} - {{item.Nombre}}
                             </mat-option>
                         </mat-select>
-                    </mat-form-field>
-                    &nbsp;<button mat-stroked-button *ngIf="this.periodos.select && this.proyectos.select" (click)="listarConsolidados()"> {{ 'GLOBAL.actualizar' | translate }} </button>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-6">
+                        <mat-form-field style="width: 100%;">
+                        <mat-label>{{ 'GLOBAL.periodo' | translate }}:</mat-label>
+                        <mat-select [(ngModel)]="periodos.select" (selectionChange)="onPeriodoChange()" [disabled]="!proyectos.select">
+                            <mat-option>--{{ 'GLOBAL.seleccionar' | translate }}--</mat-option>
+                            <mat-option *ngFor="let item of periodos.opciones" [value]="item">
+                                {{item.Nombre}}
+                            </mat-option>
+                        </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div class="row mb-3 mt-3">
+                    <div class="col-12">
+                        <button mat-stroked-button *ngIf="this.periodos.select && this.proyectos.select" (click)="listarConsolidados()"> {{ 'GLOBAL.actualizar' | translate }} </button>
+                    </div>
                 </div>
 
                 <div>
