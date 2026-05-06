@@ -572,25 +572,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     });
   }
 
-
-  private obtenerDocumentoCoordinador(): string | null {
-    try {
-      const userEncoded = window.localStorage.getItem("user");
-      if (!userEncoded) return null;
-      const decoded = JSON.parse(atob(userEncoded));
-      const posiblesDocumentos: any[] = [
-        decoded?.user?.documento, decoded?.userService?.documento,
-        decoded?.user?.documento_compuesto, decoded?.userService?.documento_compuesto
-      ];
-      for (const valor of posiblesDocumentos) {
-        const documento = String(valor ?? "").trim();
-        if (documento) return documento;
-      }
-    } catch { return null; }
-    return null;
-  }
-
-
   selectProyecto(proyecto: any) {
     this.proyecto = proyecto.value;
     this.periodo = new Periodo({});
