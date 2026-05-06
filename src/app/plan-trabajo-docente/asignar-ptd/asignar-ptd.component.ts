@@ -575,25 +575,6 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     });
   }
 
-
-  private obtenerDocumentoCoordinador(): string | null {
-    try {
-      const userEncoded = window.localStorage.getItem("user");
-      if (!userEncoded) return null;
-      const decoded = JSON.parse(atob(userEncoded));
-      const posiblesDocumentos: any[] = [
-        decoded?.user?.documento, decoded?.userService?.documento,
-        decoded?.user?.documento_compuesto, decoded?.userService?.documento_compuesto
-      ];
-      for (const valor of posiblesDocumentos) {
-        const documento = String(valor ?? "").trim();
-        if (documento) return documento;
-      }
-    } catch { return null; }
-    return null;
-  }
-
-
   selectProyecto(proyecto: any) {
     this.proyecto = proyecto.value;
     this.periodo = new Periodo({});
@@ -1079,7 +1060,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         reject(new Error("No fue posible obtener el documento del coordinador"));
         return;
       }
-      this.oikosService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
+      this.proyectoAcademicoService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
         next: (resp: any) => {
           if (Array.isArray(resp.coordinadores.coordinador)) {
             const codigos = resp.coordinadores.coordinador.map((c: any) => String(c.codigo_carrera || "").trim());
