@@ -34,7 +34,7 @@ import { checkContent, checkResponse } from "src/app/utils/verify-response";
 import { EspaciosAcademicos } from "src/app/models/espacios-academicos/espacios-academicos";
 import { MODALS } from "src/app/models/diccionario";
 import { DialogoCrearEspacioGrupoComponent } from "../dialogo-crear-espacio-grupo/dialogo-crear-espacio-grupo.component";
-import { OikosService } from "src/app/services/oikos.service";
+import { AcademicaJbpmService } from "src/app/services/academica-jbpm.service";
 
 @Component({
     selector: "dialogo-preasignacion",
@@ -88,7 +88,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     private sgaPlanTrabajoDocenteMidService: SgaPlanTrabajoDocenteMidService,
     private parametrosService: ParametrosService,
     private tercerosService: TercerosService,
-    private OikosService: OikosService,
+    private academicaJbpmService: AcademicaJbpmService,
     private builder: FormBuilder,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
@@ -992,7 +992,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
         reject(new Error("No fue posible obtener el documento del coordinador"));
         return;
       }
-      this.OikosService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
+      this.academicaJbpmService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
         next: (resp: any) => {
           if (Array.isArray(resp.coordinadores.coordinador)) {
             resolve(resp.coordinadores.coordinador);

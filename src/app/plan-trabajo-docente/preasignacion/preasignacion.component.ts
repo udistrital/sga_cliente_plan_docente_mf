@@ -16,7 +16,7 @@ import { DialogoPreAsignacionPtdComponent } from "src/app/dialog-components/dial
 import { PlanTrabajoDocenteService } from "src/app/services/plan-trabajo-docente.service";
 import { ProyectoAcademicoService } from "src/app/services/proyecto-academico.service";
 import { PermisosUtils } from "src/app/utils/role-permissions";
-import { OikosService } from "src/app/services/oikos.service";
+import { AcademicaJbpmService } from "src/app/services/academica-jbpm.service";
 import { Observable } from "rxjs/internal/Observable";
 import { firstValueFrom } from "rxjs/internal/firstValueFrom";
 import { forkJoin } from "rxjs/internal/observable/forkJoin";
@@ -86,7 +86,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     private proyectoAcademicoService: ProyectoAcademicoService,
     private dialog: MatDialog,
     private permisosUtils: PermisosUtils,
-    private OikosService: OikosService
+    private academicaJbpmService: AcademicaJbpmService
   ) {
     this.dataSource = new MatTableDataSource();
     this.dialogConfig = new MatDialogConfig();
@@ -257,7 +257,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
         reject(new Error("No fue posible obtener el documento del coordinador"));
         return;
       }
-      this.OikosService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
+      this.academicaJbpmService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
         next: (resp: any) => {
           if (Array.isArray(resp.coordinadores.coordinador)) {
             resolve(resp.coordinadores.coordinador);

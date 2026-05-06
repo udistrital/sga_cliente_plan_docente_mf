@@ -19,7 +19,7 @@ import { distinctUntilChanged } from "rxjs/operators";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { PopUpManager } from "src/app/managers/popUpManager";
 import { PlanTrabajoDocenteService } from "src/app/services/plan-trabajo-docente.service";
-import { OikosService } from "src/app/services/oikos.service";
+import { AcademicaJbpmService } from "src/app/services/academica-jbpm.service";
 import { ACTIONS, MODALS, ROLES, VIEWS } from "src/app/models/diccionario";
 import { CardDetalleCarga, CoordXY } from "src/app/models/card-detalle-carga";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
@@ -136,7 +136,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     private planDocenteMid: SgaPlanTrabajoDocenteMidService,
     private planDocenteService: PlanTrabajoDocenteService,
     private builder: FormBuilder,
-    private oikosService: OikosService,
+    private academicaJbpmService: AcademicaJbpmService,
     private readonly elementRef: ElementRef,
     private gestorDocumentalService: NewNuxeoService,
     private documentoService: DocumentoService
@@ -569,7 +569,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
       return;
     }
     try {
-      const res: any = await this.oikosService
+      const res: any = await this.academicaJbpmService
         .get(`cursos_salon/${periodoId}/${espacioFisicoId}`)
         .toPromise();
 
@@ -1224,7 +1224,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
 
   getSedes() {
     return new Promise((resolve, reject) => {
-      this.oikosService
+      this.academicaJbpmService
         .get(
           "sedes"
         )
@@ -1257,7 +1257,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         }
         resolve(this.opcionesEdificios);
       } else {*/
-        this.oikosService
+        this.academicaJbpmService
           .get(
             "edificios/"+sedeSeleccionada.sede_id
           )
@@ -1288,7 +1288,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         this.ubicacionForm.get("salon")?.enable();
       }
     } else {*/
-      this.oikosService
+      this.academicaJbpmService
         .get(
           "salones/"+this.ubicacionForm.get("edificio")?.value.codigo
         )

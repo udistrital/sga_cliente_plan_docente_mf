@@ -86,6 +86,8 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   detalleAsignacion: any = {};
   dataDocentes_ptd: any[] = [];
   detallesGeneral: any = {};
+  private errorCargaAutomaticaMostrado = false;
+  private proyectosCoordinador: string[] = [];
 
   constructor(
     private translate: TranslateService,
@@ -114,6 +116,16 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       const resultados = await firstValueFrom(forkJoin(observables));
       this.permisos = resultados;
       console.log("Permisos cargados:", this.permisos);
+      
+      // Cargar proyectos del coordinador si tiene permiso
+      if (this.permisos['enviar_coordinador']) {
+        try {
+          this.proyectosCoordinador = await this.obtenerProyectosCoordinador();
+        } catch (err) {
+          console.warn("No fue posible obtener proyectos del coordinador", err);
+          this.proyectosCoordinador = [];
+        }
+      }
     });
     this.cargarPeriodo()
       .then((resp) => (this.periodos = resp))
@@ -563,25 +575,6 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     });
   }
 
-
-  private obtenerDocumentoCoordinador(): string | null {
-    try {
-      const userEncoded = window.localStorage.getItem("user");
-      if (!userEncoded) return null;
-      const decoded = JSON.parse(atob(userEncoded));
-      const posiblesDocumentos: any[] = [
-        decoded?.user?.documento, decoded?.userService?.documento,
-        decoded?.user?.documento_compuesto, decoded?.userService?.documento_compuesto
-      ];
-      for (const valor of posiblesDocumentos) {
-        const documento = String(valor ?? "").trim();
-        if (documento) return documento;
-      }
-    } catch { return null; }
-    return null;
-  }
-
-
   selectProyecto(proyecto: any) {
     this.proyecto = proyecto.value;
     this.periodo = new Periodo({});
@@ -627,6 +620,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
 
   enviarSegunRol(coordinador: boolean, id_plan: string, rowData?: any) {
     const cod_abrev = coordinador ? "ENV_COO" : "ENV_DOC";
+    this.errorCargaAutomaticaMostrado = false;
     const estado = this.estadosPlan.find(
       (estado) => estado.codigo_abreviacion === cod_abrev
     );
@@ -640,9 +634,11 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
               res_g?.Data
             );
             if (!cargaAutomaticaOk) {
-              this.popUpManager.showErrorAlert(
-                this.translate.instant("ptd.error_enviar_plan")
-              );
+              if (!this.errorCargaAutomaticaMostrado) {
+                this.popUpManager.showErrorAlert(
+                  this.translate.instant("ptd.error_enviar_plan")
+                );
+              }
               return;
             }
           }
@@ -727,11 +723,40 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         return true;
       }
 
+      // Filtrar espacios por proyecto del coordinador si aplica
+      const espaciosFiltrarados = this.esCoordinadorAsignacion
+        ? this.filtrarEspaciosPorProyectoCoordinador(espacios)
+        : espacios;
+
+      if (espaciosFiltrarados.length !== espacios.length && this.esCoordinadorAsignacion) {
+        const espaciosFueraProyecto = espacios.filter(
+          e => !espaciosFiltrarados.some(
+            ef => (ef.id || ef._id) === (e.id || e._id)
+          )
+        );
+        
+        if (espaciosFueraProyecto.length > 0) {
+          const nombresFuera = espaciosFueraProyecto
+            .map(e => `• ${e.espacio_academico || e.nombre}`)
+            .join("<br>");
+          
+          this.popUpManager.showPopUpGeneric(
+            this.translate.instant("ptd.carga_automatica_parcial"),
+            `${this.translate.instant("ptd.espacios_fuera_proyecto_coordinador")}<br><br>${nombresFuera}`,
+            MODALS.INFO,
+            false
+          );
+        }
+      }
+
       const espaciosConCarga = new Set(
         cargaActual
           .map((c: any) => String(c?.espacio_academico_id || "").trim())
           .filter((id: string) => !!id && id !== "NA")
       );
+
+      // Usar espacios filtrados
+      const espaciosParaProcesar = espaciosFiltrarados;
 
       const periodoAcademico = String(
         dataPlan?.periodo_academico || rowData?.periodo_academico || ""
@@ -746,7 +771,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
 
       const cargasNuevas: any[] = [];
 
-      for (const espacio of espacios) {
+      for (const espacio of espaciosParaProcesar) {
         const espacioAcademicoId = String(espacio?.id || espacio?._id || "").trim();
         const codigo = String(
           espacio?.codigo || espacio?.CodigoEspacioAcademico || ""
@@ -831,12 +856,37 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         return true;
       }
 
+      const materiasConCruce = this.obtenerMateriasConCruceHorario(
+        cargaActual,
+        cargasNuevas,
+        espacios
+      );
+
+      if (materiasConCruce.length > 0) {
+        const listadoMaterias = materiasConCruce
+          .map((materia) => `• ${materia.nombre} (${materia.bloqueHorario})`)
+          .join("<br>");
+
+        this.errorCargaAutomaticaMostrado = true;
+        this.popUpManager.showPopUpGeneric(
+          this.translate.instant("ptd.error_cruce_horario_carga_automatica"),
+          `${this.translate.instant("ptd.error_cruce_horario_materias")}<br><br>${listadoMaterias}`,
+          MODALS.ERROR,
+          false
+        );
+        return false;
+      }
+
       const resumenActual = planDocenteActual?.resumen
         ? planDocenteActual.resumen
         : JSON.stringify({});
 
       const estadoActual =
         planDocenteActual?.estado_plan_id || dataPlan?.estado_plan?.[seleccion] || "Sin definir";
+
+      const espaciosAprobadosIds = cargasNuevas
+        .map((c) => String(c?.espacio_academico_id || "").trim())
+        .filter((id) => !!id && id !== "NA");
 
       await firstValueFrom(
         this.sgaPlanTrabajoDocenteMidService.put("plan/", {
@@ -851,7 +901,8 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       );
 
       const preasignacionesActualizadas = await this.marcarPreasignacionesComoAprobadasPorCoordinacion(
-        rowData
+        rowData,
+        espaciosAprobadosIds
       );
 
       if (!preasignacionesActualizadas) {
@@ -865,7 +916,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private async marcarPreasignacionesComoAprobadasPorCoordinacion(rowData: any): Promise<boolean> {
+  private async marcarPreasignacionesComoAprobadasPorCoordinacion(rowData: any, espaciosAprobadosIds: string[] = []): Promise<boolean> {
     if (!rowData?.docente_id || !rowData?.periodo_id || !rowData?.tipo_vinculacion_id) {
       return true;
     }
@@ -879,16 +930,36 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         ? preasignacionesResp.Data
         : [];
 
-      const idsPreasignaciones = preasignaciones
+      const preasignacionesElegibles = preasignaciones
         .filter((preasignacion: any) =>
           String(preasignacion?.docente_id || "").trim() === String(rowData.docente_id || "").trim() &&
           String(preasignacion?.periodo_id || "").trim() === String(rowData.periodo_id || "").trim() &&
           String(preasignacion?.tipo_vinculacion_id || "").trim() === String(rowData.tipo_vinculacion_id || "").trim() &&
           this.getValorAprobacion(preasignacion?.aprobacion_docente) &&
-          !this.getValorAprobacion(preasignacion?.aprobacion_proyecto)
+          !this.getValorAprobacion(preasignacion?.aprobacion_proyecto) &&
+          !!String(preasignacion?.espacio_academico_id || preasignacion?.espacio_academico || "").trim()
         )
         .map((preasignacion: any) => ({
-          Id: preasignacion?.id || preasignacion?._id,
+          id: preasignacion?.id || preasignacion?._id,
+          espacioAcademicoId: String(
+            preasignacion?.espacio_academico_id || preasignacion?.espacio_academico || ""
+          ).trim(),
+        }))
+        .filter((preasignacion: any) => !!String(preasignacion.id || "").trim());
+
+      const idsPreasignaciones = preasignacionesElegibles
+        .filter((preasignacion: any) =>
+          espaciosAprobadosIds.includes(preasignacion.espacioAcademicoId)
+        )
+        .map((preasignacion: any) => ({
+          Id: preasignacion.id,
+        }))
+        .filter((preasignacion: any) => !!String(preasignacion.Id || "").trim());
+
+      const idsNoPreasignaciones = preasignacionesElegibles
+        .filter((preasignacion: any) => !espaciosAprobadosIds.includes(preasignacion.espacioAcademicoId))
+        .map((preasignacion: any) => ({
+          Id: preasignacion.id,
         }))
         .filter((preasignacion: any) => !!String(preasignacion.Id || "").trim());
 
@@ -899,7 +970,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       const respAprobacion: RespFormat = await firstValueFrom(
         this.sgaPlanTrabajoDocenteMidService.put("preasignacion/aprobar", {
           preasignaciones: idsPreasignaciones,
-          "no-preasignaciones": [],
+          "no-preasignaciones": idsNoPreasignaciones,
           docente: false,
         })
       );
@@ -952,6 +1023,254 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     }
 
     return false;
+  }
+
+  private obtenerDocumentoCoordinador(): string | null {
+    try {
+      const userEncoded = window.localStorage.getItem("user");
+      if (!userEncoded) {
+        return null;
+      }
+
+      const decoded = JSON.parse(atob(userEncoded));
+      const posiblesDocumentos: any[] = [
+        decoded?.user?.documento,
+        decoded?.userService?.documento,
+        decoded?.user?.documento_compuesto,
+        decoded?.userService?.documento_compuesto,
+      ];
+
+      for (const valor of posiblesDocumentos) {
+        const documento = String(valor ?? "").trim();
+        if (documento) {
+          return documento;
+        }
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
+  private obtenerProyectosCoordinador(): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      const documentoCoordinador = this.obtenerDocumentoCoordinador();
+      if (!documentoCoordinador) {
+        reject(new Error("No fue posible obtener el documento del coordinador"));
+        return;
+      }
+      this.proyectoAcademicoService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
+        next: (resp: any) => {
+          if (Array.isArray(resp.coordinadores.coordinador)) {
+            const codigos = resp.coordinadores.coordinador.map((c: any) => String(c.codigo_carrera || "").trim());
+            resolve(codigos.filter((c: string) => !!c));
+          } else {
+            reject(new Error("No se encontraron proyectos para el coordinador"));
+          }
+        },
+        error: (err) => {
+          reject(err);
+        },
+      });
+    });
+  }
+
+  private filtrarEspaciosPorProyectoCoordinador(espacios: any[]): any[] {
+    if (!this.proyectosCoordinador || this.proyectosCoordinador.length === 0) {
+      return espacios;
+    }
+
+    return espacios.filter((espacio: any) => {
+      const proyectoId = String(espacio?.proyecto_id || espacio?.proyecto_academico_id || "").trim();
+      return this.proyectosCoordinador.includes(proyectoId);
+    });
+  }
+
+  private obtenerMateriasConCruceHorario(
+    cargaActual: any[],
+    cargasNuevas: any[],
+    espacios: any[] = []
+  ): Array<{ nombre: string; bloqueHorario: string }> {
+    const snapGridX = 110;
+    const hourIni = 6;
+    const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+    const mapaEspacios = new Map<string, string>();
+    (espacios || []).forEach((e: any) => {
+      const id = String(e?.id || e?._id || "").trim();
+      const nombreEsp = String(
+        e?.espacio_academico || e?.nombre || e?.espacio_academico_nombre || ""
+      ).trim();
+      if (id) {
+        mapaEspacios.set(id, nombreEsp || `Espacio ${id}`);
+      }
+    });
+
+    const nombreMateria = (carga: any): string => {
+      const nombre = String(
+        carga?.espacio_academico_nombre ||
+          carga?.espacio_academico ||
+          carga?.nombre ||
+          ""
+      ).trim();
+
+      if (nombre) {
+        return nombre;
+      }
+
+      const id = String(carga?.espacio_academico_id || carga?.espacio_academico || "").trim();
+      if (id && id !== "NA") {
+        return mapaEspacios.get(id) || `Espacio ${id}`;
+      }
+
+      return "Actividad";
+    };
+
+    const parseHora = (hora: string): number | null => {
+      const match = /^\s*(\d{1,2}):(\d{2})\s*$/.exec(String(hora || ""));
+      if (!match) {
+        return null;
+      }
+
+      const horas = Number(match[1]);
+      const minutos = Number(match[2]);
+
+      if (Number.isNaN(horas) || Number.isNaN(minutos)) {
+        return null;
+      }
+
+      return horas + minutos / 60;
+    };
+
+    const obtenerBloque = (carga: any): { dia: number; inicio: number; fin: number } | null => {
+      const horario = carga?.horario || {};
+      const finalPosition =
+        horario?.finalPosition || horario?.dragPosition || horario?.prevPosition || {};
+
+      const x = Number(finalPosition?.x);
+      if (Number.isNaN(x)) {
+        return null;
+      }
+
+      const dia = Math.round(x / snapGridX);
+      if (dia < 0 || dia > 6) {
+        return null;
+      }
+
+      const horasDuracion = Number(horario?.horas || carga?.duracion || 0);
+      if (!horasDuracion || Number.isNaN(horasDuracion)) {
+        return null;
+      }
+
+      const horaFormato = String(horario?.horaFormato || "").trim();
+      const horaInicioFormato = horaFormato.includes("-")
+        ? horaFormato.split("-")[0]
+        : "";
+      const inicioPorFormato = parseHora(horaInicioFormato);
+
+      let inicioHoras = inicioPorFormato;
+      if (inicioHoras === null) {
+        const y = Number(finalPosition?.y);
+        if (!Number.isNaN(y)) {
+          inicioHoras = hourIni + y / 90;
+        }
+      }
+
+      if (inicioHoras === null || Number.isNaN(inicioHoras)) {
+        return null;
+      }
+
+      const inicio = Math.round(inicioHoras * 4);
+      const fin = inicio + Math.round(horasDuracion * 4);
+
+      if (fin <= inicio) {
+        return null;
+      }
+
+      return { dia, inicio, fin };
+    };
+
+    const formatearHoraCuarto = (valor: number): string => {
+      const totalMinutos = Math.round((valor / 4) * 60);
+      const horas = Math.floor(totalMinutos / 60);
+      const minutos = totalMinutos % 60;
+      return `${String(horas).padStart(2, "0")}:${String(minutos).padStart(2, "0")}`;
+    };
+
+    const describirBloque = (bloque: { dia: number; inicio: number; fin: number }): string => {
+      const dia = diasSemana[bloque.dia] || `Día ${bloque.dia + 1}`;
+      return `${dia} ${formatearHoraCuarto(bloque.inicio)} - ${formatearHoraCuarto(bloque.fin)}`;
+    };
+
+    const hayCruce = (
+      a: { dia: number; inicio: number; fin: number },
+      b: { dia: number; inicio: number; fin: number }
+    ): boolean => a.dia === b.dia && a.inicio < b.fin && b.inicio < a.fin;
+
+    const conflictos = new Map<string, { nombre: string; bloqueHorario: string }>();
+    const registrosNuevos = ((cargasNuevas || [])
+      .map((carga: any) => ({
+        nombre: nombreMateria(carga),
+        bloque: obtenerBloque(carga),
+      }))
+      .filter((registro: any) => !!registro.bloque)) as Array<{
+      nombre: string;
+      bloque: { dia: number; inicio: number; fin: number };
+    }>;
+
+    const registrosActuales = ((cargaActual || [])
+      .map((carga: any) => ({
+        nombre: nombreMateria(carga),
+        bloque: obtenerBloque(carga),
+      }))
+      .filter((registro: any) => !!registro.bloque)) as Array<{
+      nombre: string;
+      bloque: { dia: number; inicio: number; fin: number };
+    }>;
+
+    registrosNuevos.forEach((registroNuevo: any, idxNuevo: number) => {
+      registrosActuales.forEach((registroActual: any) => {
+        if (hayCruce(registroNuevo.bloque, registroActual.bloque)) {
+          const llaveNuevo = `${registroNuevo.nombre}__${registroNuevo.bloque.dia}_${registroNuevo.bloque.inicio}_${registroNuevo.bloque.fin}`;
+          const llaveActual = `${registroActual.nombre}__${registroActual.bloque.dia}_${registroActual.bloque.inicio}_${registroActual.bloque.fin}`;
+          if (!conflictos.has(llaveNuevo)) {
+            conflictos.set(llaveNuevo, {
+              nombre: registroNuevo.nombre,
+              bloqueHorario: describirBloque(registroNuevo.bloque),
+            });
+          }
+          if (!conflictos.has(llaveActual)) {
+            conflictos.set(llaveActual, {
+              nombre: registroActual.nombre,
+              bloqueHorario: describirBloque(registroActual.bloque),
+            });
+          }
+        }
+      });
+
+      for (let i = idxNuevo + 1; i < registrosNuevos.length; i++) {
+        const comparado = registrosNuevos[i];
+        if (hayCruce(registroNuevo.bloque, comparado.bloque)) {
+          const llaveNuevo = `${registroNuevo.nombre}__${registroNuevo.bloque.dia}_${registroNuevo.bloque.inicio}_${registroNuevo.bloque.fin}`;
+          const llaveComparado = `${comparado.nombre}__${comparado.bloque.dia}_${comparado.bloque.inicio}_${comparado.bloque.fin}`;
+          if (!conflictos.has(llaveNuevo)) {
+            conflictos.set(llaveNuevo, {
+              nombre: registroNuevo.nombre,
+              bloqueHorario: describirBloque(registroNuevo.bloque),
+            });
+          }
+          if (!conflictos.has(llaveComparado)) {
+            conflictos.set(llaveComparado, {
+              nombre: comparado.nombre,
+              bloqueHorario: describirBloque(comparado.bloque),
+            });
+          }
+        }
+      }
+    });
+
+    return Array.from(conflictos.values());
   }
 
   verPTDFirmado(idDoc: any) {
