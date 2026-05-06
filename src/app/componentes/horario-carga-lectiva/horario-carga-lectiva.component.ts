@@ -19,7 +19,7 @@ import { distinctUntilChanged } from "rxjs/operators";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { PopUpManager } from "src/app/managers/popUpManager";
 import { PlanTrabajoDocenteService } from "src/app/services/plan-trabajo-docente.service";
-import { OikosService } from "src/app/services/oikos.service";
+import { AcademicaJbpmService } from "src/app/services/academica-jbpm.service";
 import { ACTIONS, MODALS, ROLES, VIEWS } from "src/app/models/diccionario";
 import { CardDetalleCarga, CoordXY } from "src/app/models/card-detalle-carga";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
@@ -136,7 +136,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     private planDocenteMid: SgaPlanTrabajoDocenteMidService,
     private planDocenteService: PlanTrabajoDocenteService,
     private builder: FormBuilder,
-    private oikosService: OikosService,
+    private academicaJbpmService: AcademicaJbpmService,
     private readonly elementRef: ElementRef,
     private gestorDocumentalService: NewNuxeoService,
     private documentoService: DocumentoService
@@ -558,24 +558,73 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
   async cargarRestricionesEspaciosFisicos(
     elementMoved: CardDetalleCarga
   ): Promise<void> {
-    const periodoId = this.Data.vigencia;
-    // Protección directa
+
+    const periodoAcademico = (this.Data?.periodo_academico || "").trim();
+    const [anio, periodo] = periodoAcademico.split("-");
+    const periodoId = periodoAcademico.replace("-", "/");
     const espacioFisicoId = elementMoved?.salon?.id;
 
-    if (!espacioFisicoId) {
-      console.warn(
-        'cargarRestricionesEspaciosFisicos: espacioFisicoId undefined',
-        elementMoved
-      );
+    if (!espacioFisicoId || !anio || !periodo) {
+      console.warn("Datos insuficientes para cargar restricciones físicas");
       return;
     }
-    const res: any = await this.horarioMid
-      .get(
-        `espacio-fisico/ocupados?espacio-fisico-id=${espacioFisicoId}&periodo-id=${periodoId}`
-      )
-      .toPromise();
-    if (res?.Data?.length) {
-      this.agregarRestriccionesAlHorario(res.Data, { espacioFisico: true });
+    try {
+      const res: any = await this.academicaJbpmService
+        .get(`cursos_salon/${periodoId}/${espacioFisicoId}`)
+        .toPromise();
+
+      const cursos = res?.cursos?.curso;
+
+      if (!Array.isArray(cursos) || cursos.length === 0) {
+        return;
+      }
+
+      const requests: Promise<any>[] = [];
+
+      for (const curso of cursos) {
+
+        if (!curso.codigo_curso || !curso.grupos) continue;
+
+        const grupos = curso.grupos
+          .split(",")
+          .map((g: string) => g.trim())
+          .filter((g: string) => g.length > 0);
+
+        for (const grupo of grupos) {
+
+          const request = this.planDocenteMid
+            .get(
+              `espacio-academico/informacion-horarios/${anio}/${periodo}/${curso.codigo_curso}/${grupo}`
+            )
+            .toPromise()
+            .catch(() => null); // evita que falle todo el Promise.all
+
+          requests.push(request);
+        }
+      }
+
+      if (requests.length === 0) return;
+
+      const responses = await Promise.all(requests);
+      const colocacionesFiltradas = responses
+        .filter(res => res?.Success && Array.isArray(res?.Data))
+        .flatMap(res => res.Data)
+        .filter(colocacion =>
+          colocacion?.
+          ResumenColocacionEspacioFisico?.
+          espacio_fisico?.
+          salon?.
+          CodigoAbreviacion === espacioFisicoId
+        );
+      if (colocacionesFiltradas.length > 0) {
+        this.agregarRestriccionesAlHorario(
+          colocacionesFiltradas,
+          { espacioFisico: true }
+        );
+      }
+
+    } catch (error) {
+      console.error("Error cargando restricciones por espacio físico", error);
     }
   }
 
@@ -618,11 +667,11 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
     colocaciones.forEach((element: any) => {
       const ocupado: any = {
         id: element._id,
-        horas: element.horas,
+        horas: element.ColocacionEspacioAcademico.horas,
         estado: this.estado.ubicado,
-        dragPosition: element.finalPosition,
-        prevPosition: element.finalPosition,
-        finalPosition: element.finalPosition,
+        dragPosition: element.ColocacionEspacioAcademico.finalPosition,
+        prevPosition: element.ColocacionEspacioAcademico.finalPosition,
+        finalPosition: element.ColocacionEspacioAcademico.finalPosition,
         //se pone true dependiendo del tipo de restriccion
         grupoEstudio: options.grupoEstudio || false,
         espacioFisico: options.espacioFisico || false,
@@ -1175,7 +1224,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
 
   getSedes() {
     return new Promise((resolve, reject) => {
-      this.oikosService
+      this.academicaJbpmService
         .get(
           "sedes"
         )
@@ -1208,7 +1257,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         }
         resolve(this.opcionesEdificios);
       } else {*/
-        this.oikosService
+        this.academicaJbpmService
           .get(
             "edificios/"+sedeSeleccionada.sede_id
           )
@@ -1239,7 +1288,7 @@ export class HorarioCargaLectivaComponent implements OnInit, OnChanges {
         this.ubicacionForm.get("salon")?.enable();
       }
     } else {*/
-      this.oikosService
+      this.academicaJbpmService
         .get(
           "salones/"+this.ubicacionForm.get("edificio")?.value.codigo
         )

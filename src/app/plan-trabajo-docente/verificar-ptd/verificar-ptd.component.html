@@ -8,31 +8,36 @@
     </mat-card-header>
     <mat-card-content>
       <h3 class="margin-y">{{ "ptd.list_planes" | translate }}</h3>
-      <div class="form-grid2">
-        <mat-form-field class="form-col1 form-field">
-          <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
-          <mat-select
-            [(ngModel)]="periodos.select"
-            (selectionChange)="filtrarPlanes()"
-          >
-            <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
-            <mat-option *ngFor="let item of periodos.opciones" [value]="item">
-              {{ item.Nombre }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field class="form-col1 form-field">
-          <mat-label>{{ "GLOBAL.proyecto_academico" | translate }}:</mat-label>
-          <mat-select
+      <div class="row">
+        <div class="col-6">
+          <mat-form-field class="form-col1 form-field" style="width: 100%">
+            <mat-label>{{ "GLOBAL.proyecto_academico" | translate }}:</mat-label>
+            <mat-select
             [(ngModel)]="proyectos.select"
-            (selectionChange)="filtrarPlanes()"
+            (selectionChange)="onProyectoChange()"
           >
             <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
             <mat-option *ngFor="let item of proyectos?.opciones" [value]="item">
               {{ item.Codigo }} - {{ item.Nombre }}
             </mat-option>
           </mat-select>
-        </mat-form-field>
+          </mat-form-field>
+        </div>
+        <div class="col-6">
+          <mat-form-field class="form-col1 form-field" style="width: 100%">
+            <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
+          <mat-select
+            [(ngModel)]="periodos.select"
+            (selectionChange)="onPeriodoChange()"
+            [disabled]="!proyectos.select"
+          >
+            <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
+            <mat-option *ngFor="let item of periodos.opciones" [value]="item">
+              {{ item.Nombre }}
+            </mat-option>
+          </mat-select>
+          </mat-form-field>
+        </div>
       </div>
       <mat-toolbar>
         <button
