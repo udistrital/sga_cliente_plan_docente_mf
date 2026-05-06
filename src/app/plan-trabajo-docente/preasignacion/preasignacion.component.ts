@@ -16,6 +16,7 @@ import { DialogoPreAsignacionPtdComponent } from "src/app/dialog-components/dial
 import { PlanTrabajoDocenteService } from "src/app/services/plan-trabajo-docente.service";
 import { ProyectoAcademicoService } from "src/app/services/proyecto-academico.service";
 import { PermisosUtils } from "src/app/utils/role-permissions";
+import { OikosService } from "src/app/services/oikos.service";
 import { Observable } from "rxjs/internal/Observable";
 import { firstValueFrom } from "rxjs/internal/firstValueFrom";
 import { forkJoin } from "rxjs/internal/observable/forkJoin";
@@ -67,7 +68,6 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     "aprobacion_docente",
     "aprobacion_proyecto",
     "semaforo_preasignacion",
-    "enviar",
     "editar",
     "borrar",
   ];
@@ -85,7 +85,8 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     private planTrabajoDocenteService: PlanTrabajoDocenteService,
     private proyectoAcademicoService: ProyectoAcademicoService,
     private dialog: MatDialog,
-    private permisosUtils: PermisosUtils
+    private permisosUtils: PermisosUtils,
+    private OikosService: OikosService
   ) {
     this.dataSource = new MatTableDataSource();
     this.dialogConfig = new MatDialogConfig();
@@ -219,6 +220,56 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+  }
+
+  private obtenerDocumentoCoordinador(): string | null {
+    try {
+      const userEncoded = window.localStorage.getItem("user");
+      if (!userEncoded) {
+        return null;
+      }
+
+      const decoded = JSON.parse(atob(userEncoded));
+      const posiblesDocumentos: any[] = [
+        decoded?.user?.documento,
+        decoded?.userService?.documento,
+        decoded?.user?.documento_compuesto,
+        decoded?.userService?.documento_compuesto,
+      ];
+
+      for (const valor of posiblesDocumentos) {
+        const documento = String(valor ?? "").trim();
+        if (documento) {
+          return documento;
+        }
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
+  private obtenerProyectosCoordinador(): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const documentoCoordinador = this.obtenerDocumentoCoordinador();
+      if (!documentoCoordinador) {
+        reject(new Error("No fue posible obtener el documento del coordinador"));
+        return;
+      }
+      this.OikosService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
+        next: (resp: any) => {
+          if (Array.isArray(resp.coordinadores.coordinador)) {
+            resolve(resp.coordinadores.coordinador);
+          } else {
+            reject(new Error("No se encontraron proyectos para el coordinador"));
+          }
+        },
+        error: (err) => {
+          reject(err);
+        },
+      });
+    });
   }
 
   applyFilter(event: Event) {
@@ -569,22 +620,18 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     tooltip: string;
     icon: string;
   } {
-    const aprobacionProyecto = this.getAprobacionValue(row?.aprobacion_proyecto);
     const aprobacionDocente = this.getAprobacionValue(row?.aprobacion_docente);
+    const aprobacionProyecto = this.getAprobacionValue(row?.aprobacion_proyecto);
 
-    // Si la aprobación del proyecto es falsa, se muestra el semáforo rojo
-    if (!aprobacionProyecto) {
+    if (aprobacionProyecto) {
       return {
-        color: "#F44336",
-        tooltip: this.translate.instant(
-          "ptd.semaforo_preasignacion_no_enviado"
-        ),
-        icon: "cancel",
+        color: "#4CAF50",
+        tooltip: this.translate.instant("ptd.semaforo_preasignacion_aprobada"),
+        icon: "check_circle",
       };
     }
 
-    // Si la aprobación del proyecto es verdadera pero la aprobación del docente es falsa, se muestra el semáforo amarillo
-    if (!aprobacionDocente) {
+    if (aprobacionDocente) {
       return {
         color: "#FFC107",
         tooltip: this.translate.instant(
@@ -594,11 +641,10 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
       };
     }
 
-    // Si ambas aprobaciones son verdaderas, se muestra el semáforo verde
     return {
-      color: "#4CAF50",
-      tooltip: this.translate.instant("ptd.semaforo_preasignacion_aprobada"),
-      icon: "check_circle",
+      color: "#F44336",
+      tooltip: this.translate.instant("ptd.semaforo_preasignacion_no_enviado"),
+      icon: "cancel",
     };
   }
 

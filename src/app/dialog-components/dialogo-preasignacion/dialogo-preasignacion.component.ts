@@ -810,7 +810,6 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                   const nombreGrupo = String(element.ProyectoAcademico)
                     .trim()
                     .toUpperCase();
-                  // 🔥 Validar directamente contra la MISMA lista proyectosCoordinador
                   const perteneceAlCoordinador = this.proyectosCoordinador.some(
                     (proyecto) =>
                       String(proyecto.nombre_carrera)
@@ -986,5 +985,25 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     });
   }
   
-
+  obtenerProyectosCoordinador(): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const documentoCoordinador = this.obtenerDocumentoCoordinador();
+      if (!documentoCoordinador) {
+        reject(new Error("No fue posible obtener el documento del coordinador"));
+        return;
+      }
+      this.OikosService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
+        next: (resp: any) => {
+          if (Array.isArray(resp.coordinadores.coordinador)) {
+            resolve(resp.coordinadores.coordinador);
+          } else {
+            reject(new Error("No se encontraron proyectos para el coordinador"));
+          }
+        },
+        error: (err) => {
+          reject(err);
+        },
+      });
+    });
+  }
 }
