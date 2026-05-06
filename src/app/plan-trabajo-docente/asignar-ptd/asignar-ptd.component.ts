@@ -23,7 +23,7 @@ import { forkJoin } from "rxjs/internal/observable/forkJoin";
 import { firstValueFrom } from "rxjs/internal/firstValueFrom";
 import { Observable } from "rxjs/internal/Observable";
 import { PermisosUtils } from "src/app/utils/role-permissions";
-import { OikosService } from "src/app/services/oikos.service";
+import { ProyectoAcademicoService } from "src/app/services/proyecto-academico.service";
 import { RouterEvent } from "@angular/router";
 
 @Component({
@@ -52,8 +52,15 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   permisos: { [key: string]: boolean } = {};
 
   periodos: Periodo[] = [];
+  periodosFiltrados: Periodo[] = [];
   periodo: Periodo = new Periodo({});
   periodosAnteriores: Periodo[] = [];
+  proyectos: any[] = [];
+  proyecto: any;
+  codigoEventoPTD: string = '';
+  calendarEventosPTD: any[] = [];
+  calendarEventoSeleccionado: any = null;
+  enRangoCalendario: boolean = false;
 
   estadosPlan: EstadoPlan[] = [];
   estadosAprobar: EstadoPlan[] = [];
@@ -92,13 +99,14 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     private gestorDocumental: GestorDocumentalService,
     private matDialog: MatDialog,
     private permisosUtils: PermisosUtils,
-    private oikosService: OikosService
+    private proyectoAcademicoService: ProyectoAcademicoService
   ) {
     this.vista = VIEWS.LIST;
     this.dataSource = new MatTableDataSource();
   }
 
   ngOnInit() {
+    this.cargarEventoPTD();
     this.userService.getUserRoles().then(async (roles) => {
       const observables: { [key: string]: Observable<boolean> } = {};
       this.opcionesPermisos.forEach(opcion => {
@@ -135,6 +143,102 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
           estado.codigo_abreviacion === "N_APR"
       );
     });
+  }
+
+  cargarEventoPTD() {
+    this.sgaPlanTrabajoDocenteMidService.get("calendario/eventos").subscribe({
+      next: (resp: any) => {
+        if (checkContent(resp)) {
+          const eventos = Array.isArray(resp.Data) ? resp.Data : [];
+          const evento = eventos.find((e: any) => e.Descripcion === "PLANES DE TRABAJO DOCENTES");
+          if (evento) {
+            this.codigoEventoPTD = evento.CodigoEvento;
+            this.cargarCalendarioEventos().then(eventosCalendario => {
+              this.calendarEventosPTD = eventosCalendario;
+              this.resolverProyectosDesdeCalendario();
+            }).catch(err => console.warn(err));
+          }
+        }
+      },
+      error: (err: any) => {
+        console.warn("Error obteniendo calendario/eventos:", err);
+      }
+    });
+  }
+
+  cargarCalendarioEventos(): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const documento = this.obtenerDocumentoCoordinador();
+      if (!documento || !this.codigoEventoPTD) {
+        reject(new Error('No se pudo obtener documento o código de evento'));
+        return;
+      }
+      this.sgaPlanTrabajoDocenteMidService.get(
+        `calendario/calendario_eventos?documento=${documento}&codigo_evento=${this.codigoEventoPTD}`
+      ).subscribe({
+        next: (calResp: any) => {
+          const data = calResp?.Data ?? calResp ?? [];
+          resolve(Array.isArray(data) ? data : [data]);
+        },
+        error: (err: any) => {
+          console.warn("Error obteniendo calendario/calendario_eventos:", err);
+          reject(err);
+        }
+      });
+    });
+  }
+
+  resolverProyectosDesdeCalendario() {
+    if (!this.calendarEventosPTD || this.calendarEventosPTD.length === 0) return;
+    const proyectosMap = new Map<string, any>();
+    this.calendarEventosPTD.forEach((evento: any) => {
+      const id = String(evento.CodigoProyecto);
+      if (id && evento.NombreProyecto && !proyectosMap.has(id)) {
+        proyectosMap.set(id, { Id: id, Codigo: id, Nombre: evento.NombreProyecto });
+      }
+    });
+    this.proyectos = Array.from(proyectosMap.values());
+  }
+
+  filtrarPeriodosPorCalendario() {
+    if (!this.calendarEventosPTD || this.calendarEventosPTD.length === 0) {
+      this.periodosFiltrados = [];
+      return;
+    }
+    const eventosDelProyecto = this.calendarEventosPTD.filter((e: any) =>
+      String(e.CodigoProyecto) === String(this.proyecto?.Id)
+    );
+    this.periodosFiltrados = this.periodos.filter(periodo => {
+      return eventosDelProyecto.some((evento: any) =>
+        String(evento.Year) === String(periodo.Year) &&
+        String(evento.Ciclo) === String(periodo.Ciclo)
+      );
+    });
+  }
+
+  verificarRangoFechas() {
+    this.enRangoCalendario = false;
+    this.calendarEventoSeleccionado = null;
+    if (!this.periodo || !this.proyecto || !this.calendarEventosPTD || this.calendarEventosPTD.length === 0) {
+      return;
+    }
+    const eventoMatch = this.calendarEventosPTD.find((evento: any) =>
+      String(evento.CodigoProyecto) === String(this.proyecto.Id) &&
+      String(evento.Year) === String(this.periodo.Year) &&
+      String(evento.Ciclo) === String(this.periodo.Ciclo)
+    );
+    if (eventoMatch) {
+      this.calendarEventoSeleccionado = eventoMatch;
+      const ahora = new Date();
+      const fechaInicio = new Date(eventoMatch.FechaInicio);
+      const fechaFin = new Date(eventoMatch.FechaFin);
+      this.enRangoCalendario = ahora >= fechaInicio && ahora <= fechaFin;
+      console.log('--- Asignar PTD: Verificar Rango Fechas ---');
+      console.log('Fecha actual:', ahora);
+      console.log('Fecha Inicio Evento:', fechaInicio);
+      console.log('Fecha Fin Evento:', fechaFin);
+      console.log('¿Está en rango?:', this.enRangoCalendario);
+    }
   }
 
   ngAfterViewInit() {
@@ -339,12 +443,16 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
 
   loadAsignaciones() {
     if (this.permisos['asignaciones_coordinador']) {
+      let url = "asignacion?vigencia=" + this.periodo.Id;
+      if (this.proyecto && this.proyecto.Id) {
+        url += "&proyecto=" + this.proyecto.Id;
+      }
       this.sgaPlanTrabajoDocenteMidService
-        .get("asignacion?vigencia=" + this.periodo.Id)
+        .get(url)
         .subscribe({
           next: (resp: RespFormat) => {
             if (checkResponse(resp) && checkContent(resp)) {
-              const data = (resp.Data || []).map((row: any) => {
+              let data = (resp.Data || []).map((row: any) => {
                 const estado = row?.estado
                   ? row.estado.toString().toLowerCase()
                   : "";
@@ -375,17 +483,16 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       this.userService
         .getPersonaId()
         .then((id_tercero) => {
+          let url = "asignacion/docente?docente=" + id_tercero + "&vigencia=" + this.periodo.Id;
+          if (this.proyecto && this.proyecto.Id) {
+            url += "&proyecto=" + this.proyecto.Id;
+          }
           this.sgaPlanTrabajoDocenteMidService
-            .get(
-              "asignacion/docente?docente=" +
-                id_tercero +
-                "&vigencia=" +
-                this.periodo.Id
-            )
+            .get(url)
             .subscribe({
               next: (resp: RespFormat) => {
                 if (checkResponse(resp) && checkContent(resp)) {
-                  const data = (resp.Data || []).map((row: any) => {
+                  let data = (resp.Data || []).map((row: any) => {
                     const estado = row?.estado
                       ? row.estado.toString().toLowerCase()
                       : "";
@@ -468,13 +575,46 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     });
   }
 
+
+  private obtenerDocumentoCoordinador(): string | null {
+    try {
+      const userEncoded = window.localStorage.getItem("user");
+      if (!userEncoded) return null;
+      const decoded = JSON.parse(atob(userEncoded));
+      const posiblesDocumentos: any[] = [
+        decoded?.user?.documento, decoded?.userService?.documento,
+        decoded?.user?.documento_compuesto, decoded?.userService?.documento_compuesto
+      ];
+      for (const valor of posiblesDocumentos) {
+        const documento = String(valor ?? "").trim();
+        if (documento) return documento;
+      }
+    } catch { return null; }
+    return null;
+  }
+
+
+  selectProyecto(proyecto: any) {
+    this.proyecto = proyecto.value;
+    this.periodo = new Periodo({});
+    this.periodosFiltrados = [];
+    this.dataSource = new MatTableDataSource();
+    if (this.proyecto) {
+      this.filtrarPeriodosPorCalendario();
+    }
+  }
+
   selectPeriodo(periodo: MatSelectChange) {
     this.periodo = periodo.value;
+    this.dataSource = new MatTableDataSource();
     if (this.periodo.Id) {
       this.cargarPeriodosAnteriores(this.periodo);
+      this.verificarRangoFechas();
+      if (!this.enRangoCalendario) {
+        this.popUpManager.showErrorToast("El periodo seleccionado no se encuentra en el rango de fechas.");
+        return;
+      }
       this.loadAsignaciones();
-    } else {
-      this.dataSource = new MatTableDataSource();
     }
   }
 

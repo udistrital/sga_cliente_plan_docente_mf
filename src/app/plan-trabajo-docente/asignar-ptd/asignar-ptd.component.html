@@ -8,11 +8,24 @@
     </mat-card-header>
     <mat-card-content>
       <h3 class="margin-y">{{ "ptd.list_docente" | translate }}</h3>
-      <mat-form-field class="form-field">
-        <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
-        <mat-select (selectionChange)="selectPeriodo($event)">
+      <div class="row">
+        <div class="col-6">
+          <mat-form-field class="form-field" style="width: 100%">
+        <mat-label>{{ "GLOBAL.proyecto_academico" | translate }}:</mat-label>
+        <mat-select (selectionChange)="selectProyecto($event)" [(ngModel)]="proyecto">
           <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
-          <mat-option *ngFor="let item of periodos" [value]="item">
+          <mat-option *ngFor="let item of proyectos" [value]="item">
+            {{ item.Codigo }} - {{ item.Nombre }}
+          </mat-option>
+        </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="col-6">
+          <mat-form-field class="form-field" style="width: 100%">
+        <mat-label>{{ "GLOBAL.periodo" | translate }}:</mat-label>
+        <mat-select (selectionChange)="selectPeriodo($event)" [disabled]="!proyecto">
+          <mat-option>--{{ "GLOBAL.seleccionar" | translate }}--</mat-option>
+          <mat-option *ngFor="let item of periodosFiltrados" [value]="item">
             <div style="display: flex; flex-wrap: wrap; align-items: center">
               <div
                 class="badge"
@@ -30,7 +43,9 @@
             </div>
           </mat-option>
         </mat-select>
-      </mat-form-field>
+          </mat-form-field>
+        </div>
+      </div>
 
       <!-- BARRA DE HERRAMIENTAS -->
       <mat-toolbar style="display: flex; gap: 0.5em; flex-wrap: wrap">
