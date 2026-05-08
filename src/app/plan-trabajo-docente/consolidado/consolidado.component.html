@@ -48,7 +48,20 @@
                 >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
               >
               <mat-option *ngFor="let item of periodos.opciones" [value]="item">
-                {{ item.Nombre }}
+                <div style="display: flex; flex-wrap: wrap; align-items: center">
+                  <div
+                    class="badge"
+                    [ngStyle]="{
+                      backgroundColor: item.Activo
+                        ? 'var(--success-accent)'
+                        : 'var(--danger-base)'
+                    }"
+                  ></div>
+                  <b>{{ item.Nombre }}</b>
+                  <small style="margin-left: 5px; font-size: 0.8em; color: gray">
+                    (Vigencia: {{ item.InicioVigencia | date : "yyyy-MM-dd" }} a {{ item.FinVigencia | date : "yyyy-MM-dd" }})
+                  </small>
+                </div>
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -224,11 +237,21 @@
                 <mat-option
                   >--{{ "GLOBAL.seleccionar" | translate }}--</mat-option
                 >
-                <mat-option
-                  *ngFor="let item of periodos.opciones"
-                  [value]="item"
-                >
-                  {{ item.Nombre }}
+                <mat-option *ngFor="let item of periodos.opciones" [value]="item">
+                  <div style="display: flex; flex-wrap: wrap; align-items: center">
+                    <div
+                      class="badge"
+                      [ngStyle]="{
+                        backgroundColor: item.Activo
+                          ? 'var(--success-accent)'
+                          : 'var(--danger-base)'
+                      }"
+                    ></div>
+                    <b>{{ item.Nombre }}</b>
+                    <small style="margin-left: 5px; font-size: 0.8em; color: gray">
+                      (Vigencia: {{ item.InicioVigencia | date : "yyyy-MM-dd" }} a {{ item.FinVigencia | date : "yyyy-MM-dd" }})
+                    </small>
+                  </div>
                 </mat-option>
               </mat-select>
             </mat-form-field>

@@ -9,7 +9,7 @@ import { RespFormat } from "src/app/models/response-format";
 import { ParametrosService } from "src/app/services/parametros.service";
 import { UserService } from "src/app/services/user.service";
 import { checkContent, checkResponse } from "src/app/utils/verify-response";
-import { MODALS } from "src/app/models/diccionario";
+import { MODALS, ROLES } from "src/app/models/diccionario";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
 import { MatDialog, MatDialogConfig } from "@angular/material/dialog";
 import { DialogoPreAsignacionPtdComponent } from "src/app/dialog-components/dialogo-preasignacion/dialogo-preasignacion.component";
@@ -184,11 +184,25 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     const eventosDelProyecto = this.calendarEventosPTD.filter((e: any) =>
       String(e.CodigoProyecto) === String(this.proyecto?.Id)
     );
+    const vistos = new Set<string>();
     this.periodosFiltrados = this.periodos.filter(periodo => {
-      return eventosDelProyecto.some((evento: any) =>
-        String(evento.Year) === String(periodo.Year) &&
-        String(evento.Ciclo) === String(periodo.Ciclo)
+      const evento = eventosDelProyecto.find((e: any) =>
+        String(e.Year) === String(periodo.Year) &&
+        String(e.Ciclo) === String(periodo.Ciclo)
       );
+      if (evento) {
+        if (vistos.has(periodo.Nombre)) return false;
+        vistos.add(periodo.Nombre);
+
+        periodo.InicioVigencia = evento.FechaInicio;
+        periodo.FinVigencia = evento.FechaFin;
+        const ahora = new Date();
+        const fechaInicio = new Date(evento.FechaInicio);
+        const fechaFin = new Date(evento.FechaFin);
+        periodo.Activo = ahora >= fechaInicio && ahora <= fechaFin;
+        return true;
+      }
+      return false;
     });
   }
 
@@ -281,6 +295,70 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private async limpiarCargaPlanDePreasignacion(preasignacion: any): Promise<boolean> {
+    if (!preasignacion?.docente_id || !preasignacion?.periodo_id || !preasignacion?.tipo_vinculacion_id) {
+      return false;
+    }
+
+    try {
+      const estadosPlanResp: any = await firstValueFrom(
+        this.planTrabajoDocenteService.get("estado_plan?query=activo:true&limit=0")
+      );
+
+      const estadoPlanDef = Array.isArray(estadosPlanResp?.Data)
+        ? estadosPlanResp.Data.find((estado: any) => String(estado?.codigo_abreviacion || "").trim() === "DEF")?._id
+        : undefined;
+
+      if (!estadoPlanDef) {
+        return false;
+      }
+
+      const planResp: any = await firstValueFrom(
+        this.planDocenteMid.get(
+          `plan?docente=${preasignacion.docente_id}&vigencia=${preasignacion.periodo_id}&vinculacion=${preasignacion.tipo_vinculacion_id}`
+        )
+      );
+
+      const dataPlan = planResp?.Data;
+      const seleccion = Number(dataPlan?.seleccion || 0);
+      const planDocente = Array.isArray(dataPlan?.plan_docente)
+        ? dataPlan.plan_docente[seleccion] ?? dataPlan.plan_docente[0]
+        : dataPlan?.plan_docente;
+      const planDocenteId = typeof planDocente === "object"
+        ? planDocente?._id || planDocente?.id
+        : planDocente;
+
+      if (!planDocenteId) {
+        return false;
+      }
+
+      const cargaActual = Array.isArray(dataPlan?.carga?.[seleccion])
+        ? dataPlan.carga[seleccion]
+        : [];
+
+      const idsADescartar = cargaActual
+        .map((carga: any) => ({ id: carga.id }))
+        .filter((carga: any) => !!String(carga.id || "").trim());
+
+      const respuesta: RespFormat = await firstValueFrom(
+        this.planDocenteMid.put("plan/", {
+          carga_plan: [],
+          plan_docente: {
+            id: planDocenteId,
+            resumen: JSON.stringify({}),
+            estado_plan: estadoPlanDef,
+          },
+          descartar: idsADescartar,
+        })
+      );
+
+      return checkResponse(respuesta);
+    } catch (error) {
+      console.warn("No fue posible limpiar la carga del plan desde preasignación", error);
+      return false;
+    }
+  }
+
   accionEnviar(event: any) {
     if (!this.permisos['tabla_coordinador']) {
       return this.popUpManager.showErrorToast(
@@ -342,13 +420,20 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
       )
       .then((action) => {
         if (action.value) {
-          this.dialogConfig.data = event["rowData"];
+          const preasignacion = event["rowData"];
+          this.dialogConfig.data = preasignacion;
           const preasignacionDialog = this.dialog.open(
             DialogoPreAsignacionPtdComponent,
             this.dialogConfig
           );
-          preasignacionDialog.afterClosed().subscribe(() => {
-            this.loadPreasignaciones();
+          preasignacionDialog.afterClosed().subscribe((result) => {
+            if (result) {
+              this.limpiarCargaPlanDePreasignacion(preasignacion).then(() => {
+                this.loadPreasignaciones();
+              });
+            } else {
+              this.loadPreasignaciones();
+            }
           });
         }
       });
@@ -487,7 +572,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
           next: (resp: RespFormat) => {
             if (checkResponse(resp)) {
               let data = resp.Data;
-              if (this.proyecto && this.proyecto.Id) {
+              if (this.proyecto && this.proyecto.Id && !this.roles.includes(ROLES.DOCENTE)) {
                 data = data.filter((item: any) => String(item.codigo_proyecto_academico) === String(this.proyecto.Id));
               }
               this.dataSource = new MatTableDataSource(data);
@@ -520,7 +605,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
               next: (resp: RespFormat) => {
                 if (checkResponse(resp)) {
                   let data = resp.Data;
-                  if (this.proyecto && this.proyecto.Id) {
+                  if (this.proyecto && this.proyecto.Id && !this.roles.includes(ROLES.DOCENTE)) {
                     data = data.filter((item: any) => String(item.codigo_proyecto_academico) === String(this.proyecto.Id));
                   }
                   this.dataSource = new MatTableDataSource(data);

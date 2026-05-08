@@ -23,7 +23,7 @@ import { forkJoin } from "rxjs/internal/observable/forkJoin";
 import { firstValueFrom } from "rxjs/internal/firstValueFrom";
 import { Observable } from "rxjs/internal/Observable";
 import { PermisosUtils } from "src/app/utils/role-permissions";
-import { ProyectoAcademicoService } from "src/app/services/proyecto-academico.service";
+import { AcademicaJbpmService } from "src/app/services/academica-jbpm.service";
 import { RouterEvent } from "@angular/router";
 
 @Component({
@@ -38,7 +38,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   readonly ACTIONS = ACTIONS;
   vista: Symbol;
 
-
+  roles: string[] = [];
   canEdit: Symbol = ACTIONS.VIEW;
 
   opcionesPermisos: string[] = [
@@ -88,6 +88,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   detallesGeneral: any = {};
   private errorCargaAutomaticaMostrado = false;
   private proyectosCoordinador: string[] = [];
+  private preasignacionesPeriodo: any[] = [];
 
   constructor(
     private translate: TranslateService,
@@ -99,7 +100,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     private gestorDocumental: GestorDocumentalService,
     private matDialog: MatDialog,
     private permisosUtils: PermisosUtils,
-    private proyectoAcademicoService: ProyectoAcademicoService
+    private academicaJbpmService: AcademicaJbpmService
   ) {
     this.vista = VIEWS.LIST;
     this.dataSource = new MatTableDataSource();
@@ -108,6 +109,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.cargarEventoPTD();
     this.userService.getUserRoles().then(async (roles) => {
+      this.roles = roles;
       const observables: { [key: string]: Observable<boolean> } = {};
       this.opcionesPermisos.forEach(opcion => {
         observables[opcion] =
@@ -208,11 +210,25 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     const eventosDelProyecto = this.calendarEventosPTD.filter((e: any) =>
       String(e.CodigoProyecto) === String(this.proyecto?.Id)
     );
+    const vistos = new Set<string>();
     this.periodosFiltrados = this.periodos.filter(periodo => {
-      return eventosDelProyecto.some((evento: any) =>
-        String(evento.Year) === String(periodo.Year) &&
-        String(evento.Ciclo) === String(periodo.Ciclo)
+      const evento = eventosDelProyecto.find((e: any) =>
+        String(e.Year) === String(periodo.Year) &&
+        String(e.Ciclo) === String(periodo.Ciclo)
       );
+      if (evento) {
+        if (vistos.has(periodo.Nombre)) return false;
+        vistos.add(periodo.Nombre);
+
+        periodo.InicioVigencia = evento.FechaInicio;
+        periodo.FinVigencia = evento.FechaFin;
+        const ahora = new Date();
+        const fechaInicio = new Date(evento.FechaInicio);
+        const fechaFin = new Date(evento.FechaFin);
+        periodo.Activo = ahora >= fechaInicio && ahora <= fechaFin;
+        return true;
+      }
+      return false;
     });
   }
 
@@ -334,6 +350,13 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       return;
     }
 
+    if (canSendCoordinator && !this.tienePendienteEnvioCoordinacion(event?.rowData)) {
+      this.popUpManager.showErrorToast(
+        this.translate.instant("ptd.no_hay_pendientes_aprobacion_coordinacion")
+      );
+      return;
+    }
+
     const title = canSendCoordinator
       ? this.translate.instant("ptd.enviar_a_docente")
       : this.translate.instant("ptd.mensaje_enviar_a_coordinacion");
@@ -444,24 +467,32 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   loadAsignaciones() {
     if (this.permisos['asignaciones_coordinador']) {
       let url = "asignacion?vigencia=" + this.periodo.Id;
-      if (this.proyecto && this.proyecto.Id) {
+      if (this.proyecto && this.proyecto.Id && !this.roles.includes(ROLES.DOCENTE)) {
         url += "&proyecto=" + this.proyecto.Id;
       }
       this.sgaPlanTrabajoDocenteMidService
         .get(url)
         .subscribe({
-          next: (resp: RespFormat) => {
+          next: async (resp: RespFormat) => {
             if (checkResponse(resp) && checkContent(resp)) {
+              const preasignaciones = await this.cargarPreasignacionesPeriodo();
+              this.preasignacionesPeriodo = preasignaciones;
               let data = (resp.Data || []).map((row: any) => {
+                const semaforo = this.getSemaforoAsignacion(row, preasignaciones);
+                const enviar = this.construirAccionEnviar(row, preasignaciones);
                 const estado = row?.estado
                   ? row.estado.toString().toLowerCase()
                   : "";
                 const isNoAprobado = estado.indexOf("no aprobado") > -1;
                 if (this.permisos['ver_gestion'] && (isNoAprobado || row.estado === "Enviado a docente") && row.gestion) {
-                  return { ...row, gestion: { ...row.gestion, type: "ver" } };
+                  return { ...row, gestion: { ...row.gestion, type: "ver" }, semaforo, enviar };
                 }
 
-                return row;
+                return {
+                  ...row,
+                  semaforo,
+                  enviar,
+                };
               });
 
               this.dataSource = new MatTableDataSource(data);
@@ -484,7 +515,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         .getPersonaId()
         .then((id_tercero) => {
           let url = "asignacion/docente?docente=" + id_tercero + "&vigencia=" + this.periodo.Id;
-          if (this.proyecto && this.proyecto.Id) {
+          if (this.proyecto && this.proyecto.Id && !this.roles.includes(ROLES.DOCENTE)) {
             url += "&proyecto=" + this.proyecto.Id;
           }
           this.sgaPlanTrabajoDocenteMidService
@@ -493,6 +524,8 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
               next: (resp: RespFormat) => {
                 if (checkResponse(resp) && checkContent(resp)) {
                   let data = (resp.Data || []).map((row: any) => {
+                    const semaforo = this.getSemaforoAsignacion(row);
+                    const enviar = this.construirAccionEnviar(row);
                     const estado = row?.estado
                       ? row.estado.toString().toLowerCase()
                       : "";
@@ -502,10 +535,16 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
                       return {
                         ...row,
                         gestion: { ...row.gestion, type: "ver" },
+                        semaforo,
+                        enviar,
                       };
                     }
 
-                    return row;
+                    return {
+                      ...row,
+                      semaforo,
+                      enviar,
+                    };
                   });
 
                   this.dataSource = new MatTableDataSource(data);
@@ -540,6 +579,85 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
 
   get esCoordinadorAsignacion(): boolean {
     return !!this.permisos['enviar_coordinador'];
+  }
+
+  getSemaforoAsignacion(row: any, preasignaciones: any[] = []): { color: string; tooltip: string; icon: string } {
+    if (!this.esCoordinadorAsignacion) {
+      return this.getSemaforoEstado(row?.estado, row?.tiene_observaciones);
+    }
+
+    const preasignacionesRelacionadas = this.obtenerPreasignacionesRelacionadas(row, preasignaciones);
+
+    if (preasignacionesRelacionadas.length === 0) {
+      return {
+        color: "#F44336",
+        tooltip: this.translate.instant("ptd.semaforo_preasignacion_pendiente_docente"),
+        icon: "cancel",
+      };
+    }
+
+    const total = preasignacionesRelacionadas.length;
+    const aprobadasDocente = preasignacionesRelacionadas.filter((preasignacion) =>
+      this.getValorAprobacion(preasignacion?.aprobacion_docente)
+    ).length;
+    const aprobadasCoordinacion = preasignacionesRelacionadas.filter((preasignacion) =>
+      this.getValorAprobacion(preasignacion?.aprobacion_proyecto)
+    ).length;
+
+    if (aprobadasDocente === total && aprobadasCoordinacion === total) {
+      return {
+        color: "#4CAF50",
+        tooltip: this.translate.instant("ptd.semaforo_preasignacion_aprobada"),
+        icon: "check_circle",
+      };
+    }
+
+    if (aprobadasDocente === total && aprobadasCoordinacion < total) {
+      return {
+        color: "#FFC107",
+        tooltip: this.translate.instant("ptd.semaforo_preasignacion_pendiente_coordinacion"),
+        icon: "autorenew",
+      };
+    }
+
+    return {
+      color: "#F44336",
+      tooltip: this.translate.instant("ptd.semaforo_preasignacion_pendiente_docente"),
+      icon: "cancel",
+    };
+  }
+
+  private construirAccionEnviar(row: any, preasignaciones: any[] = []): { value: any; type: string; disabled: boolean } {
+    const accion = row?.enviar && typeof row.enviar === "object"
+      ? { ...row.enviar }
+      : { value: undefined, type: "enviar" };
+
+    accion.type = accion.type || "enviar";
+
+    if (this.esCoordinadorAsignacion) {
+      accion.disabled = !this.tienePendienteEnvioCoordinacion(row, preasignaciones);
+    } else if (typeof accion.disabled !== "boolean") {
+      accion.disabled = !this.permisos['enviar_docente'];
+    }
+
+    return accion;
+  }
+
+  private tienePendienteEnvioCoordinacion(row: any, preasignaciones: any[] = this.preasignacionesPeriodo): boolean {
+    const preasignacionesRelacionadas = this.obtenerPreasignacionesRelacionadas(row, preasignaciones);
+    if (preasignacionesRelacionadas.length === 0) {
+      return false;
+    }
+
+    const total = preasignacionesRelacionadas.length;
+    const aprobadasDocente = preasignacionesRelacionadas.filter((preasignacion) =>
+      this.getValorAprobacion(preasignacion?.aprobacion_docente)
+    ).length;
+    const aprobadasCoordinacion = preasignacionesRelacionadas.filter((preasignacion) =>
+      this.getValorAprobacion(preasignacion?.aprobacion_proyecto)
+    ).length;
+
+    return aprobadasDocente === total && aprobadasCoordinacion < total;
   }
 
   cargarPeriodo(): Promise<Periodo[]> {
@@ -1053,6 +1171,60 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     return null;
   }
 
+  private async cargarPreasignacionesPeriodo(): Promise<any[]> {
+    if (!this.esCoordinadorAsignacion || !this.periodo?.Id) {
+      this.preasignacionesPeriodo = [];
+      return [];
+    }
+
+    try {
+      const resp: any = await firstValueFrom(
+        this.sgaPlanTrabajoDocenteMidService.get(`preasignacion?vigencia=${this.periodo.Id}`)
+      );
+
+      const preasignaciones = Array.isArray(resp?.Data) ? resp.Data : [];
+      if (!this.proyecto?.Id) {
+        this.preasignacionesPeriodo = preasignaciones;
+        return preasignaciones;
+      }
+
+      const filtradas = preasignaciones.filter((item: any) =>
+        String(item?.codigo_proyecto_academico || "").trim() === String(this.proyecto.Id).trim()
+      );
+
+      this.preasignacionesPeriodo = filtradas;
+      return filtradas;
+    } catch (error) {
+      console.warn("No fue posible cargar las preasignaciones del periodo", error);
+      this.preasignacionesPeriodo = [];
+      return [];
+    }
+  }
+
+  private obtenerPreasignacionesRelacionadas(row: any, preasignaciones: any[]): any[] {
+    if (!row) {
+      return [];
+    }
+
+    const docenteId = String(row?.docente_id || "").trim();
+    const periodoId = String(row?.periodo_id || "").trim();
+    const tipoVinculacionId = String(row?.tipo_vinculacion_id || "").trim();
+
+    if (!docenteId || !periodoId || !tipoVinculacionId) {
+      return [];
+    }
+
+    return (preasignaciones || []).filter((preasignacion: any) => {
+      const coincideProyecto = !this.proyecto?.Id ||
+        String(preasignacion?.codigo_proyecto_academico || "").trim() === String(this.proyecto.Id).trim();
+
+      return coincideProyecto &&
+        String(preasignacion?.docente_id || "").trim() === docenteId &&
+        String(preasignacion?.periodo_id || "").trim() === periodoId &&
+        String(preasignacion?.tipo_vinculacion_id || "").trim() === tipoVinculacionId;
+    });
+  }
+
   private obtenerProyectosCoordinador(): Promise<string[]> {
     return new Promise((resolve, reject) => {
       const documentoCoordinador = this.obtenerDocumentoCoordinador();
@@ -1060,7 +1232,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         reject(new Error("No fue posible obtener el documento del coordinador"));
         return;
       }
-      this.proyectoAcademicoService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
+      this.academicaJbpmService.get(`coordinador_usuario/${documentoCoordinador}`).subscribe({
         next: (resp: any) => {
           if (Array.isArray(resp.coordinadores.coordinador)) {
             const codigos = resp.coordinadores.coordinador.map((c: any) => String(c.codigo_carrera || "").trim());

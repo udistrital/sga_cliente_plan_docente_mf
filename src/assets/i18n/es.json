@@ -1350,6 +1350,8 @@
     "semaforo_preasignacion": "Semáforo preasignación",
     "semaforo_preasignacion_aprobada": "Aprobado por coordinación y docente",
     "semaforo_preasignacion_pendiente_docente": "Docente no ha aprobado",
+    "semaforo_preasignacion_pendiente_coordinacion": "Docente aprobó, pendiente de coordinación",
+    "no_hay_pendientes_aprobacion_coordinacion": "No hay pendientes de aprobación para esta coordinación",
     "semaforo_preasignacion_no_enviado": "Coordinación aún no envía a docente",
     "semaforo_aprobado": "Aprobado",
     "semaforo_preaprobado": "Sin observaciones - Preaprobado",
