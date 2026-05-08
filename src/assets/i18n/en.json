@@ -1351,6 +1351,8 @@
     "semaforo_preasignacion": "Pre-assignment traffic light",
     "semaforo_preasignacion_aprobada": "Approved by coordination and teacher",
     "semaforo_preasignacion_pendiente_docente": "Teacher has not approved",
+    "semaforo_preasignacion_pendiente_coordinacion": "Teacher approved, pending coordination",
+    "no_hay_pendientes_aprobacion_coordinacion": "There are no pending approvals for this coordination",
     "semaforo_preasignacion_no_enviado": "Coordination has not sent to teacher yet",
     "semaforo_aprobado": "Approved",
     "semaforo_preaprobado": "Pre-approved",

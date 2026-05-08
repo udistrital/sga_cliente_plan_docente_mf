@@ -281,6 +281,70 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private async limpiarCargaPlanDePreasignacion(preasignacion: any): Promise<boolean> {
+    if (!preasignacion?.docente_id || !preasignacion?.periodo_id || !preasignacion?.tipo_vinculacion_id) {
+      return false;
+    }
+
+    try {
+      const estadosPlanResp: any = await firstValueFrom(
+        this.planTrabajoDocenteService.get("estado_plan?query=activo:true&limit=0")
+      );
+
+      const estadoPlanDef = Array.isArray(estadosPlanResp?.Data)
+        ? estadosPlanResp.Data.find((estado: any) => String(estado?.codigo_abreviacion || "").trim() === "DEF")?._id
+        : undefined;
+
+      if (!estadoPlanDef) {
+        return false;
+      }
+
+      const planResp: any = await firstValueFrom(
+        this.planDocenteMid.get(
+          `plan?docente=${preasignacion.docente_id}&vigencia=${preasignacion.periodo_id}&vinculacion=${preasignacion.tipo_vinculacion_id}`
+        )
+      );
+
+      const dataPlan = planResp?.Data;
+      const seleccion = Number(dataPlan?.seleccion || 0);
+      const planDocente = Array.isArray(dataPlan?.plan_docente)
+        ? dataPlan.plan_docente[seleccion] ?? dataPlan.plan_docente[0]
+        : dataPlan?.plan_docente;
+      const planDocenteId = typeof planDocente === "object"
+        ? planDocente?._id || planDocente?.id
+        : planDocente;
+
+      if (!planDocenteId) {
+        return false;
+      }
+
+      const cargaActual = Array.isArray(dataPlan?.carga?.[seleccion])
+        ? dataPlan.carga[seleccion]
+        : [];
+
+      const idsADescartar = cargaActual
+        .map((carga: any) => ({ id: carga.id }))
+        .filter((carga: any) => !!String(carga.id || "").trim());
+
+      const respuesta: RespFormat = await firstValueFrom(
+        this.planDocenteMid.put("plan/", {
+          carga_plan: [],
+          plan_docente: {
+            id: planDocenteId,
+            resumen: JSON.stringify({}),
+            estado_plan: estadoPlanDef,
+          },
+          descartar: idsADescartar,
+        })
+      );
+
+      return checkResponse(respuesta);
+    } catch (error) {
+      console.warn("No fue posible limpiar la carga del plan desde preasignación", error);
+      return false;
+    }
+  }
+
   accionEnviar(event: any) {
     if (!this.permisos['tabla_coordinador']) {
       return this.popUpManager.showErrorToast(
@@ -342,13 +406,20 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
       )
       .then((action) => {
         if (action.value) {
-          this.dialogConfig.data = event["rowData"];
+          const preasignacion = event["rowData"];
+          this.dialogConfig.data = preasignacion;
           const preasignacionDialog = this.dialog.open(
             DialogoPreAsignacionPtdComponent,
             this.dialogConfig
           );
-          preasignacionDialog.afterClosed().subscribe(() => {
-            this.loadPreasignaciones();
+          preasignacionDialog.afterClosed().subscribe((result) => {
+            if (result) {
+              this.limpiarCargaPlanDePreasignacion(preasignacion).then(() => {
+                this.loadPreasignaciones();
+              });
+            } else {
+              this.loadPreasignaciones();
+            }
           });
         }
       });

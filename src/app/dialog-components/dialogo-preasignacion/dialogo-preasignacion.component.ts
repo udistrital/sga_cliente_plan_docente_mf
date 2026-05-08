@@ -441,7 +441,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
             this.popUpManager.showSuccessAlert(
               this.translate.instant("ptd.preasignacion_actualizada")
             );
-            this.dialogRef.close();
+            this.dialogRef.close(true);
           },
           error: (error: any) => {
             this.popUpManager.showErrorAlert(
@@ -455,7 +455,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
           this.popUpManager.showSuccessAlert(
             this.translate.instant("ptd.preasignacion_creada")
           );
-          this.dialogRef.close();
+          this.dialogRef.close(true);
         },
         error: (error: any) => {
           this.popUpManager.showErrorAlert(
@@ -467,7 +467,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   cancelar() {
-    this.dialogRef.close();
+    this.dialogRef.close(false);
   }
 
   buscarNombreDocentes(text: string, field: any) {
