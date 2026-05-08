@@ -44,6 +44,8 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   readonly ACTIONS = ACTIONS; */
   vista: Symbol;
 
+  roles: string[] = [];
+
   opcionesPermisos: string[] = [
     'ver_gestion_consolidado',
     'editar_gestion_consolidado',
@@ -122,6 +124,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.cargarEventoPTD();
     this.userService.getUserRoles().then(async (roles) => {
+      this.roles = roles;
       const observables: { [key: string]: Observable<boolean> } = {};
       this.opcionesPermisos.forEach(opcion => {
         observables[opcion] =
@@ -204,11 +207,25 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
       String(e.CodigoProyecto) === String(this.proyectos.select?.Id)
     );
     const todosLosPeriodos = this._todosLosPeriodos || this.periodos.opciones;
+    const vistos = new Set<string>();
     this.periodos.opciones = todosLosPeriodos.filter((periodo: Periodo) => {
-      return eventosDelProyecto.some((evento: any) =>
-        String(evento.Year) === String(periodo.Year) &&
-        String(evento.Ciclo) === String(periodo.Ciclo)
+      const evento = eventosDelProyecto.find((e: any) =>
+        String(e.Year) === String(periodo.Year) &&
+        String(e.Ciclo) === String(periodo.Ciclo)
       );
+      if (evento) {
+        if (vistos.has(periodo.Nombre)) return false;
+        vistos.add(periodo.Nombre);
+
+        periodo.InicioVigencia = evento.FechaInicio;
+        periodo.FinVigencia = evento.FechaFin;
+        const ahora = new Date();
+        const fechaInicio = new Date(evento.FechaInicio);
+        const fechaFin = new Date(evento.FechaFin);
+        periodo.Activo = ahora >= fechaInicio && ahora <= fechaFin;
+        return true;
+      }
+      return false;
     });
   }
 
@@ -461,7 +478,7 @@ export class ConsolidadoComponent implements OnInit, AfterViewInit {
     }
     if (this.periodos.select) {
       let proyecto = "";
-      if (this.proyectos.select) {
+      if (this.proyectos.select && !this.roles.includes(ROLES.DOCENTE)) {
         proyecto = ",proyecto_academico_id:" + this.proyectos.select.Id;
       }
       this.planTrabajoDocenteService

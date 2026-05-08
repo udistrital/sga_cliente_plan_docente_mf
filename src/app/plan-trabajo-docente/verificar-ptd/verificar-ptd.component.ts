@@ -36,6 +36,7 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
 
   rolesCoord: string[] = [ROLES.COORDINADOR, ROLES.ADMIN_DOCENCIA];
   isCoordinator: string|undefined = undefined;
+  roles: string[] = [];
   
   dataSource: MatTableDataSource<any>;
   displayedColumns: string[] = ["nombre", "identificacion", "tipo_vinculacion", "periodo_academico", "soporte_documental", "gestion", "estado"];
@@ -85,6 +86,7 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.cargarEventoPTD();
     this.userService.getUserRoles().then(roles => {
+      this.roles = roles;
       this.isCoordinator = _head(_intersection(roles, this.rolesCoord));
     });
     this.loadSelects();
@@ -160,11 +162,25 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
       String(e.CodigoProyecto) === String(this.proyectos.select?.Id)
     );
     const todosLosPeriodos = this._todosLosPeriodos || this.periodos.opciones;
+    const vistos = new Set<string>();
     this.periodos.opciones = todosLosPeriodos.filter((periodo: Periodo) => {
-      return eventosDelProyecto.some((evento: any) =>
-        String(evento.Year) === String(periodo.Year) &&
-        String(evento.Ciclo) === String(periodo.Ciclo)
+      const evento = eventosDelProyecto.find((e: any) =>
+        String(e.Year) === String(periodo.Year) &&
+        String(e.Ciclo) === String(periodo.Ciclo)
       );
+      if (evento) {
+        if (vistos.has(periodo.Nombre)) return false;
+        vistos.add(periodo.Nombre);
+
+        periodo.InicioVigencia = evento.FechaInicio;
+        periodo.FinVigencia = evento.FechaFin;
+        const ahora = new Date();
+        const fechaInicio = new Date(evento.FechaInicio);
+        const fechaFin = new Date(evento.FechaFin);
+        periodo.Activo = ahora >= fechaInicio && ahora <= fechaFin;
+        return true;
+      }
+      return false;
     });
   }
 
@@ -327,8 +343,12 @@ export class VerificarPtdComponent implements OnInit, AfterViewInit {
       this.popUpManager.showErrorToast("El periodo seleccionado no se encuentra en el rango de fechas.");
       return;
     }
-    if (this.periodos.select && this.proyectos.select) {//&& this.isCoordinator) {
-      this.sgaPlanTrabajoDocenteMidService.get(`plan/preaprobado?vigencia=${this.periodos.select.Id}&proyecto=${this.proyectos.select.Id}`).subscribe(
+    if (this.periodos.select && (this.proyectos.select || this.roles.includes(ROLES.DOCENTE))) {
+      let url = `plan/preaprobado?vigencia=${this.periodos.select.Id}`;
+      if (this.proyectos.select && !this.roles.includes(ROLES.DOCENTE)) {
+        url += `&proyecto=${this.proyectos.select.Id}`;
+      }
+      this.sgaPlanTrabajoDocenteMidService.get(url).subscribe(
         (resp) => {
           let planes = <any[]>resp.Data;
           planes.forEach(plan => {

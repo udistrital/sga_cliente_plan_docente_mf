@@ -9,7 +9,7 @@ import { RespFormat } from "src/app/models/response-format";
 import { ParametrosService } from "src/app/services/parametros.service";
 import { UserService } from "src/app/services/user.service";
 import { checkContent, checkResponse } from "src/app/utils/verify-response";
-import { MODALS } from "src/app/models/diccionario";
+import { MODALS, ROLES } from "src/app/models/diccionario";
 import { SgaPlanTrabajoDocenteMidService } from "src/app/services/sga-plan-trabajo-docente-mid.service";
 import { MatDialog, MatDialogConfig } from "@angular/material/dialog";
 import { DialogoPreAsignacionPtdComponent } from "src/app/dialog-components/dialogo-preasignacion/dialogo-preasignacion.component";
@@ -184,11 +184,25 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
     const eventosDelProyecto = this.calendarEventosPTD.filter((e: any) =>
       String(e.CodigoProyecto) === String(this.proyecto?.Id)
     );
+    const vistos = new Set<string>();
     this.periodosFiltrados = this.periodos.filter(periodo => {
-      return eventosDelProyecto.some((evento: any) =>
-        String(evento.Year) === String(periodo.Year) &&
-        String(evento.Ciclo) === String(periodo.Ciclo)
+      const evento = eventosDelProyecto.find((e: any) =>
+        String(e.Year) === String(periodo.Year) &&
+        String(e.Ciclo) === String(periodo.Ciclo)
       );
+      if (evento) {
+        if (vistos.has(periodo.Nombre)) return false;
+        vistos.add(periodo.Nombre);
+
+        periodo.InicioVigencia = evento.FechaInicio;
+        periodo.FinVigencia = evento.FechaFin;
+        const ahora = new Date();
+        const fechaInicio = new Date(evento.FechaInicio);
+        const fechaFin = new Date(evento.FechaFin);
+        periodo.Activo = ahora >= fechaInicio && ahora <= fechaFin;
+        return true;
+      }
+      return false;
     });
   }
 
@@ -487,7 +501,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
           next: (resp: RespFormat) => {
             if (checkResponse(resp)) {
               let data = resp.Data;
-              if (this.proyecto && this.proyecto.Id) {
+              if (this.proyecto && this.proyecto.Id && !this.roles.includes(ROLES.DOCENTE)) {
                 data = data.filter((item: any) => String(item.codigo_proyecto_academico) === String(this.proyecto.Id));
               }
               this.dataSource = new MatTableDataSource(data);
@@ -520,7 +534,7 @@ export class PreasignacionComponent implements OnInit, AfterViewInit {
               next: (resp: RespFormat) => {
                 if (checkResponse(resp)) {
                   let data = resp.Data;
-                  if (this.proyecto && this.proyecto.Id) {
+                  if (this.proyecto && this.proyecto.Id && !this.roles.includes(ROLES.DOCENTE)) {
                     data = data.filter((item: any) => String(item.codigo_proyecto_academico) === String(this.proyecto.Id));
                   }
                   this.dataSource = new MatTableDataSource(data);

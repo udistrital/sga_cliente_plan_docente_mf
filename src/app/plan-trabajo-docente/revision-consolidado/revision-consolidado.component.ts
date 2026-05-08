@@ -5,7 +5,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { TranslateService } from '@ngx-translate/core';
 import { PopUpManager } from 'src/app/managers/popUpManager';
-import { MODALS, VIEWS } from 'src/app/models/diccionario';
+import { MODALS, ROLES, VIEWS } from 'src/app/models/diccionario';
 import { Periodo } from 'src/app/models/parametros/periodo';
 import { EstadoConsolidado } from 'src/app/models/plan-trabajo-docente/estado-consolidado';
 import { RespFormat } from 'src/app/models/response-format';
@@ -41,6 +41,8 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
     ENV_AVA: '64e61208a659b2fca5b0bd6a',
   };
   vista: Symbol;
+
+  roles: string[] = [];
 
   isSecDecanatura = false;
   isDecano = false;
@@ -99,6 +101,7 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.cargarEventoPTD();
     this.userService.getUserRoles().then(async roles => {
+      this.roles = roles;
       const observables: { [key: string]: Observable<boolean> } = {};
       this.opcionesPermisos.forEach(opcion => {
         observables[opcion] =
@@ -183,11 +186,25 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
       String(e.CodigoProyecto) === String(this.proyectos.select?.Id)
     );
     const todosLosPeriodos = this._todosLosPeriodos || this.periodos.opciones;
+    const vistos = new Set<string>();
     this.periodos.opciones = todosLosPeriodos.filter((periodo: Periodo) => {
-      return eventosDelProyecto.some((evento: any) =>
-        String(evento.Year) === String(periodo.Year) &&
-        String(evento.Ciclo) === String(periodo.Ciclo)
+      const evento = eventosDelProyecto.find((e: any) =>
+        String(e.Year) === String(periodo.Year) &&
+        String(e.Ciclo) === String(periodo.Ciclo)
       );
+      if (evento) {
+        if (vistos.has(periodo.Nombre)) return false;
+        vistos.add(periodo.Nombre);
+
+        periodo.InicioVigencia = evento.FechaInicio;
+        periodo.FinVigencia = evento.FechaFin;
+        const ahora = new Date();
+        const fechaInicio = new Date(evento.FechaInicio);
+        const fechaFin = new Date(evento.FechaFin);
+        periodo.Activo = ahora >= fechaInicio && ahora <= fechaFin;
+        return true;
+      }
+      return false;
     });
   }
 
@@ -378,7 +395,7 @@ export class RevisionConsolidadoComponent implements OnInit, AfterViewInit {
     }
     if (this.periodos.select) {
       let proyecto = ""
-      if (this.proyectos.select) {
+      if (this.proyectos.select && !this.roles.includes(ROLES.DOCENTE)) {
         proyecto = ",proyecto_academico_id:"+this.proyectos.select.Id;
       }
       this.planTrabajoDocenteService.get(`consolidado_docente?query=activo:true,periodo_id:${this.periodos.select.Id}${proyecto}&limit=0`).subscribe((resp) => {
