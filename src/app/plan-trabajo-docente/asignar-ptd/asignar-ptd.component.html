@@ -132,9 +132,9 @@
               <b>{{ "ptd.observaciones" | translate }}</b>
             </mat-header-cell>
             <mat-cell *matCellDef="let row">
-              <div class="semaforo-container" [matTooltip]="getSemaforoEstado(row.estado, row.tiene_observaciones).tooltip">
-                <mat-icon class="semaforo-icon" [ngStyle]="{ color: getSemaforoEstado(row.estado, row.tiene_observaciones).color }">
-                  {{ getSemaforoEstado(row.estado, row.tiene_observaciones).icon }}
+              <div class="semaforo-container" [matTooltip]="(row.semaforo || getSemaforoEstado(row.estado, row.tiene_observaciones)).tooltip">
+                <mat-icon class="semaforo-icon" [ngStyle]="{ color: (row.semaforo || getSemaforoEstado(row.estado, row.tiene_observaciones)).color }">
+                  {{ (row.semaforo || getSemaforoEstado(row.estado, row.tiene_observaciones)).icon }}
                 </mat-icon>
               </div>
             </mat-cell>
