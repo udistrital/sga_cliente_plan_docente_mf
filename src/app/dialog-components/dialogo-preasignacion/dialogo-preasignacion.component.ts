@@ -35,6 +35,8 @@ import { EspaciosAcademicos } from "src/app/models/espacios-academicos/espacios-
 import { MODALS } from "src/app/models/diccionario";
 import { DialogoCrearEspacioGrupoComponent } from "../dialogo-crear-espacio-grupo/dialogo-crear-espacio-grupo.component";
 import { AcademicaJbpmService } from "src/app/services/academica-jbpm.service";
+import { UserService } from "src/app/services/user.service";
+import { ROLES } from "src/app/models/diccionario";
 
 @Component({
     selector: "dialogo-preasignacion",
@@ -46,6 +48,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   modificando: boolean = true;
   preasignacionForm: FormGroup;
   private proyectoCurricularId: number | null = null;
+  roles: string[] = [];
 
   searchTerm$ = new Subject<any>();
   opcionesDocente: any[] = [];
@@ -89,6 +92,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     private parametrosService: ParametrosService,
     private tercerosService: TercerosService,
     private academicaJbpmService: AcademicaJbpmService,
+    private userService: UserService,
     private builder: FormBuilder,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
@@ -176,6 +180,9 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.userService.getUserRoles().then(roles => {
+      this.roles = roles;
+    });
     this.cargarEventoPTD().then(() => {
       if (this.calendarEventosPTD && this.calendarEventosPTD.length > 0) {
         this.proyectosCoordinador = this.calendarEventosPTD.map((e: any) => ({
@@ -816,7 +823,7 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
                         .trim()
                         .toUpperCase() === nombreGrupo
                   );
-                  if (perteneceAlCoordinador) {
+                  if (perteneceAlCoordinador || this.roles.includes(ROLES.DOCENTE)) {
                     // Evitar duplicados en opciones
                     const yaExiste = this.opcionesProyectos.some(
                       (opcion) =>
@@ -857,12 +864,16 @@ export class DialogoPreAsignacionPtdComponent implements OnInit {
     const nombreProyecto = String(proyectoSeleccionado)
       .trim()
       .toUpperCase();
-    this.opcionesGrupos = this.opcionesGruposTodas.filter(
-      (grupo) =>
-        String(grupo.ProyectoAcademico)
-          .trim()
-          .toUpperCase() === nombreProyecto
-    );
+    if (this.roles.includes(ROLES.DOCENTE)) {
+      this.opcionesGrupos = this.opcionesGruposTodas;
+    } else {
+      this.opcionesGrupos = this.opcionesGruposTodas.filter(
+        (grupo) =>
+          String(grupo.ProyectoAcademico)
+            .trim()
+            .toUpperCase() === nombreProyecto
+      );
+    }
     this.preasignacionForm.get("grupo")?.setValue(null);
     if (this.opcionesGrupos.length > 0) {
       this.preasignacionForm

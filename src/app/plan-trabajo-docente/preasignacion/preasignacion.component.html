@@ -37,7 +37,7 @@
             ></div>
             <b>{{ item.Nombre }}</b>
             <small style="margin-left: 5px; font-size: 0.8em; color: gray">
-              (Inicio vigencia: {{ item.InicioVigencia | date : "yyyy-MM-dd" }})
+              (Vigencia: {{ item.InicioVigencia | date : "yyyy-MM-dd" }} a {{ item.FinVigencia | date : "yyyy-MM-dd" }})
             </small>
           </div>
         </mat-option>
@@ -193,7 +193,7 @@
             ></div>
             <b>{{ item.Nombre }}</b>
             <small style="margin-left: 5px; font-size: 0.8em; color: gray">
-              (Inicio vigencia: {{ item.InicioVigencia | date : "yyyy-MM-dd" }})
+              (Vigencia: {{ item.InicioVigencia | date : "yyyy-MM-dd" }} a {{ item.FinVigencia | date : "yyyy-MM-dd" }})
             </small>
           </div>
         </mat-option>

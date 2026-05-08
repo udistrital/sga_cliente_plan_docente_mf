@@ -38,7 +38,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   readonly ACTIONS = ACTIONS;
   vista: Symbol;
 
-
+  roles: string[] = [];
   canEdit: Symbol = ACTIONS.VIEW;
 
   opcionesPermisos: string[] = [
@@ -108,6 +108,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.cargarEventoPTD();
     this.userService.getUserRoles().then(async (roles) => {
+      this.roles = roles;
       const observables: { [key: string]: Observable<boolean> } = {};
       this.opcionesPermisos.forEach(opcion => {
         observables[opcion] =
@@ -208,11 +209,25 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
     const eventosDelProyecto = this.calendarEventosPTD.filter((e: any) =>
       String(e.CodigoProyecto) === String(this.proyecto?.Id)
     );
+    const vistos = new Set<string>();
     this.periodosFiltrados = this.periodos.filter(periodo => {
-      return eventosDelProyecto.some((evento: any) =>
-        String(evento.Year) === String(periodo.Year) &&
-        String(evento.Ciclo) === String(periodo.Ciclo)
+      const evento = eventosDelProyecto.find((e: any) =>
+        String(e.Year) === String(periodo.Year) &&
+        String(e.Ciclo) === String(periodo.Ciclo)
       );
+      if (evento) {
+        if (vistos.has(periodo.Nombre)) return false;
+        vistos.add(periodo.Nombre);
+
+        periodo.InicioVigencia = evento.FechaInicio;
+        periodo.FinVigencia = evento.FechaFin;
+        const ahora = new Date();
+        const fechaInicio = new Date(evento.FechaInicio);
+        const fechaFin = new Date(evento.FechaFin);
+        periodo.Activo = ahora >= fechaInicio && ahora <= fechaFin;
+        return true;
+      }
+      return false;
     });
   }
 
@@ -444,7 +459,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
   loadAsignaciones() {
     if (this.permisos['asignaciones_coordinador']) {
       let url = "asignacion?vigencia=" + this.periodo.Id;
-      if (this.proyecto && this.proyecto.Id) {
+      if (this.proyecto && this.proyecto.Id && !this.roles.includes(ROLES.DOCENTE)) {
         url += "&proyecto=" + this.proyecto.Id;
       }
       this.sgaPlanTrabajoDocenteMidService
@@ -484,7 +499,7 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         .getPersonaId()
         .then((id_tercero) => {
           let url = "asignacion/docente?docente=" + id_tercero + "&vigencia=" + this.periodo.Id;
-          if (this.proyecto && this.proyecto.Id) {
+          if (this.proyecto && this.proyecto.Id && !this.roles.includes(ROLES.DOCENTE)) {
             url += "&proyecto=" + this.proyecto.Id;
           }
           this.sgaPlanTrabajoDocenteMidService
