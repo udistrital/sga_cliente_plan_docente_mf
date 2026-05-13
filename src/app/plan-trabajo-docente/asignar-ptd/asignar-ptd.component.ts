@@ -776,19 +776,6 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
             .put("plan_docente/" + id_plan, res_g.Data)
             .subscribe({
               next: async (res_p) => {
-                if (coordinador) {
-                  const preasignacionesActualizadas = await this.marcarPreasignacionesComoAprobadasPorCoordinacion(
-                    rowData
-                  );
-
-                  if (!preasignacionesActualizadas) {
-                    this.popUpManager.showErrorAlert(
-                      this.translate.instant("ptd.error_enviar_plan")
-                    );
-                    return;
-                  }
-                }
-
                 this.popUpManager.showSuccessAlert(
                   this.translate.instant("ptd.plan_enviado_ok")
                 );
@@ -888,6 +875,13 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
       }
 
       const cargasNuevas: any[] = [];
+      const espaciosObjetivoIds = Array.from(
+        new Set(
+          espaciosParaProcesar
+            .map((espacio: any) => String(espacio?.id || espacio?._id || "").trim())
+            .filter((id: string) => !!id)
+        )
+      );
 
       for (const espacio of espaciosParaProcesar) {
         const espacioAcademicoId = String(espacio?.id || espacio?._id || "").trim();
@@ -970,8 +964,26 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
         });
       }
 
+      const espaciosAprobadosIds = Array.from(
+        new Set(
+          [
+            ...cargaActual
+              .map((c: any) => String(c?.espacio_academico_id || "").trim())
+              .filter((id: string) => !!id && id !== "NA"),
+            ...cargasNuevas
+              .map((c: any) => String(c?.espacio_academico_id || "").trim())
+              .filter((id: string) => !!id && id !== "NA"),
+          ].filter((id: string) => espaciosObjetivoIds.includes(id))
+        )
+      );
+
       if (!cargasNuevas.length) {
-        return true;
+        const preasignacionesActualizadas = await this.marcarPreasignacionesComoAprobadasPorCoordinacion(
+          rowData,
+          espaciosAprobadosIds
+        );
+
+        return preasignacionesActualizadas;
       }
 
       const materiasConCruce = this.obtenerMateriasConCruceHorario(
@@ -1001,10 +1013,6 @@ export class AsignarPtdComponent implements OnInit, AfterViewInit {
 
       const estadoActual =
         planDocenteActual?.estado_plan_id || dataPlan?.estado_plan?.[seleccion] || "Sin definir";
-
-      const espaciosAprobadosIds = cargasNuevas
-        .map((c) => String(c?.espacio_academico_id || "").trim())
-        .filter((id) => !!id && id !== "NA");
 
       await firstValueFrom(
         this.sgaPlanTrabajoDocenteMidService.put("plan/", {

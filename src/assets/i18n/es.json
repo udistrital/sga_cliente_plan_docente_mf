@@ -1359,7 +1359,9 @@
     "semaforo_pendiente_revision": "Pendiente de revisión",
     "semaforo_pendiente_con_observaciones": "Pendiente de revisión - Con observaciones",
     "semaforo_pendiente_sin_observaciones": "Pendiente de revisión - Sin observaciones",
-    "semaforo_sin_estado": "Sin estado asignado"
+    "semaforo_sin_estado": "Sin estado asignado",
+    "vista_docente": "Vista docente",
+    "vista_coordinador": "Vista coordinador"
   },
   "espacios_academicos": {
     "espacios_academicos": "Espacios Académicos",
