@@ -1360,7 +1360,9 @@
     "semaforo_pendiente_revision": "Pending review",
     "semaforo_pendiente_con_observaciones": "Pending review - With observations",
     "semaforo_pendiente_sin_observaciones": "Pending review - Without observations",
-    "semaforo_sin_estado": "No status assigned"
+    "semaforo_sin_estado": "No status assigned",
+    "vista_docente": "Teacher view",
+    "vista_coordinador": "Coordinator view"
   },
   "espacios_academicos": {
     "espacios_academicos": "Academic Spaces",
