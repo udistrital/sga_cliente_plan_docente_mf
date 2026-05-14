@@ -1276,8 +1276,6 @@
     "carga_automatica_parcial": "Carga automática parcial",
     "espacios_fuera_proyecto_coordinador": "Los siguientes espacios no pertenecen a su proyecto y no serán cargados:",
     "info_modo_solo_ver": "En este estado no es posible editar el plan",
-    "aprobacion_plan_coordinacion": "Aprobación del Plan Trabajo Docente",
-    "recordar_aprobar_plan": "No olvide preaprobar o rechazar el plan en la sección final de esta página",
     "revisar_solapamiento_carga": "Por favor revise que no haya superposición entre carga lectiva y actividades. Corrobore que resumen el total de horas coincida con lo cargado en horario.",
     "descargar": "Descargar PTD",
     "formato_doc": "Seleccione el tipo de archivo",
